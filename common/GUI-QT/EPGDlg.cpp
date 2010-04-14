@@ -109,13 +109,14 @@ void EPGDlg::OnTimer()
         if (date == todayUTC) /* if today */
         {
             /* Extract values from the list */
-            MyListViewItem * myItem = (MyListViewItem*)Data->firstChild();
+            QListViewItem * myItem = Data->firstChild();
 
             while ( myItem )
             {
                 /* Check, if the programme is now on line. If yes, set
                 special pixmap */
-                if (myItem->IsActive())
+                MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
+                if (item && item->IsActive())
                 {
                     myItem->setPixmap(COL_START, BitmCubeGreen);
                     Data->ensureItemVisible(myItem);
@@ -123,7 +124,7 @@ void EPGDlg::OnTimer()
                 else
                     myItem->setPixmap(COL_START,QPixmap()); /* no pixmap */
 
-                myItem = (MyListViewItem*)myItem->nextSibling();
+                myItem = myItem->nextSibling();
             }
         }
     }
