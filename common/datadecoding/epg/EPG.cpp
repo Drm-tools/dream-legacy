@@ -1290,6 +1290,10 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
 void
 EPG::parseDoc (const QDomDocument & doc)
 {
+	if(doc.documentElement().nodeType() != QDomNode::ElementNode)
+		return;
+	if(doc.documentElement().nodeName()=="")
+		return;
     QDomNodeList programmes = doc.elementsByTagName ("programme");
     if(programmes.count()==0)
 		return;
