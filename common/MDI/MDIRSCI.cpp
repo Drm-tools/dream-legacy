@@ -385,9 +385,9 @@ _BOOLEAN
 CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile)
 {
 	CRSISubscriber* subs = NULL;
-
-	// check for file or socket
-	if(dest.find('.'))
+	/* heuristic to test for file or socket - TODO - better syntax */
+	size_t p = dest.find_first_not_of("TPtp0123456789.:");
+	if (p != string::npos)
 	{
 		subs = new CRSISubscriberFile();
 	}
