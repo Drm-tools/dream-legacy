@@ -32,6 +32,22 @@
 #include "DialogUtil.h"
 
 /* Implementation *************************************************************/
+QString MyListViewItem::key(int column, bool ascending) const
+{
+	/* Reimplement "key()" function to get correct sorting behaviour */
+	if ((column == 2) || (column == 4))
+	{
+		/* These columns are filled with numbers. Some items may have numbers
+		   after the comma, therefore multiply with 10000 (which moves the
+		   numbers in front of the comma). Afterwards append zeros at the
+		   beginning so that positive integer numbers are sorted correctly */
+		return QString(QString().setNum((long int)
+			(text(column).toFloat() * 10000.0))).rightJustify(20, '0');
+	}
+    else
+		return QListViewItem::key(column, ascending);
+}
+
 void CDRMSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
 {
 QStringList result;
@@ -369,10 +385,10 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 	}
 }
 
-StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	CStationsDlgBase(parent, name, modal, f),
-	DRMReceiver(NDRMR),
+	DRMReceiver(NDRMR),rig(nrig),
 	Settings(NSettings),
 	bReInitOnFrequencyChange(FALSE), vecpListItems(0)
 {
@@ -490,11 +506,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	SetStationsView();
 
 	/* Remote menu  --------------------------------------------------------- */
-#ifdef HAVE_LIBHAMLIB
-	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
-	pRemoteMenu = new RemoteMenu(*DRMReceiver.GetHamlib());
-	pRemoteMenu->MakeMenu(this);
-	/* Other settings ------------------------------------------------------- */
+	pRemoteMenu = new RemoteMenu(this, rig);
 	/* Separator */
 	pRemoteMenu->menu()->insertSeparator();
 
@@ -503,7 +515,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnSMeterMenu(int)), 0, SMETER_MENU_ID);
 
 	connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
-	connect(&DRMReceiver, SIGNAL(sigstr(double)), this, SLOT(OnSigStr(double)));
+	connect(&rig, SIGNAL(sigstr(double)), this, SLOT(OnSigStr(double)));
 
 	/* Init progress bar for input s-meter */
 
@@ -517,7 +529,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ProgrSigStrength->setValue(S_METER_THERMO_MIN);
 	ProgrSigStrength->setFillColor(QColor(0, 190, 0));
 
-#endif
 	/* Update menu ---------------------------------------------------------- */
 	pUpdateMenu = new QPopupMenu(this);
 	CHECK_PTR(pUpdateMenu);
@@ -527,9 +538,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QMenuBar* pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&View"), pViewMenu);
-#ifdef HAVE_LIBHAMLIB
 	pMenu->insertItem(tr("&Remote"), pRemoteMenu->menu());
-#endif
 	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Update" used below */
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
@@ -804,12 +813,12 @@ void StationsDlg::showEvent(QShowEvent*)
 	/* S-meter settings */
 	if(Settings.Get("Hamlib", "ensmeter", int(0)))
 	{
-		pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, true);
+		if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, true);
 		EnableSMeter();
 	}
 	else
 	{
-		pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, false);
+		if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, false);
 		DisableSMeter();
 	}
 
@@ -830,22 +839,6 @@ void StationsDlg::OnTimerList()
 
 	/* Update list view */
 	SetStationsView();
-}
-
-QString MyListViewItem::key(int column, bool ascending) const
-{
-	/* Reimplement "key()" function to get correct sorting behaviour */
-	if ((column == 2) || (column == 4))
-	{
-		/* These columns are filled with numbers. Some items may have numbers
-		   after the comma, therefore multiply with 10000 (which moves the
-		   numbers in front of the comma). Afterwards append zeros at the
-		   beginning so that positive integer numbers are sorted correctly */
-		return QString(QString().setNum((long int)
-			(text(column).toFloat() * 10000.0))).rightJustify(20, '0');
-	}
-    else
-		return QListViewItem::key(column, ascending);
 }
 
 void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
@@ -1155,20 +1148,21 @@ void StationsDlg::OnSMeterMenu(int iID)
 
 void StationsDlg::EnableSMeter()
 {
-	DRMReceiver.SetEnableSMeter(TRUE);
 	ProgrSigStrength->setEnabled(TRUE);
 	TextLabelSMeter->setEnabled(TRUE);
 	ProgrSigStrength->show();
+	rig.subscribe();
 }
 
 void StationsDlg::DisableSMeter()
 {
-	DRMReceiver.SetEnableSMeter(FALSE);
 	ProgrSigStrength->hide();
+	rig.unsubscribe();
 }
 
 void StationsDlg::OnSigStr(double rCurSigStr)
 {
+	cerr << "sigstr " << rCurSigStr << endl;
 	ProgrSigStrength->setValue(rCurSigStr);
 }
 

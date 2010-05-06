@@ -73,9 +73,13 @@ private:
 
 	QSocketDevice				SocketDevice;
 	QSocketNotifier*			pSocketNotivRead;
+	QSocketNotifier*			pSocketNotivWrite;
+	QMutex						writeLock;
+	vector<_BYTE>				writeBuf;
 
 public slots:
 	void OnDataReceived();
+	void OnWritePossible();
 
 };
 

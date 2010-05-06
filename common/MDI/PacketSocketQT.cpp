@@ -57,15 +57,26 @@ typedef int SOCKET;
 CPacketSocketQT::CPacketSocketQT(QSocketDevice::Type type):
 	pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
 	SocketDevice(type),
-	pSocketNotivRead(NULL)
+	pSocketNotivRead(NULL), pSocketNotivWrite(NULL),
+	writeLock(),writeBuf()
 {
-	/* Generate the socket notifier and connect the signal */
+
+	// reading is always asynchronous and uses QSocketNotifier
 	pSocketNotivRead = new QSocketNotifier(SocketDevice.socket(),
 											QSocketNotifier::Read);
 
-	/* Connect the "activated" signal */
 	QObject::connect(pSocketNotivRead, SIGNAL(activated(int)),
 					  this, SLOT(OnDataReceived()));
+
+	// UDP can get away with blocking mode but TCP needs async I/O
+	if(type == QSocketDevice::Stream)
+	{
+		pSocketNotivWrite = new QSocketNotifier(SocketDevice.socket(),
+												QSocketNotifier::Write);
+		QObject::connect(pSocketNotivWrite, SIGNAL(activated(int)),
+						  this, SLOT(OnWritePossible()));
+		pSocketNotivWrite->setEnabled(false);
+	}
 
 	/* allow connection when others are listening */
 	SocketDevice.setAddressReusable(true);
@@ -101,18 +112,30 @@ CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, ui
 	int bytes_written;
 	/* Send packet to network */
 	//cout << "CPacketSocketQT::SendPacket(" << vecbydata.size() << " bytes, " << addr << ", " << port << ") " << HostAddrOut.toString() << ":" << iHostPortOut << endl;
-	if(addr==0)
-		bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
-	else
-		bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), QHostAddress(addr), port);
-	/* should we throw an exception or silently accept? */
-	/* the most likely cause is that we are sending unicast and no-one
-	   is listening, or the interface is down, there is no route */
-	if(bytes_written == -1)
+
+	if(SocketDevice.type() == QSocketDevice::Datagram)
 	{
-		QSocketDevice::Error x = SocketDevice.error();
-		if(x != QSocketDevice::NetworkFailure)
-			qDebug("error sending packet");
+		if(addr==0)
+			bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
+		else
+			bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), QHostAddress(addr), port);
+		/* should we throw an exception or silently accept? */
+		/* the most likely cause is that we are sending unicast and no-one
+		   is listening, or the interface is down, there is no route */
+		if(bytes_written == -1)
+		{
+			QSocketDevice::Error x = SocketDevice.error();
+			if(x != QSocketDevice::NetworkFailure)
+				qDebug("error sending packet");
+		}
+	}
+	else
+	{
+		writeLock.lock();
+		for(size_t i=0; i<vecbydata.size(); i++)
+			writeBuf.push_back(vecbydata[i]);
+		writeLock.unlock();
+		pSocketNotivWrite->setEnabled(true);
 	}
 }
 
@@ -232,11 +255,7 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		return FALSE;
 	}
 
-	if(SocketDevice.type() == QSocketDevice::Stream)
-	{
-		return SocketDevice.connect(AddrGroup, iPort);
-	}
-	else
+	if(SocketDevice.type() == QSocketDevice::Datagram)
 	{
 		/* Multicast ? */
 
@@ -292,6 +311,7 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 void
 CPacketSocketQT::OnDataReceived()
 {
+	cerr << "DataReceived" << endl;
 	vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
 
 	/* Read block from network interface */
@@ -311,4 +331,15 @@ CPacketSocketQT::OnDataReceived()
 			pPacketSink->SendPacket(vecbydata, addr, SocketDevice.peerPort());
 		}
 	}
+}
+
+void
+CPacketSocketQT::OnWritePossible()
+{
+	//cerr << "OnWritePossible()" << endl;
+	writeLock.lock();
+	SocketDevice.writeBlock((char*)&writeBuf[0], writeBuf.size());
+	writeBuf.clear();
+	writeLock.unlock();
+	pSocketNotivWrite->setEnabled(false);
 }

@@ -198,6 +198,7 @@ public:
 };
 
 class RemoteMenu;
+class CRig;
 
 class StationsDlg : public CStationsDlgBase
 {
@@ -205,7 +206,7 @@ class StationsDlg : public CStationsDlgBase
 
 public:
 
-	StationsDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	StationsDlg(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~StationsDlg();
 
@@ -254,6 +255,7 @@ protected:
 	QMutex						ListItemsMutex;
 
 	RemoteMenu*					pRemoteMenu;
+	CRig&						rig;
 
 public slots:
 	void OnSMeterMenu(int iID);

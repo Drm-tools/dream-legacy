@@ -68,7 +68,7 @@ class FDRMDialog : public FDRMDialogBase
 	Q_OBJECT
 
 public:
-	FDRMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+	FDRMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE,	WFlags f = 0);
 
 	virtual ~FDRMDialog();

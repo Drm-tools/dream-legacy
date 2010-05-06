@@ -139,7 +139,10 @@ _BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 	delete pSocket;
 	pSocket = new CPacketSocketQT(type);
 	pPacketSink = pSocket;
-    return pSocket->SetDestination(d);
+    _BOOLEAN bOk = pSocket->SetDestination(d);
+    if(bOk && type == QSocketDevice::Stream)
+		pSocket->SetPacketSink(this);
+	return bOk;
 #else
 	return FALSE;
 #endif

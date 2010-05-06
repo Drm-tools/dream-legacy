@@ -32,7 +32,7 @@
 #include <qinputdialog.h>
 
 /* Implementation *************************************************************/
-FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
+FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	QWidget* parent, const char* name, bool modal, WFlags f)
 	: FMDialogBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
@@ -71,12 +71,8 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertSeparator();
 
 	/* Remote menu  --------------------------------------------------------- */
-#ifdef HAVE_LIBHAMLIB
-	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
-	RemoteMenu* pRemoteMenu = new RemoteMenu(*DRMReceiver.GetHamlib());
-	pRemoteMenu->MakeMenu(this);
+	RemoteMenu* pRemoteMenu = new RemoteMenu(this, rig);
 	pSettingsMenu->insertItem(tr("Set &Rig..."), pRemoteMenu->menu(), CTRL+Key_R);
-#endif
 
 	pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
 		SLOT(OnMenuSetDisplayColor()));
@@ -442,6 +438,7 @@ void FMDialog::SetService(int iNewServiceID)
 	Parameters.SetCurSelAudioService(iNewServiceID);
 	Parameters.SetCurSelDataService(iNewServiceID);
 	iCurSelServiceGUI = iNewServiceID;
+	Parameters.Unlock();
 }
 
 void FMDialog::OnMenuSetDisplayColor()
@@ -461,9 +458,6 @@ void FMDialog::closeEvent(QCloseEvent* ce)
 	/* stop real-time timers */
 	Timer.stop();
 
-	/* tell every other window to close too */
-	emit Closed();
-
 	/* Save window geometry data */
 	CWinGeom s;
 	QRect WinGeom = geometry();
@@ -474,15 +468,13 @@ void FMDialog::closeEvent(QCloseEvent* ce)
 	Settings.Put("FM Dialog", s);
 	Settings.Put("FM Dialog", "visible", 1);
 
-	/* request that the working thread stops */
-	DRMReceiver.Stop();
-	(void)DRMReceiver.wait(5000);
-	if(!DRMReceiver.finished())
-	{
-		QMessageBox::critical(this, "Dream", "Exit\n",
-				"Termination of working thread failed");
-	}
-	ce->accept();
+	/* tell every other window to close too */
+	emit Closed();
+	// stay open until working thread is done
+	if(DRMReceiver.GetParameters()->eRunState==CParameter::STOPPED)
+		ce->accept();
+	else
+		ce->ignore();
 }
 
 void FMDialog::customEvent(QCustomEvent* Event)

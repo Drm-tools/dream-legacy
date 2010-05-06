@@ -57,6 +57,34 @@
 * Using GUI with QT                                                            *
 \******************************************************************************/
 
+class CRx: public QThread
+{
+public:
+	CRx(CDRMReceiver& nRx):rx(nRx){}
+	void run();
+private:
+	CDRMReceiver& rx;
+};
+
+void
+CRx::run()
+{
+#ifdef _WIN32
+    /* it doesn't matter what the GUI does, we want to be normal! */
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+#endif
+    try
+    {
+        /* Call receiver main routine */
+        rx.Start();
+    }
+    catch (CGenErr GenErr)
+    {
+        ErrorMessage(GenErr.strError);
+    }
+    qDebug("Working thread complete");
+}
+
 int
 main(int argc, char **argv)
 {
@@ -119,16 +147,29 @@ main(int argc, char **argv)
 
 			DRMReceiver.Init();
 
-			FDRMDialog MainDlg(DRMReceiver, Settings, 0, 0, FALSE, Qt::WStyle_MinMax);
+			CRig rig(DRMReceiver.GetParameters());
+			rig.LoadSettings(Settings);
+			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
+			{
+				rig.subscribe();
+			}
+
+			FDRMDialog MainDlg(DRMReceiver, Settings, rig, NULL, NULL, FALSE, Qt::WStyle_MinMax);
 
 			/* Start working thread */
-			DRMReceiver.start();
+			CRx rx(DRMReceiver);
+			rx.start();
 
 			/* Set main window */
 			app.setMainWidget(&MainDlg);
 
 			app.exec();
 
+			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
+			{
+				rig.unsubscribe();
+			}
+			rig.SaveSettings(Settings);
 			DRMReceiver.SaveSettings(Settings);
 		}
 		else if(mode == "transmit")

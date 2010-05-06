@@ -19,11 +19,11 @@
 				</Compiler>
 			</Target>
 			<Target title="Win32 Debug">
-				<Option output="Dream" prefix_auto="1" extension_auto="1" />
+				<Option output="Dreamd" prefix_auto="1" extension_auto="1" />
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\ws-drm0-sw.pcap" />
+				<Option parameters="D:\ws-drm0-sw.pcap " />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />
@@ -344,7 +344,6 @@
 		<Unit filename="moc\moc_AnalogDemDlgbase.cpp" />
 		<Unit filename="moc\moc_DRMPlot.cpp" />
 		<Unit filename="moc\moc_DialogUtil.cpp" />
-		<Unit filename="moc\moc_DrmReceiver.cpp" />
 		<Unit filename="moc\moc_EPGDlg.cpp" />
 		<Unit filename="moc\moc_EPGDlgbase.cpp" />
 		<Unit filename="moc\moc_GPSReceiver.cpp" />

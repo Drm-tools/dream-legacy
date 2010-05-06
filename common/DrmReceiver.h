@@ -58,15 +58,6 @@
 #include "soundinterface.h"
 #include "PlotManager.h"
 
-#ifdef USE_QT_GUI
-# include <qthread.h>
-# if QT_VERSION >= 0x030000
-#  include <qmutex.h>
-# endif
-# include <qvariant.h> // needed fos Q_OBJECT
-# include <qobject.h> // needed fos Q_OBJECT
-#endif
-
 /* Definitions ****************************************************************/
 /* Number of FAC frames until the acquisition is activated in case a signal
    was successfully decoded */
@@ -136,29 +127,12 @@ protected:
 };
 
 class CDRMReceiver
-#ifdef USE_QT_GUI
-            : public QObject, public QThread
-#endif
 {
-#ifdef USE_QT_GUI
-	Q_OBJECT
-#endif
 public:
 
     CDRMReceiver();
     virtual ~CDRMReceiver();
 
-    /* For GUI */
-#ifdef USE_QT_GUI
-    virtual void			run();
-#else /* keep the windows builds happy when compiling without the GUI */
-    int						wait(int) {
-        return 0;
-    }
-    bool					finished() {
-        return true;
-    }
-#endif
     void					LoadSettings(CSettings&); // can write to settings to set defaults
     void					SaveSettings(CSettings&);
     void					Init();
@@ -173,6 +147,11 @@ public:
     ERecMode				GetReceiverMode() {
         return eReceiverMode;
     }
+    bool GetDownstreamRSCIOutEnabled()
+    {
+		return downstreamRSCI.GetOutEnabled();
+	}
+
     void					SetReceiverMode(ERecMode eNewMode);
     void					SetInitResOff(_REAL rNRO)
     {
@@ -305,11 +284,6 @@ public:
     CChannelEstimation*		GetChannelEstimation() {
         return &ChannelEstimation;
     }
-#ifdef HAVE_LIBHAMLIB
-    CHamlib*				GetHamlib() {
-        return &Hamlib;
-    }
-#endif
 
     CParameter*				GetParameters() {
         return pReceiverParam;
@@ -453,10 +427,6 @@ protected:
 
     _REAL					rInitResampleOffset;
 
-#ifdef HAVE_LIBHAMLIB
-    CHamlib					Hamlib;
-#endif
-
     CVectorEx<_BINARY>		vecbiMostRecentSDC;
     int						iFreqkHz;
 
@@ -465,26 +435,6 @@ protected:
 
     /* Counter for unlocked frames, to keep generating RSCI even when unlocked */
     int						iUnlockedCount;
-
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-    class CRigPoll : public QThread
-    {
-    public:
-        CRigPoll():pDRMRec(NULL),bQuit(FALSE) { }
-        virtual void	run();
-        virtual void	stop() {
-            bQuit=TRUE;
-        }
-        void SetReceiver(CDRMReceiver* prx) {
-            pDRMRec = prx;
-        }
-    protected:
-        CDRMReceiver* pDRMRec;
-        _BOOLEAN	bQuit;
-    } RigPoll;
-    friend class CRigPoll;
-#endif
-
     int						iBwAM;
     int						iBwLSB;
     int						iBwUSB;
@@ -494,11 +444,6 @@ protected:
     time_t					time_keeper;
 
     CPlotManager PlotManager;
-#ifdef USE_QT_GUI
-public slots:
-signals:
-    void sigstr(double);
-#endif
 };
 
 

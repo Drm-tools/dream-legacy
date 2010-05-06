@@ -30,7 +30,7 @@
 #include <iostream>
 
 /* Implementation *************************************************************/
-FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
+FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	QWidget* parent, const char* name, bool modal, WFlags f)
 	: FDRMDialogBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
@@ -136,7 +136,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
 	/* Stations window */
-	pStationsDlg = new StationsDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
 	bStationsDlgWasVis = Settings.Get("Stations Dialog", "visible", FALSE);
 
 	SetDialogCaption(pStationsDlg, tr("Stations"));
@@ -172,7 +172,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
 
 	/* FM window */
-	pFMDlg = new FMDialog(DRMReceiver, Settings, NULL, "FM Receiver", FALSE, Qt::WStyle_MinMax);
+	pFMDlg = new FMDialog(DRMReceiver, Settings, rig, NULL, "FM Receiver", FALSE, Qt::WStyle_MinMax);
 
 	/* general settings window */
 	CParameter& Parameters = *DRMReceiver.GetParameters();
@@ -1103,20 +1103,6 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 		pLiveScheduleDlg->hide();
 		pEPGDlg->hide();
 		pStationsDlg->hide();
-		pAnalogDemDlg->hide();
-
-		/* request that the working thread stops
-		 * TODO move this to main and pass a close routine to here and
-		* AnalogDemDlg to cover gps and anything else
-		* or possible have a new ALWAYS hidden main dialogue box
-		* that manages startup and close-down */
-		DRMReceiver.Stop();
-		(void)DRMReceiver.wait(5000);
-		if(!DRMReceiver.finished())
-		{
-			QMessageBox::critical(this, "Dream", "Exit\n",
-				"Termination of working thread failed");
-		}
 	}
 	else
 	{
@@ -1158,8 +1144,27 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	s.iWSize = WinGeom.width();
 	Settings.Put("DRM Dialog", s);
 
-	/* now let QT close us */
-	ce->accept();
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	switch(Parameters.eRunState)
+	{
+		case CParameter::RUNNING:
+			// request that the working thread stops
+			DRMReceiver.Stop();
+			QTimer::singleShot(1000, this, SLOT(close()));
+			ce->ignore();
+			break;
+		case CParameter::STOP_REQUESTED:
+			QMessageBox::critical(this, "Dream", "Exit\n",
+					"Termination of working thread failed");
+			ce->ignore();
+			break;
+		case CParameter::STOPPED:
+			/* now let QT close us */
+			pAnalogDemDlg->close();
+			pFMDlg->close();
+			ce->accept();
+			break;
+	}
 }
 
 void FDRMDialog::customEvent(QCustomEvent* Event)

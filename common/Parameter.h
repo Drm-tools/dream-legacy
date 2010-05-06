@@ -1188,7 +1188,7 @@ public:
     /* General -------------------------------------------------------------- */
     _REAL GetNominalBandwidth();
     _REAL GetSysToNomBWCorrFact();
-    _BOOLEAN bRunThread;
+    enum { STOPPED, RUNNING, STOP_REQUESTED } eRunState;
     _BOOLEAN bUsingMultimedia;
 
     CCellMappingTable CellMappingTable;

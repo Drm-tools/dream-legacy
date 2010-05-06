@@ -33,7 +33,7 @@
 void CDRMTransmitter::Start()
 {
     /* Set run flag */
-    TransmParam.bRunThread = TRUE;
+    TransmParam.eRunState = CParameter::RUNNING;
 
     /* Initialization of the modules */
     Init();
@@ -44,7 +44,7 @@ void CDRMTransmitter::Start()
 
 void CDRMTransmitter::Stop()
 {
-    TransmParam.bRunThread = FALSE;
+    TransmParam.eRunState = CParameter::STOP_REQUESTED;
 
     if (pSoundInInterface) pSoundInInterface->Close();
     if (pSoundOutInterface) pSoundOutInterface->Close();
@@ -57,7 +57,7 @@ void CDRMTransmitter::Run()
     	convention is always "input-buffer, output-buffer". Additional, the
     	DRM-parameters are fed to the function
     */
-    while (TransmParam.bRunThread)
+    while (TransmParam.eRunState == CParameter::RUNNING)
     {
         /* MSC ****************************************************************/
         /* Read the source signal */
@@ -95,6 +95,7 @@ void CDRMTransmitter::Run()
         /* Transmit the signal ************************************************/
         TransmitData.WriteData(TransmParam, OFDMModBuf);
     }
+    TransmParam.eRunState = CParameter::STOPPED;
 }
 
 void CDRMTransmitter::Init()

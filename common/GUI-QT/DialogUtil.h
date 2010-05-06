@@ -166,17 +166,42 @@ inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 
 class QAction;
 
+class CRig : public QObject, public QThread
+{
+	Q_OBJECT
+public:
+	CRig(CParameter* np)
+	:Hamlib(),subscribers(0),pParameters(np)
+	{ }
+	void run();
+	void subscribe();
+	void unsubscribe();
+	void GetRigList(map<rig_model_t,CHamlib::SDrRigCaps>& r) { Hamlib.GetRigList(r); }
+	rig_model_t GetHamlibModelID() { return Hamlib.GetHamlibModelID(); }
+	void SetHamlibModelID(rig_model_t r) { Hamlib.SetHamlibModelID(r); }
+	void SetEnableModRigSettings(_BOOLEAN b) { Hamlib.SetEnableModRigSettings(b); }
+	void GetPortList(map<string,string>& ports) { Hamlib.GetPortList(ports); }
+	string GetComPort() { return Hamlib.GetComPort(); }
+	void SetComPort(const string& s) { Hamlib.SetComPort(s); }
+	_BOOLEAN GetEnableModRigSettings() { return Hamlib.GetEnableModRigSettings(); }
+	CHamlib::ESMeterState GetSMeter(_REAL& r) { return Hamlib.GetSMeter(r); }
+	void LoadSettings(CSettings& s) { Hamlib.LoadSettings(s);}
+	void SaveSettings(CSettings& s) { Hamlib.SaveSettings(s); }
+
+signals:
+    void sigstr(double);
+protected:
+	CHamlib Hamlib;
+	int subscribers;
+	CParameter* pParameters;
+};
+
 class RemoteMenu : public QObject
 {
 	Q_OBJECT
 
 public:
-#ifdef HAVE_LIBHAMLIB
-	RemoteMenu(CHamlib& h):rigmenus(),specials(),Hamlib(h){}
-#else
-	RemoteMenu(){}
-#endif
-	void MakeMenu(QWidget* parent);
+	RemoteMenu(QWidget*, CRig&);
 	QPopupMenu* menu(){ return pRemoteMenu; }
 
 public slots:
@@ -192,7 +217,7 @@ protected:
 	struct Rigmenu {std::string mfr; QPopupMenu* pMenu;};
 	std::map<int,Rigmenu> rigmenus;
 	std::vector<rig_model_t> specials;
-	CHamlib&	Hamlib;
+	CRig&	rig;
 #endif
 	QPopupMenu* pRemoteMenu;
 	QPopupMenu* pRemoteMenuOther;

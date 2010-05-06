@@ -299,18 +299,22 @@ void CSoundCardSelMenu::OnSoundOutDevice(int id)
 		pSoundOutMenu->setItemChecked(i, i == id);
 }
 
-void RemoteMenu::MakeMenu(QWidget* parent)
-{
+RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 #ifdef HAVE_LIBHAMLIB
+	:rigmenus(),specials(),rig(nrig)
+#endif
+{
 	pRemoteMenu = new QPopupMenu(parent);
 	CHECK_PTR(pRemoteMenu);
 
 	pRemoteMenuOther = new QPopupMenu(parent);
 	CHECK_PTR(pRemoteMenuOther);
 
+#ifdef HAVE_LIBHAMLIB
+
 	map<rig_model_t,CHamlib::SDrRigCaps> rigs;
 
-	Hamlib.GetRigList(rigs);
+	rig.GetRigList(rigs);
 
 	rigmenus.clear();
 	specials.clear();
@@ -319,7 +323,7 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 	pRemoteMenu->setItemChecked(RIG_MODEL_NONE, TRUE);
 	specials.push_back(RIG_MODEL_NONE);
 
-	rig_model_t currentRig = Hamlib.GetHamlibModelID();
+	rig_model_t currentRig = rig.GetHamlibModelID();
 
 	/* Add menu entries */
 	for (map<rig_model_t,CHamlib::SDrRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
@@ -386,8 +390,8 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 	/* Toggle action for com port selection menu entries */
 	QActionGroup* agCOMPortSel = new QActionGroup(parent, "Com port", TRUE);
 	map<string,string> ports;
-	Hamlib.GetPortList(ports);
-	string strPort = Hamlib.GetComPort();
+	rig.GetPortList(ports);
+	string strPort = rig.GetComPort();
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
 		QString text = p->second.c_str();
@@ -408,7 +412,7 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 		"Modification"), this, SLOT(OnModRigMenu(int)), 0);
 
 	/* Set check */
-	pRemoteMenu->setItemChecked(iModRigMenuID, Hamlib.GetEnableModRigSettings());
+	pRemoteMenu->setItemChecked(iModRigMenuID, rig.GetEnableModRigSettings());
 
 #endif
 }
@@ -419,12 +423,12 @@ void RemoteMenu::OnModRigMenu(int iID)
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
-		Hamlib.SetEnableModRigSettings(FALSE);
+		rig.SetEnableModRigSettings(FALSE);
 	}
 	else
 	{
 		pRemoteMenu->setItemChecked(iID, TRUE);
-		Hamlib.SetEnableModRigSettings(TRUE);
+		rig.SetEnableModRigSettings(TRUE);
 	}
 #endif
 }
@@ -432,7 +436,6 @@ void RemoteMenu::OnModRigMenu(int iID)
 void RemoteMenu::OnRemoteMenu(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
-
 	// if an "others" rig was selected add it to the specials list
 	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
 	{
@@ -446,7 +449,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
 				if(pRemoteMenu->indexOf(mID)==-1)
 				{
 					map<rig_model_t,CHamlib::SDrRigCaps> rigs;
-					Hamlib.GetRigList(rigs);
+					rig.GetRigList(rigs);
 					QString strMenuText =
 							"[" + QString().setNum(mID) + "] " +
 							i->second.mfr.c_str() + " " +
@@ -471,9 +474,9 @@ void RemoteMenu::OnRemoteMenu(int iID)
 	//	agComPortSel->setChecked(false);
 
 	/* Set ID */
-	Hamlib.SetHamlibModelID(iID);
+	rig.SetHamlibModelID(iID);
 	double r;
-	if(Hamlib.GetSMeter(r) == CHamlib::SS_VALID)
+	if(rig.GetSMeter(r) == CHamlib::SS_VALID)
 	{
 		emit SMeterAvailable();
 	}
@@ -483,6 +486,54 @@ void RemoteMenu::OnRemoteMenu(int iID)
 void RemoteMenu::OnComPortMenu(QAction* action)
 {
 #ifdef HAVE_LIBHAMLIB
-	Hamlib.SetComPort(action->text().latin1());
+	rig.SetComPort(action->text().latin1());
 #endif
 }
+
+void CRig::subscribe()
+{
+	if(Hamlib.GetHamlibModelID()==RIG_MODEL_NONE)
+	{
+		cerr << "can't subscribe - no rig set! " << subscribers << endl;
+		return;
+	}
+	subscribers++;
+	cerr << "subscribe " << subscribers << endl;
+	if((subscribers>0) && !running())
+		start();
+}
+
+void CRig::unsubscribe()
+{
+	if(Hamlib.GetHamlibModelID()==RIG_MODEL_NONE)
+	{
+		cerr << "can't unsubscribe - no rig set! " << subscribers << endl;
+		return;
+	}
+	if(subscribers>0)
+	{
+		subscribers--;
+		cerr << "unsubscribe " << subscribers << endl;
+	}
+}
+
+void CRig::run()
+{
+    while (subscribers>0)
+    {
+        _REAL r;
+        if (Hamlib.GetSMeter(r) == CHamlib::SS_VALID)
+        {
+        	pParameters->Lock();
+            r += pParameters->rSigStrengthCorrection;
+            pParameters->SigStrstat.addSample(r);
+        	pParameters->Unlock();
+        	cerr << "CRig " << r << endl;
+            emit sigstr(r);
+        }
+        else
+            emit sigstr(0.0);
+        msleep(400);
+    }
+}
+

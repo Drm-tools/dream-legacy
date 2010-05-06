@@ -106,7 +106,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
         rMaxPSDwrtSig(0.0),
         rMaxPSDFreq(0.0),
         rSigStrengthCorrection(0.0),
-        bRunThread(FALSE),
+        eRunState(STOPPED),
         bUsingMultimedia(FALSE),
         CellMappingTable(),
         GPSData(),
@@ -205,7 +205,7 @@ CParameter::CParameter(const CParameter& p):
         rMaxPSDwrtSig(p.rMaxPSDwrtSig),
         rMaxPSDFreq(p.rMaxPSDFreq),
         rSigStrengthCorrection(p.rSigStrengthCorrection),
-        bRunThread(p.bRunThread),
+        eRunState(p.eRunState),
         bUsingMultimedia(p.bUsingMultimedia),
         CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
         GPSData(p.GPSData),
@@ -300,7 +300,7 @@ CParameter& CParameter::operator=(const CParameter& p)
     rMaxPSDwrtSig = p.rMaxPSDwrtSig;
     rMaxPSDFreq = p.rMaxPSDFreq;
     rSigStrengthCorrection = p.rSigStrengthCorrection;
-    bRunThread = p.bRunThread;
+    eRunState = p.eRunState;
     bUsingMultimedia = p.bUsingMultimedia;
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
     GPSData = p.GPSData;

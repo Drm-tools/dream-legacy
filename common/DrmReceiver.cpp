@@ -63,28 +63,16 @@ CDRMReceiver::CDRMReceiver():
         iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
         rInitResampleOffset((_REAL) 0.0),
         iFreqkHz(0),
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-        RigPoll(),
-#endif
         iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
         bReadFromFile(FALSE), time_keeper(0)
 {
     pReceiverParam = new CParameter(this);
     downstreamRSCI.SetReceiver(this);
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-    RigPoll.SetReceiver(this);
-#endif
     PlotManager.SetReceiver(this);
 }
 
 CDRMReceiver::~CDRMReceiver()
 {
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-    if (RigPoll.running())
-        RigPoll.stop();
-    if (RigPoll.wait(1000) == FALSE)
-        cout << "error terminating rig polling thread" << endl;
-#endif
     delete pSoundInInterface;
     delete pSoundOutInterface;
 }
@@ -206,15 +194,6 @@ CDRMReceiver::Run()
     }
     else
     {
-#if defined(HAVE_LIBHAMLIB) && !defined(USE_QT_GUI)
-        /* TODO - get the polling interval sensible */
-        _BOOLEAN bValid;
-        _REAL r;
-        bValid = Hamlib.GetSMeter(r) == CHamlib::SS_VALID;
-        // Apply any correction
-        r += ReceiverParam.rSigStrengthCorrection;
-        ReceiverParam.SigStrstat.addSample(r);
-#endif
         ReceiveData.ReadData(ReceiverParam, RecDataBuf);
 
         // Split samples, one output to the demodulation, another for IQ recording
@@ -270,7 +249,7 @@ CDRMReceiver::Run()
     }
 
     /* decoding */
-    while (bEnoughData && ReceiverParam.bRunThread)
+    while (bEnoughData && (ReceiverParam.eRunState==CParameter::RUNNING))
     {
         /* Init flag */
         bEnoughData = FALSE;
@@ -642,14 +621,14 @@ CDRMReceiver::Init()
     /* Set flags so that we have only one loop in the Run() routine which is
        enough for initializing all modues */
     bDoInitRun = TRUE;
-    pReceiverParam->bRunThread = TRUE;
+    pReceiverParam->eRunState = CParameter::RUNNING;
 
     /* Run once */
     Run();
 
     /* Reset flags */
     bDoInitRun = FALSE;
-    pReceiverParam->bRunThread = FALSE;
+    pReceiverParam->eRunState = CParameter::STOPPED;
 }
 
 void
@@ -792,39 +771,18 @@ CDRMReceiver::InitReceiverMode()
     }
 }
 
-#ifdef USE_QT_GUI
-void
-CDRMReceiver::run()
-{
-#ifdef _WIN32
-    /* it doesn't matter what the GUI does, we want to be normal! */
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-#endif
-    try
-    {
-        /* Call receiver main routine */
-        Start();
-    }
-    catch (CGenErr GenErr)
-    {
-        ErrorMessage(GenErr.strError);
-    }
-    qDebug("Working thread complete");
-}
-#endif
-
 void
 CDRMReceiver::Start()
 {
     /* Set run flag so that the thread can work */
-    pReceiverParam->bRunThread = TRUE;
+    pReceiverParam->eRunState = CParameter::RUNNING;
 
     do
     {
         Run();
-
     }
-    while (pReceiverParam->bRunThread);
+    while (pReceiverParam->eRunState == CParameter::RUNNING);
+    pReceiverParam->eRunState = CParameter::STOPPED;
 
     pSoundInInterface->Close();
     pSoundOutInterface->Close();
@@ -833,7 +791,7 @@ CDRMReceiver::Start()
 void
 CDRMReceiver::Stop()
 {
-    pReceiverParam->bRunThread = FALSE;
+    pReceiverParam->eRunState = CParameter::STOP_REQUESTED;
 }
 
 void
@@ -1324,11 +1282,7 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 
         WriteIQFile.NewFrequency(*pReceiverParam);
 
-#ifdef HAVE_LIBHAMLIB
-        return Hamlib.SetFrequency(iNewFreqkHz);
-#else
         return TRUE;
-#endif
     }
 }
 
@@ -1345,61 +1299,6 @@ void
 CDRMReceiver::SetRSIRecording(_BOOLEAN bOn, const char cProfile)
 {
     downstreamRSCI.SetRSIRecording(*pReceiverParam, bOn, cProfile);
-}
-
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-void
-CDRMReceiver::CRigPoll::run()
-{
-    CHamlib & rig = *(pDRMRec->GetHamlib());
-    bQuit = FALSE;
-    while (bQuit == FALSE)
-    {
-        _REAL r;
-        if (rig.GetSMeter(r) == CHamlib::SS_VALID)
-        {
-            CParameter& Parameters = *pDRMRec->GetParameters();
-            Parameters.Lock();
-            // Apply any correction
-            r += Parameters.rSigStrengthCorrection;
-            Parameters.SigStrstat.addSample(r);
-            Parameters.Unlock();
-            emit pDRMRec->sigstr(r);
-        }
-        else
-            emit pDRMRec->sigstr(0.0);
-        msleep(400);
-    }
-}
-#endif
-
-void
-CDRMReceiver::SetEnableSMeter(_BOOLEAN bNew)
-{
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-    if (bNew && upstreamRSCI.GetInEnabled() == FALSE)
-    {
-        if (RigPoll.running() == FALSE)
-            RigPoll.start();
-    }
-    else
-    {
-        if (RigPoll.running())
-        {
-            RigPoll.stop();
-        }
-    }
-#endif
-}
-
-_BOOLEAN
-CDRMReceiver::GetEnableSMeter()
-{
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-    return RigPoll.running();
-#else
-	return FALSE;
-#endif
 }
 
 /* TEST store information about alternative frequency transmitted in SDC */
@@ -1698,16 +1597,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
 
-    /* Hamlib --------------------------------------------------------------- */
-#ifdef HAVE_LIBHAMLIB
-    Hamlib.LoadSettings(s);
-#endif
-
-    //andrewm - moved to _after_ hamlib initialisation
-    /* Wanted RF Frequency file */
-    SetFrequency(s.Get("Receiver", "frequency", 0));
-
-
     /* Front-end - combine into Hamlib? */
     CFrontEndParameters& FrontEndParameters = pReceiverParam->FrontEndParameters;
 
@@ -1725,7 +1614,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
     FrontEndParameters.rCalFactorAM = s.Get("FrontEnd", "calfactoram", 0.0);
 
     FrontEndParameters.rIFCentreFreq = s.Get("FrontEnd", "ifcentrefrequency", SOUNDCRD_SAMPLE_RATE / 4);
-
 }
 
 void
@@ -1792,11 +1680,6 @@ CDRMReceiver::SaveSettings(CSettings& s)
     s.Put("AM Demodulation", "filterbwlsb", iBwLSB);
     s.Put("AM Demodulation", "filterbwcw", iBwCW);
     s.Put("AM Demodulation", "filterbwfm", iBwFM);
-
-#ifdef HAVE_LIBHAMLIB
-    /* Hamlib --------------------------------------------------------------- */
-    Hamlib.SaveSettings(s);
-#endif
 
     /* Front-end - combine into Hamlib? */
     s.Put("FrontEnd", "smetercorrectiontype", int(pReceiverParam->FrontEndParameters.eSMeterCorrectionType));

@@ -212,9 +212,6 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 
 	Settings.Put("AMSS Dialog", "visible", AMSSDlg.isVisible());
 
-	/* tell every other window to close too */
-	emit Closed();
-
 	/* Save window geometry data */
 	CWinGeom s;
 	QRect WinGeom = geometry();
@@ -224,15 +221,13 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 	s.iWSize = WinGeom.width();
 	Settings.Put("AM Dialog", s);
 
-	/* request that the working thread stops */
-	DRMReceiver.Stop();
-	(void)DRMReceiver.wait(5000);
-	if(!DRMReceiver.finished())
-	{
-		QMessageBox::critical(this, "Dream", "Exit\n",
-				"Termination of working thread failed");
-	}
-	ce->accept();
+	/* tell every other window to close too */
+	emit Closed();
+	// stay open until working thread is done
+	if(DRMReceiver.GetParameters()->eRunState==CParameter::STOPPED)
+		ce->accept();
+	else
+		ce->ignore();
 }
 
 void AnalogDemDlg::UpdateControls()
