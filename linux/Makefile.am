@@ -311,7 +311,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
-	moc/moc_PacketSourceFile.cpp moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp moc/moc_DrmReceiver.cpp
+	moc/moc_PacketSourceFile.cpp moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp
 
 # and should be cleaned by make clean
 
@@ -338,9 +338,6 @@ moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
 
 moc/moc_GPSReceiver.cpp: ../common/GPSReceiver.h
 	$(MOC) ../common/GPSReceiver.h -o moc/moc_GPSReceiver.cpp
-
-moc/moc_DrmReceiver.cpp: ../common/DrmReceiver.h
-	$(MOC) ../common/DrmReceiver.h -o moc/moc_DrmReceiver.cpp
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp

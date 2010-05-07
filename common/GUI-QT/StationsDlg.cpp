@@ -515,7 +515,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 		this, SLOT(OnSMeterMenu(int)), 0, SMETER_MENU_ID);
 
 	connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
+#ifdef HAVE_LIBHAMLIB
 	connect(&rig, SIGNAL(sigstr(double)), this, SLOT(OnSigStr(double)));
+#endif
 
 	/* Init progress bar for input s-meter */
 
@@ -1151,13 +1153,17 @@ void StationsDlg::EnableSMeter()
 	ProgrSigStrength->setEnabled(TRUE);
 	TextLabelSMeter->setEnabled(TRUE);
 	ProgrSigStrength->show();
+#ifdef HAVE_LIBHAMLIB
 	rig.subscribe();
+#endif
 }
 
 void StationsDlg::DisableSMeter()
 {
 	ProgrSigStrength->hide();
+#ifdef HAVE_LIBHAMLIB
 	rig.unsubscribe();
+#endif
 }
 
 void StationsDlg::OnSigStr(double rCurSigStr)

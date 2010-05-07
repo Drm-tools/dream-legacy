@@ -148,11 +148,13 @@ main(int argc, char **argv)
 			DRMReceiver.Init();
 
 			CRig rig(DRMReceiver.GetParameters());
+#ifdef HAVE_LIBHAMLIB
 			rig.LoadSettings(Settings);
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
 			{
 				rig.subscribe();
 			}
+#endif
 
 			FDRMDialog MainDlg(DRMReceiver, Settings, rig, NULL, NULL, FALSE, Qt::WStyle_MinMax);
 
@@ -165,11 +167,13 @@ main(int argc, char **argv)
 
 			app.exec();
 
+#ifdef HAVE_LIBHAMLIB
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
 			{
 				rig.unsubscribe();
 			}
 			rig.SaveSettings(Settings);
+#endif
 			DRMReceiver.SaveSettings(Settings);
 		}
 		else if(mode == "transmit")

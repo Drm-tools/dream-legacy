@@ -492,11 +492,13 @@ void RemoteMenu::OnComPortMenu(QAction* action)
 
 void CRig::subscribe()
 {
+#ifdef HAVE_LIBHAMLIB
 	if(Hamlib.GetHamlibModelID()==RIG_MODEL_NONE)
 	{
 		cerr << "can't subscribe - no rig set! " << subscribers << endl;
 		return;
 	}
+#endif
 	subscribers++;
 	cerr << "subscribe " << subscribers << endl;
 	if((subscribers>0) && !running())
@@ -505,11 +507,13 @@ void CRig::subscribe()
 
 void CRig::unsubscribe()
 {
+#ifdef HAVE_LIBHAMLIB
 	if(Hamlib.GetHamlibModelID()==RIG_MODEL_NONE)
 	{
 		cerr << "can't unsubscribe - no rig set! " << subscribers << endl;
 		return;
 	}
+#endif
 	if(subscribers>0)
 	{
 		subscribers--;
@@ -522,6 +526,7 @@ void CRig::run()
     while (subscribers>0)
     {
         _REAL r;
+#ifdef HAVE_LIBHAMLIB
         if (Hamlib.GetSMeter(r) == CHamlib::SS_VALID)
         {
         	pParameters->Lock();
@@ -533,6 +538,7 @@ void CRig::run()
         }
         else
             emit sigstr(0.0);
+#endif
         msleep(400);
     }
 }

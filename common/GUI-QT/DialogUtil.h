@@ -170,12 +170,16 @@ class CRig : public QObject, public QThread
 {
 	Q_OBJECT
 public:
-	CRig(CParameter* np)
-	:Hamlib(),subscribers(0),pParameters(np)
+	CRig(CParameter* np):
+#ifdef HAVE_LIBHAMLIB
+	Hamlib(),
+#endif
+	subscribers(0),pParameters(np)
 	{ }
 	void run();
 	void subscribe();
 	void unsubscribe();
+#ifdef HAVE_LIBHAMLIB
 	void GetRigList(map<rig_model_t,CHamlib::SDrRigCaps>& r) { Hamlib.GetRigList(r); }
 	rig_model_t GetHamlibModelID() { return Hamlib.GetHamlibModelID(); }
 	void SetHamlibModelID(rig_model_t r) { Hamlib.SetHamlibModelID(r); }
@@ -187,11 +191,12 @@ public:
 	CHamlib::ESMeterState GetSMeter(_REAL& r) { return Hamlib.GetSMeter(r); }
 	void LoadSettings(CSettings& s) { Hamlib.LoadSettings(s);}
 	void SaveSettings(CSettings& s) { Hamlib.SaveSettings(s); }
+protected:
+	CHamlib Hamlib;
+#endif
 
 signals:
     void sigstr(double);
-protected:
-	CHamlib Hamlib;
 	int subscribers;
 	CParameter* pParameters;
 };
