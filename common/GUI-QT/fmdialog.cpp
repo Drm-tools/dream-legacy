@@ -157,7 +157,6 @@ void FMDialog::OnTune()
 {
 	bool ok;
 	double freq = double(DRMReceiver.GetFrequency())/1000.0;
-// TODO Check Qt2 has this
 	double f = QInputDialog::getDouble(tr("Dream FM"),
 					tr("Frequency (MHz):"), freq, 86.0, 110.0, 2, &ok);
 	if (ok)

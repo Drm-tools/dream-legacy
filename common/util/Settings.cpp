@@ -155,6 +155,25 @@ CSettings::Put(const string& section, const CWinGeom& value)
 	s.str("");
 }
 
+void
+CSettings::FileArg(const string& str)
+{
+	// Identify the type of file
+	string ext;
+	size_t p = str.rfind('.');
+	if (p != string::npos)
+		ext = str.substr(p + 1);
+	if (ext.substr(0,2) == "RS" || ext.substr(0,2) == "rs" || ext.substr(0,4) == "pcap")
+	{
+		// it's an RSI or MDI input file
+		Put("command", "rsiin", str);
+	}
+	else
+	{
+		// its an I/Q or I/F file
+		Put("command", "fileio", str);
+	}
+}
 /* Command line argument parser ***********************************************/
 void
 CSettings::ParseArguments(int argc, char **argv)
@@ -226,7 +245,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
 							  strArgument) == TRUE)
 		{
-			Put("command", "fileio", strArgument);
+			FileArg(strArgument);
 			continue;
 		}
 
@@ -494,7 +513,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		/* not an option --------------------------------------------------- */
 		if(argv[i][0] != '-')
 		{
-			Put("command", "fileio", string(argv[i]));
+			FileArg(string(argv[i]));
 			continue;
 		}
 

@@ -63,7 +63,6 @@ CDRMReceiver::CDRMReceiver():
         eNewReceiverMode(RM_DRM), iAudioStreamID(STREAM_ID_NOT_USED),
         iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
         rInitResampleOffset((_REAL) 0.0),
-        iFreqkHz(-1),
         iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
         bReadFromFile(FALSE), time_keeper(0),pRig(NULL),PlotManager()
 {
@@ -779,6 +778,7 @@ CDRMReceiver::Start()
     pReceiverParam->eRunState = CParameter::RUNNING;
 
     // set the frequency from the command line or ini file
+    int iFreqkHz = pReceiverParam->GetFrequency();
     if(iFreqkHz!=-1)
     {
     	SetFrequency(iFreqkHz);
@@ -960,44 +960,6 @@ CDRMReceiver::SetInTrackingModeDelayed()
        the channel estimation has initialized its estimation */
     TimeSync.StopTimingAcqu();
     ChannelEstimation.GetTimeSyncTrack()->StartTracking();
-}
-
-void
-CDRMReceiver::SetReadDRMFromFile(const string strNFN)
-{
-    // Identify the type of file
-
-    string ext;
-    size_t p = strNFN.rfind('.');
-    if (p != string::npos)
-        ext = strNFN.substr(p + 1);
-
-    if (ext.substr(0,2) == "RS" || ext.substr(0,2) == "rs" || ext.substr(0,4) == "pcap")
-    {
-        // it's an RSI or MDI input file
-        GetRSIIn()->SetOrigin(strNFN);
-    }
-    else
-    {
-        // It's an IQ or IF file
-
-        delete pSoundInInterface;
-        CAudioFileIn *pf = new CAudioFileIn;
-        pf->SetFileName(strNFN);
-        pSoundInInterface = pf;
-        ReceiveData.SetSoundInterface(pSoundInInterface);	// needed ?
-
-        _BOOLEAN bIsIQ = FALSE;
-        if (ext.substr(0, 2) == "iq")
-            bIsIQ = TRUE;
-        if (ext.substr(0, 2) == "IQ")
-            bIsIQ = TRUE;
-        if (bIsIQ)
-            ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
-        else
-            ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
-        bReadFromFile = TRUE;
-    }
 }
 
 void
@@ -1262,15 +1224,8 @@ CDRMReceiver::InitsForDataParam()
     DataDecoder.SetInitFlag();
 }
 
-_BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
+void CDRMReceiver::SetFrequency(int iNewFreqkHz)
 {
-    if (iFreqkHz == iNewFreqkHz)
-        return TRUE;
-    iFreqkHz = iNewFreqkHz;
-
-	if(pRig)
-		pRig->SetFrequency(iNewFreqkHz);
-
     pReceiverParam->Lock();
     pReceiverParam->SetFrequency(iNewFreqkHz);
     /* clear out AMSS data and re-initialise AMSS acquisition */
@@ -1281,18 +1236,16 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
     if (upstreamRSCI.GetOutEnabled() == TRUE)
     {
         upstreamRSCI.SetFrequency(iNewFreqkHz);
-        return TRUE;
     }
-    else
-    {
-        /* tell the RSCI and IQ file writer that freq has changed in case it needs to start a new file */
-        if (downstreamRSCI.GetOutEnabled() == TRUE)
-            downstreamRSCI.NewFrequency(*pReceiverParam);
 
-        WriteIQFile.NewFrequency(*pReceiverParam);
+	if(pRig)
+		pRig->SetFrequency(iNewFreqkHz);
 
-        return TRUE;
-    }
+	if (downstreamRSCI.GetOutEnabled() == TRUE)
+		downstreamRSCI.NewFrequency(*pReceiverParam);
+
+	/* tell the IQ file writer that freq has changed in case it needs to start a new file */
+	WriteIQFile.NewFrequency(*pReceiverParam);
 }
 
 void
@@ -1345,6 +1298,9 @@ CDRMReceiver::saveSDCtoFile()
 void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
+    string str;
+	CReceiveData::EInChanSel defaultInChanSel = CReceiveData::CS_MIX_CHAN;
+
     /* Serial Number */
     string sValue = s.Get("Receiver", "serialnumber");
     if (sValue != "")
@@ -1373,79 +1329,84 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* if 0 then only measure PSD when RSCI in use otherwise always measure it */
 	pReceiverParam->bMeasurePSDAlways =	s.Get("Receiver", "measurepsdalways", 0);
 
-    /* Sound In device */
-    pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", 0));
+    /* upstream RSCI or sound card, etc. */
+    str = s.Get("command", "rsiin");
+    if (str != "")
+    {
+        upstreamRSCI.SetOrigin(str);
+    }
+    else
+    {
+		/* input from file or sound card */
+		string strInFile = s.Get("command", string("fileio"));
+        if (strInFile != "")
+        {
+			// It's an I/Q or I/F file
+			delete pSoundInInterface;
+			CAudioFileIn *pf = new CAudioFileIn;
+			pf->SetFileName(strInFile);
+			pSoundInInterface = pf;
+			ReceiveData.SetSoundInterface(pSoundInInterface);	// needed ?
+			string ext;
+			size_t p = str.rfind('.');
+			if (p != string::npos)
+				ext = str.substr(p + 1);
+			if (ext.substr(0, 2) == "iq")
+				defaultInChanSel = CReceiveData::CS_IQ_POS_ZERO;
+			if (ext.substr(0, 2) == "IQ")
+				defaultInChanSel = CReceiveData::CS_IQ_POS_ZERO;
+			bReadFromFile = TRUE;
+        }
+        else /* sound card */
+        {
+			/* Sound In device */
+            delete pSoundInInterface;
 
-    /* Sound Out device */
-    pSoundOutInterface->SetDev(s.Get("Receiver", "snddevout", 0));
-
-    string strInFile;
-    string str;
-    int n;
-    /* input from file */
-    strInFile = s.Get("command", "fileio");
+            // check if we need to do something special for the rig
+            int model = s.Get("Hamlib", "hamlib-model", 0);
+            switch (model)
+            {
+#ifdef __linux__
+            case 1509:
+            {
+            	string shmPath = "/dreamg313if";
+            	string kwd = "if_path";
+                string strHamlibConf = s.Get("Hamlib", "hamlib-config");
+                if (strHamlibConf!="")
+                {
+					if(strHamlibConf.find_first_of(kwd)!=string::npos)
+					{
+						// TODO - parse the string, for now, ignore
+					}
+                    strHamlibConf += ",";
+                }
+				strHamlibConf += kwd + "=" + shmPath;
+                CShmSoundIn* ShmSoundIn = new CShmSoundIn;
+                pSoundInInterface = ShmSoundIn;
+                pSoundInInterface->SetDev(0);
+                ShmSoundIn->SetShmPath(shmPath);
+                ShmSoundIn->SetName("WinRadio G313");
+                ShmSoundIn->SetShmChannels(1);
+                ShmSoundIn->SetWantedChannels(2);
+                s.Put("Hamlib", "hamlib-config", strHamlibConf);
+            }
+            break;
+#endif
+            default:
+                pSoundInInterface = new CSoundIn;
+                pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", int(0)));
+            }
+        }
+	}
 
     /* Flip spectrum flag */
     ReceiveData.SetFlippedSpectrum(s.Get("Receiver", "flipspectrum", FALSE));
 
-    n = s.Get("command", "inchansel", -1);
-    switch (n)
-    {
-    case 0:
-        ReceiveData.SetInChanSel(CReceiveData::CS_LEFT_CHAN);
-        break;
+    CReceiveData::EInChanSel inChanSel = (CReceiveData::EInChanSel)s.Get("command", "inchansel", int(defaultInChanSel));
+	ReceiveData.SetInChanSel(inChanSel);
 
-    case 1:
-        ReceiveData.SetInChanSel(CReceiveData::CS_RIGHT_CHAN);
-        break;
-
-    case 2:
-        ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
-        break;
-
-    case 3:
-        ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS);
-        break;
-
-    case 4:
-        ReceiveData.SetInChanSel(CReceiveData::CS_IQ_NEG);
-        break;
-
-    case 5:
-        ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
-        break;
-
-    case 6:
-        ReceiveData.SetInChanSel(CReceiveData::CS_IQ_NEG_ZERO);
-        break;
-    default:
-        break;
-    }
-    n = s.Get("command", "outchansel", -1);
-    switch (n)
-    {
-    case 0:
-        WriteData.SetOutChanSel(CWriteData::CS_BOTH_BOTH);
-        break;
-
-    case 1:
-        WriteData.SetOutChanSel(CWriteData::CS_LEFT_LEFT);
-        break;
-
-    case 2:
-        WriteData.SetOutChanSel(CWriteData::CS_RIGHT_RIGHT);
-        break;
-
-    case 3:
-        WriteData.SetOutChanSel(CWriteData::CS_LEFT_MIX);
-        break;
-
-    case 4:
-        WriteData.SetOutChanSel(CWriteData::CS_RIGHT_MIX);
-        break;
-    default:
-        break;
-    }
+    CWriteData::EOutChanSel outChanSel = (CWriteData::EOutChanSel)s.Get("command", "outchansel", CWriteData::CS_BOTH_BOTH);
+	WriteData.SetOutChanSel(outChanSel);
 
     /* AM Parameters */
 
@@ -1497,59 +1458,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
         break;
     }
 
-    /* upstream RSCI or sound card, etc. */
-    str = s.Get("command", "rsiin");
-    if (str == "")
-    {
-        if (strInFile == "")
-        {
-            int iDev = pSoundInInterface->GetDev();
-            delete pSoundInInterface;
-            int model = s.Get("Hamlib", "hamlib-model", 0);
-            switch (model)
-            {
-#ifdef __linux__
-            case 1509:
-            {
-            	string shmPath = "/dreamg313if";
-            	string kwd = "if_path";
-                string strHamlibConf = s.Get("Hamlib", "hamlib-config");
-                if (strHamlibConf!="")
-                {
-					if(strHamlibConf.find_first_of(kwd)!=string::npos)
-					{
-						// TODO - parse the string, for now, ignore
-					}
-                    strHamlibConf += ",";
-                }
-				strHamlibConf += kwd + "=" + shmPath;
-                CShmSoundIn* ShmSoundIn = new CShmSoundIn;
-                pSoundInInterface = ShmSoundIn;
-                pSoundInInterface->SetDev(0);
-                ShmSoundIn->SetShmPath(shmPath);
-                ShmSoundIn->SetName("WinRadio G313");
-                ShmSoundIn->SetShmChannels(1);
-                ShmSoundIn->SetWantedChannels(2);
-                s.Put("Hamlib", "hamlib-config", strHamlibConf);
-            }
-            break;
-#endif
-            default:
-                pSoundInInterface = new CSoundIn;
-                pSoundInInterface->SetDev(iDev);
-            }
-        }
-        else
-        {
-            SetReadDRMFromFile(strInFile);
-        }
-    }
-    else
-    {
-        if (strInFile != "")
-            throw "Can't specify both rsiin and fileio file";
-        upstreamRSCI.SetOrigin(str);
-    }
+    /* Sound Out device */
+    pSoundOutInterface->SetDev(s.Get("Receiver", "snddevout", int(0)));
 
     str = s.Get("command", "rciout");
     if (str != "")
@@ -1614,7 +1524,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
 
     /* Tuned Frequency */
-    iFreqkHz = s.Get("Receiver", "frequency", iFreqkHz);
+    pReceiverParam->SetFrequency(s.Get("Receiver", "frequency", -1));
 
     /* Front-end - combine into Hamlib? */
     CFrontEndParameters& FrontEndParameters = pReceiverParam->FrontEndParameters;
@@ -1671,7 +1581,7 @@ CDRMReceiver::SaveSettings(CSettings& s)
     s.Put("Receiver", "mlciter", MSCMLCDecoder.GetInitNumIterations());
 
     /* Tuned Frequency */
-    s.Put("Receiver", "frequency", iFreqkHz);
+    s.Put("Receiver", "frequency", pReceiverParam->GetFrequency());
 
     /* Active/Deactivate EPG decoding */
     s.Put("EPG", "decodeepg", DataDecoder.GetDecodeEPG());

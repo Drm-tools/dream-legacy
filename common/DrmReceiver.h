@@ -162,10 +162,8 @@ public:
     void					SetAMFilterBW(int iBw);
     void					SetAMDemodAcq(_REAL rNewNorCen);
     void	 				SetRig(CHamlib* n) { pRig=n; }
-    _BOOLEAN 				SetFrequency(int iNewFreqkHz);
-    int		 				GetFrequency() {
-        return iFreqkHz;
-    }
+    void	 				SetFrequency(int);
+    int		 				GetFrequency() {return pReceiverParam->GetFrequency();}
     void					SetIQRecording(_BOOLEAN);
     void					SetRSIRecording(_BOOLEAN, const char);
 
@@ -309,11 +307,7 @@ protected:
     void					SetInStartMode();
     void					SetInTrackingMode();
     void					SetInTrackingModeDelayed();
-
-    void					SetReadDRMFromFile(const string strNFN);
-
     void					InitsForAllModules();
-
     void					Run();
     void					DemodulateDRM(_BOOLEAN&);
     void					DecodeDRM(_BOOLEAN&, _BOOLEAN&);
@@ -428,7 +422,6 @@ protected:
     _REAL					rInitResampleOffset;
 
     CVectorEx<_BINARY>		vecbiMostRecentSDC;
-    int						iFreqkHz;
 
     /* number of frames without FAC data before generating free-running RSCI */
     static const int		MAX_UNLOCKED_COUNT;
