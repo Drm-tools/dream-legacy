@@ -1300,7 +1300,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 {
     string str;
 	CReceiveData::EInChanSel defaultInChanSel = CReceiveData::CS_MIX_CHAN;
-
+cerr << "LoadSettings" << endl;
     /* Serial Number */
     string sValue = s.Get("Receiver", "serialnumber");
     if (sValue != "")
@@ -1359,42 +1359,33 @@ CDRMReceiver::LoadSettings(CSettings& s)
         }
         else /* sound card */
         {
+cerr << "LoadSettings - sound card" << endl;
 			/* Sound In device */
             delete pSoundInInterface;
 
             // check if we need to do something special for the rig
-            int model = s.Get("Hamlib", "hamlib-model", 0);
-            switch (model)
-            {
+            bool special = false;
 #ifdef __linux__
-            case 1509:
+            string strHamlibConf = s.Get("Hamlib", "hamlib-config");
+            size_t p = strHamlibConf.find_first_of("if_path=");
+            if(p!=string::npos)
             {
-            	string shmPath = "/dreamg313if";
-            	string kwd = "if_path";
-                string strHamlibConf = s.Get("Hamlib", "hamlib-config");
-                if (strHamlibConf!="")
-                {
-					if(strHamlibConf.find_first_of(kwd)!=string::npos)
-					{
-						// TODO - parse the string, for now, ignore
-					}
-                    strHamlibConf += ",";
-                }
-				strHamlibConf += kwd + "=" + shmPath;
                 CShmSoundIn* ShmSoundIn = new CShmSoundIn;
                 pSoundInInterface = ShmSoundIn;
                 pSoundInInterface->SetDev(0);
-                ShmSoundIn->SetShmPath(shmPath);
+                ShmSoundIn->SetShmPath(strHamlibConf.substr(p+8));
                 ShmSoundIn->SetName("WinRadio G313");
                 ShmSoundIn->SetShmChannels(1);
                 ShmSoundIn->SetWantedChannels(2);
-                s.Put("Hamlib", "hamlib-config", strHamlibConf);
+                special = true;
             }
-            break;
 #endif
-            default:
+            if(!special)
+            {
+                int dev = s.Get("Receiver", "snddevin", int(0));
+cerr << "LoadSettings sound dev " << dev << endl;
                 pSoundInInterface = new CSoundIn;
-                pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", int(0)));
+                pSoundInInterface->SetDev(dev);
             }
         }
 	}

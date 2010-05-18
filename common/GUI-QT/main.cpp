@@ -141,16 +141,18 @@ main(int argc, char **argv)
 			   routine since we cannot 100% assume that the working thread is
 			   ready before the GUI thread */
 
+#ifdef HAVE_LIBHAMLIB
+			CRig rig(DRMReceiver.GetParameters()); // G313 must be initialised before DRMReceiver
+			rig.LoadSettings(Settings);
+#endif
+
 			DRMReceiver.LoadSettings(Settings);
 
 			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
 
 			DRMReceiver.Init();
 
-			CRig rig(DRMReceiver.GetParameters());
 #ifdef HAVE_LIBHAMLIB
-			rig.LoadSettings(Settings);
-
 			DRMReceiver.SetRig(rig.GetRig());
 
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())

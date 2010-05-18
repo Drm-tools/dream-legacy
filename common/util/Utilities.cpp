@@ -4,7 +4,7 @@
  *
  * Author(s):
  *	Volker Fischer
- * 
+ *
  * Description:
  *
  ******************************************************************************
@@ -36,7 +36,7 @@
 #  include <windows.h>
 #  include <setupapi.h>
 #  if defined(_MSC_VER) && (_MSC_VER < 1400) || defined(__MINGW32__)
-    DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089, 
+    DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089,
     0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
 #  endif
 # endif
@@ -459,7 +459,7 @@ modes(), levels(), functions(), parameters(), config()
 #endif
 
 #ifdef RIG_MODEL_G303
-	/* Winradio G3 */
+	/* Winradio G303 */
 	RigSpecialParameters(RIG_MODEL_G303, "l_ATT=0,l_AGC=3", 0,
 						 "l_ATT=0,l_AGC=3");
 #endif
@@ -487,7 +487,7 @@ modes(), levels(), functions(), parameters(), config()
 
 #ifdef RIG_MODEL_ELEKTOR507
     /* Elektor 5/07 */
-    RigSpecialParameters(RIG_MODEL_ELEKTOR507, "", 
+    RigSpecialParameters(RIG_MODEL_ELEKTOR507, "",
 						-12 /* kHz frequency offset */ ,
 						"");
 #endif
@@ -640,7 +640,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 	}
 #elif defined(__APPLE__)
 	io_iterator_t serialPortIterator;
-    kern_return_t			kernResult; 
+    kern_return_t			kernResult;
     CFMutableDictionaryRef	classesToMatch;
 
     // Serial devices are instances of class IOSerialBSDClient
@@ -654,18 +654,18 @@ CHamlib::GetPortList(map < string, string > &ports)
         CFDictionarySetValue(classesToMatch,
                              CFSTR(kIOSerialBSDTypeKey),
                              CFSTR(kIOSerialBSDRS232Type));
-        
+
 	}
-    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);    
+    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);
     if (KERN_SUCCESS != kernResult)
     {
         printf("IOServiceGetMatchingServices returned %d\n", kernResult);
     }
-        
+
     io_object_t		modemService;
-    
+
     // Iterate across all modems found. In this example, we bail after finding the first modem.
-    
+
     while ((modemService = IOIteratorNext(serialPortIterator)))
     {
         CFStringRef	bsdPathAsCFString;
@@ -673,7 +673,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 		// Get the callout device's path (/dev/cu.xxxxx). The callout device should almost always be
 		// used: the dialin device (/dev/tty.xxxxx) would be used when monitoring a serial port for
 		// incoming calls, e.g. a fax listener.
-	
+
 		bsdPathAsCFString = CFStringRef(IORegistryEntryCreateCFProperty(modemService,
                                                             CFSTR(kIOCalloutDeviceKey),
                                                             kCFAllocatorDefault,
@@ -682,16 +682,16 @@ CHamlib::GetPortList(map < string, string > &ports)
         {
             Boolean result;
 			char bsdPath[256];
-            
+
             // Convert the path from a CFString to a C (NUL-terminated) string for use
 			// with the POSIX open() call.
-	    
+
 			result = CFStringGetCString(bsdPathAsCFString,
                                         bsdPath,
-                                        sizeof(bsdPath), 
+                                        sizeof(bsdPath),
                                         kCFStringEncodingUTF8);
             CFRelease(bsdPathAsCFString);
-            
+
             if (result)
 			{
 				// make the name a bit more friendly for the menu
@@ -706,7 +706,7 @@ CHamlib::GetPortList(map < string, string > &ports)
         }
 
         // Release the io_service_t now that we are done with it.
-	
+
 		(void) IOObjectRelease(modemService);
     }
 #endif
@@ -752,6 +752,18 @@ CHamlib::LoadSettings(CSettings & s)
 	{
 		/* Hamlib configuration string */
 		string strHamlibConf = s.Get("Hamlib", "hamlib-config");
+		if(model==1509)
+		{
+		    if(strHamlibConf=="")
+		    {
+#ifdef __linux__
+                strHamlibConf = "if_path=/dreamg313if"
+#endif
+#ifdef _WIN32
+                strHamlibConf = "wodeviceid=-2";
+#endif
+		    }
+		}
 		if (strHamlibConf != "")
 		{
 			istringstream params(strHamlibConf);
@@ -991,6 +1003,7 @@ CHamlib::SetRigConfig()
 	for (map < string, string >::const_iterator i = config.begin();
 		 i != config.end(); i++)
 	{
+	    cerr << i->first << ":" << i->second << endl;
 		int ret =
 			rig_set_conf(pRig, rig_token_lookup(pRig, i->first.c_str()),
 						 i->second.c_str());
