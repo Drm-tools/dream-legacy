@@ -770,7 +770,7 @@ CHamlib::LoadSettings(CSettings & s)
 			{
 				if (strHamlibConf=="")
 				{
-					strHamlibConf == kwd + "=" + val;
+					strHamlibConf = kwd + "=" + val;
 				}
 				else
 				{
@@ -782,7 +782,6 @@ CHamlib::LoadSettings(CSettings & s)
 				}
 			}
 		}
-
 		if (strHamlibConf != "")
 		{
 			istringstream params(strHamlibConf);
