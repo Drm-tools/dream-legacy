@@ -37,7 +37,7 @@
    In case of robustness mode D we have 24 symbols */
 #define NUM_SOUND_BUFFERS_IN	24		/* Number of sound card buffers */
 
-#define NUM_SOUND_BUFFERS_OUT	3		/* Number of sound card buffers */
+#define NUM_SOUND_BUFFERS_OUT	6		/* Number of sound card buffers */
 #define	NUM_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
 use one channel for recording) */
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */

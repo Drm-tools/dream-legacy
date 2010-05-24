@@ -433,6 +433,7 @@ _BOOLEAN CSoundOut::Write(CVector<short>& psData)
             /* All buffers are filled, dump new block ----------------------- */
 // It would be better to kill half of the buffer blocks to set the start
 // back to the middle: TODO
+cerr << "sound out buffers full" << endl;
             return TRUE; /* An error occurred */
         }
     }
@@ -455,6 +456,7 @@ _BOOLEAN CSoundOut::Write(CVector<short>& psData)
         /* Set index for done buffer */
         iIndexDoneBuf = NUM_SOUND_BUFFERS_OUT / 2;
 
+cerr << "sound out buffers empty" << endl;
         bError = TRUE;
     }
     else
