@@ -60,7 +60,7 @@ using namespace std; /* Because of the library: "complex" */
 
 /* Define whether using libsndfile for audio file I/O */
 //# define HAVE_LIBSNDFILE
-# undef HAVE_LIBSNDFILE
+//# undef HAVE_LIBSNDFILE
 
 /* Activate or disable faad2 library (AAC decoding) */
 # define USE_FAAD2_LIBRARY
@@ -69,17 +69,14 @@ using namespace std; /* Because of the library: "complex" */
 # define USE_FAAC_LIBRARY
 //# undef USE_FAAC_LIBRARY
 
-# define HAVE_LIBPCAP
+//# define HAVE_LIBPCAP
 //# undef HAVE_LIBPCAP
 
 # define DLL_EXPORT 1
 //# undef DLL_EXPORT 1
 
-# define HAVE_LIBHAMLIB
+//# define HAVE_LIBHAMLIB
 //# undef HAVE_LIBHAMLIB
-
-/* Define if you have Hamlib >= 1.2.1 */
-# define HAVE_RIG_PARSE_MODE			1
 
 /* set sensible defaults for QT2 or QT3 */
 # ifdef USE_QT_GUI

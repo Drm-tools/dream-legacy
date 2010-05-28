@@ -23,7 +23,7 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\DKULTUR_177.rsA" />
+				<Option parameters="D:\ws-drm0.pcap" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />
@@ -42,6 +42,9 @@
 			<Add option="-DQT_TABLET_SUPPORT" />
 			<Add option="-DQT_NO_DEBUG" />
 			<Add option="-DHAVE_STDINT_H" />
+			<Add option="-DHAVE_LIBHAMLIB" />
+			<Add option="-DHAVE_LIBSNDFILE" />
+			<Add option="-DHAVE_LIBPCAP" />
 			<Add directory="$(QTDIR)\include" />
 			<Add directory="..\libs" />
 			<Add directory="..\common\GUI-QT" />
@@ -201,6 +204,8 @@
 		<Unit filename="..\common\datadecoding\DABMOT.h" />
 		<Unit filename="..\common\datadecoding\DataDecoder.cpp" />
 		<Unit filename="..\common\datadecoding\DataDecoder.h" />
+		<Unit filename="..\common\datadecoding\DataEncoder.cpp" />
+		<Unit filename="..\common\datadecoding\DataEncoder.h" />
 		<Unit filename="..\common\datadecoding\Journaline.cpp" />
 		<Unit filename="..\common\datadecoding\Journaline.h" />
 		<Unit filename="..\common\datadecoding\MOTSlideShow.cpp" />
@@ -283,6 +288,10 @@
 		<Unit filename="..\common\soundinterface.h" />
 		<Unit filename="..\common\sourcedecoders\AudioSourceDecoder.cpp" />
 		<Unit filename="..\common\sourcedecoders\AudioSourceDecoder.h" />
+		<Unit filename="..\common\sourcedecoders\AudioSourceEncoder.cpp" />
+		<Unit filename="..\common\sourcedecoders\AudioSourceEncoder.h" />
+		<Unit filename="..\common\sourcedecoders\faac_dll.h" />
+		<Unit filename="..\common\sourcedecoders\neaacdec_dll.h" />
 		<Unit filename="..\common\sync\FreqSyncAcq.cpp" />
 		<Unit filename="..\common\sync\FreqSyncAcq.h" />
 		<Unit filename="..\common\sync\SyncUsingPil.cpp" />

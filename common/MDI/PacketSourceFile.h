@@ -58,6 +58,7 @@ private:
 	uint64_t		last_packet_time;
     void*			pf;
 	_BOOLEAN		bRaw;
+	int 			wanted_dest_port;
 public slots:
 	void OnDataReceived();
 };

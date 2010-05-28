@@ -31,162 +31,9 @@
 #include "Journaline.h"
 #include <iostream>
 
-/* Implementation *************************************************************/
-/******************************************************************************\
-* Encoder                                                                      *
-\******************************************************************************/
-void
-CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
-{
-	int i;
-	_BOOLEAN bLastFlag;
-
-	/* Init size for whole packet, not only body */
-	vecbiPacket.Init(iTotalPacketSize);
-	vecbiPacket.ResetBitAccess();
-
-	/* Calculate remaining data size to be transmitted */
-	const int iRemainSize = vecbiCurDataUnit.Size() - iCurDataPointer;
-
-	/* Header --------------------------------------------------------------- */
-	/* First flag */
-	if (iCurDataPointer == 0)
-		vecbiPacket.Enqueue((uint32_t) 1, 1);
-	else
-		vecbiPacket.Enqueue((uint32_t) 0, 1);
-
-	/* Last flag */
-	if (iRemainSize > iPacketLen)
-	{
-		vecbiPacket.Enqueue((uint32_t) 0, 1);
-		bLastFlag = FALSE;
-	}
-	else
-	{
-		vecbiPacket.Enqueue((uint32_t) 1, 1);
-		bLastFlag = TRUE;
-	}
-
-	/* Packet Id */
-	vecbiPacket.Enqueue((uint32_t) iPacketID, 2);
-
-	/* Padded packet indicator (PPI) */
-	if (iRemainSize < iPacketLen)
-		vecbiPacket.Enqueue((uint32_t) 1, 1);
-	else
-		vecbiPacket.Enqueue((uint32_t) 0, 1);
-
-	/* Continuity index (CI) */
-	vecbiPacket.Enqueue((uint32_t) iContinInd, 3);
-
-	/* Increment index modulo 8 (1 << 3) */
-	iContinInd++;
-	if (iContinInd == 8)
-		iContinInd = 0;
-
-	/* Body ----------------------------------------------------------------- */
-	if (iRemainSize >= iPacketLen)
-	{
-		if (iRemainSize == iPacketLen)
-		{
-			/* Last packet */
-			for (i = 0; i < iPacketLen; i++)
-				vecbiPacket.Enqueue(vecbiCurDataUnit.Separate(1), 1);
-		}
-		else
-		{
-			for (i = 0; i < iPacketLen; i++)
-			{
-				vecbiPacket.Enqueue(vecbiCurDataUnit.Separate(1), 1);
-				iCurDataPointer++;
-			}
-		}
-	}
-	else
-	{
-		/* Padded packet. If the PPI is 1 then the first byte shall indicate
-		   the number of useful bytes that follow, and the data field is
-		   completed with padding bytes of value 0x00 */
-		vecbiPacket.Enqueue((uint32_t) (iRemainSize / SIZEOF__BYTE),
-							SIZEOF__BYTE);
-
-		/* Data */
-		for (i = 0; i < iRemainSize; i++)
-			vecbiPacket.Enqueue(vecbiCurDataUnit.Separate(1), 1);
-
-		/* Padding */
-		for (i = 0; i < iPacketLen - iRemainSize; i++)
-			vecbiPacket.Enqueue(vecbiCurDataUnit.Separate(1), 1);
-	}
-
-	/* If this was the last packet, get data for next data unit */
-	if (bLastFlag == TRUE)
-	{
-		/* Generate new data unit */
-		MOTSlideShowEncoder.GetDataUnit(vecbiCurDataUnit);
-		vecbiCurDataUnit.ResetBitAccess();
-
-		/* Reset data pointer and continuity index */
-		iCurDataPointer = 0;
-	}
-
-	/* CRC ------------------------------------------------------------------ */
-	CCRC CRCObject;
-
-	/* Reset bit access */
-	vecbiPacket.ResetBitAccess();
-
-	/* Calculate the CRC and put it at the end of the segment */
-	CRCObject.Reset(16);
-
-	/* "byLengthBody" was defined in the header */
-	for (i = 0; i < (iTotalPacketSize / SIZEOF__BYTE - 2); i++)
-		CRCObject.AddByte(_BYTE(vecbiPacket.Separate(SIZEOF__BYTE)));
-
-	/* Now, pointer in "enqueue"-function is back at the same place, add CRC */
-	vecbiPacket.Enqueue(CRCObject.GetCRC(), 16);
-}
-
-int
-CDataEncoder::Init(CParameter & Param)
-{
-	/* Init packet length and total packet size (the total packet length is
-	   three bytes longer as it includes the header and CRC fields) */
-
-// TODO we only use always the first service right now
-	const int iCurSelDataServ = 0;
-
-	Param.Lock();
-
-	iPacketLen =
-		Param.Service[iCurSelDataServ].DataParam.iPacketLen * SIZEOF__BYTE;
-	iTotalPacketSize = iPacketLen + 24 /* CRC + header = 24 bits */ ;
-
-	iPacketID = Param.Service[iCurSelDataServ].DataParam.iPacketID;
-
-	Param.Unlock();
-
-	/* Init DAB MOT encoder object */
-	MOTSlideShowEncoder.Init();
-
-	/* Generate first data unit */
-	MOTSlideShowEncoder.GetDataUnit(vecbiCurDataUnit);
-	vecbiCurDataUnit.ResetBitAccess();
-
-	/* Reset pointer to current position in data unit and continuity index */
-	iCurDataPointer = 0;
-	iContinInd = 0;
-
-	/* Return total packet size */
-	return iTotalPacketSize;
-}
-
-/******************************************************************************\
-* Decoder                                                                      *
-\******************************************************************************/
 CDataDecoder::CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
 	Journaline(*new CJournaline()),
-	iOldJournalineServiceID (0), bDecodeEPG(TRUE)
+	iOldJournalineServiceID (0)
 {
 		for(size_t i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
 			eAppType[i] = AT_NOT_SUP;
@@ -366,6 +213,19 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				/* Only DAB multimedia is supported */
 				//cout << "new data unit for packet id " << iPacketID << " apptype " << eAppType[iPacketID] << endl;
 
+				if(eAppType[iPacketID] == AT_NOT_SUP)
+				{
+					int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
+					int iCurDataStreamID = ReceiverParam.Service[iCurSelDataServ].DataParam.iStreamID;
+					for (int i = 0; i <=3; i++)
+					{
+						if(ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID == iPacketID)
+						{
+							eAppType[iPacketID] = GetAppType(ReceiverParam.Service[iCurSelDataServ].DataParam);
+						}
+					}
+				}
+
 				switch (eAppType[iPacketID])
 				{
 				case AT_MOTSLISHOW:	/* MOTSlideshow */
@@ -409,7 +269,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				(*pvecInputData).Separate(SIZEOF__BYTE);
 		}
 	}
-	if ((iEPGService >= 0) && (GetDecodeEPG() == TRUE))	/* if EPG decoding is active */
+	if(iEPGService >= 0)	/* if EPG decoding is active */
 		DecodeEPG(ReceiverParam);
 }
 
@@ -421,6 +281,7 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 		&& (iEPGPacketID >= 0)
 		&& MOTObject[iEPGPacketID].NewObjectAvailable())
 	{
+		cerr << "EPG object" << endl;
 		CMOTObject NewObj;
 		MOTObject[iEPGPacketID].GetNextObject(NewObj);
 		string fileName;
@@ -523,72 +384,26 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 			/* Number of data packets in one data block */
 			iNumDataPackets = iTotalNumInputBytes / iTotalPacketSize;
 
-			/* Only DAB application supported */
-			if (ReceiverParam.Service[iCurSelDataServ].DataParam.
-				eAppDomain == CDataParam::AD_DAB_SPEC_APP)
+			eAppType[iServPacketID] = GetAppType(ReceiverParam.Service[iCurSelDataServ].DataParam);
+
+			/* Check, if service ID of Journaline application has
+			   changed, that indicates that a new transmission is
+			   received -> reset decoder in this case. Otherwise
+			   use old buffer. That ensures that the decoder keeps
+			   old data in buffer when synchronization was lost for
+			   a short time */
+			const uint32_t iNewServID = ReceiverParam.Service[iCurSelDataServ].iServiceID;
+
+			if((eAppType[iServPacketID]==AT_JOURNALINE) && (iOldJournalineServiceID != iNewServID))
 			{
-				/* Get application identifier of current selected service, only
-				   used with DAB */
-				const int iDABUserAppIdent = ReceiverParam.
-					Service[iCurSelDataServ].DataParam.iUserAppIdent;
 
-				switch (iDABUserAppIdent)
-				{
-				case 2:		/* MOTSlideshow */
-					eAppType[iServPacketID] = AT_MOTSLISHOW;
-					break;
+				// Problem: if two different services point to the same stream, they have different
+				// IDs and the Journaline is reset! TODO: fix this problem...
 
-				case 3:		/* MOT Broadcast Web Site */
-					eAppType[iServPacketID] = AT_MOTBROADCASTWEBSITE;
-					break;
-
-				case 4:
-					eAppType[iServPacketID] = AT_MOTTPEG;
-					break;
-
-				case 5:
-					eAppType[iServPacketID] = AT_DGPS;
-					break;
-
-				case 6:
-					eAppType[iServPacketID] = AT_TMC;
-					break;
-
-				case 7:
-					eAppType[iServPacketID] = AT_MOTEPG;
-					break;
-
-				case 8:
-					eAppType[iServPacketID] = AT_JAVA;
-					break;
-
-					/* The preliminary 11-bit user Application Type ID for the
-					   NewsService Journaline shall be 0x44A */
-				case 0x44A:	/* Journaline */
-					eAppType[iServPacketID] = AT_JOURNALINE;
-
-					/* Check, if service ID of Journaline application has
-					   changed, that indicates that a new transmission is
-					   received -> reset decoder in this case. Otherwise
-					   use old buffer. That ensures that the decoder keeps
-					   old data in buffer when synchronization was lost for
-					   a short time */
-					const uint32_t iNewServID =
-						ReceiverParam.Service[iCurSelDataServ].iServiceID;
-
-					if (iOldJournalineServiceID != iNewServID)
-					{
-
-// Problem: if two different services point to the same stream, they have different
-// IDs and the Journaline is reset! TODO: fix this problem...
-
-						/* Reset Journaline decoder and store the new service
-						   ID number */
-						Journaline.Reset();
-						iOldJournalineServiceID = iNewServID;
-					}
-					break;
-				}
+				/* Reset Journaline decoder and store the new service
+				   ID number */
+				Journaline.Reset();
+				iOldJournalineServiceID = iNewServID;
 			}
 
 			/* Init vector for storing the CRC results for each packet */
@@ -622,6 +437,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 		{
 			iEPGService = i;
 			iEPGPacketID = ReceiverParam.Service[i].DataParam.iPacketID;
+			eAppType[iEPGPacketID] = AT_MOTEPG;
 			//cerr << "EPG packet id " << iEPGPacketID << endl;
 		}
 	}
@@ -685,4 +501,53 @@ CDataDecoder::GetNews(const int iObjID, CNews & News)
 
 	/* Release resources */
 	Unlock();
+}
+
+CDataDecoder::EAppType CDataDecoder::GetAppType(const CDataParam& DataParam)
+{
+	EAppType eAppType = AT_NOT_SUP;
+
+		/* Only DAB application supported */
+	if (DataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
+	{
+		/* Get application identifier of current selected service, only
+		   used with DAB */
+		const int iDABUserAppIdent = DataParam.iUserAppIdent;
+
+		switch (iDABUserAppIdent)
+		{
+		case 2:		/* MOTSlideshow */
+			eAppType = AT_MOTSLISHOW;
+			break;
+
+		case 3:		/* MOT Broadcast Web Site */
+			eAppType = AT_MOTBROADCASTWEBSITE;
+			break;
+
+		case 4:
+			eAppType = AT_MOTTPEG;
+			break;
+
+		case 5:
+			eAppType = AT_DGPS;
+			break;
+
+		case 6:
+			eAppType = AT_TMC;
+			break;
+
+		case 7:
+			eAppType  = AT_MOTEPG;
+			break;
+
+		case 8:
+			eAppType = AT_JAVA;
+			break;
+
+		case 0x44A:	/* Journaline */
+			eAppType  = AT_JOURNALINE;
+			break;
+		}
+	}
+	return eAppType;
 }

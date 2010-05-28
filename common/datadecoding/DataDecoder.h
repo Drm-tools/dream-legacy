@@ -44,40 +44,6 @@ class CNews;
 /* Maximum number of packets per stream */
 #define MAX_NUM_PACK_PER_STREAM					4
 
-
-/* Classes ********************************************************************/
-/* Encoder ------------------------------------------------------------------ */
-class CDataEncoder
-{
-  public:
-    CDataEncoder ()
-    {
-    }
-    virtual ~ CDataEncoder ()
-    {
-    }
-
-    int Init (CParameter & Param);
-    void GeneratePacket (CVector < _BINARY > &vecbiPacket);
-
-    CMOTSlideShowEncoder *GetSliShowEnc ()
-    {
-	return &MOTSlideShowEncoder;
-    }
-
-  protected:
-    CMOTSlideShowEncoder MOTSlideShowEncoder;
-    CVector < _BINARY > vecbiCurDataUnit;
-
-    int iPacketLen;
-    int iTotalPacketSize;
-    int iCurDataPointer;
-    int iPacketID;
-    int iContinInd;
-};
-
-
-/* Decoder ------------------------------------------------------------------ */
 class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
   public:
@@ -98,10 +64,6 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     {
 		return eAppType[iServPacketID];
     }
-
-	/* Parameter for activate/deactivate EPG decoding */
-	void		SetDecodeEPG(const _BOOLEAN bDecEPG) {bDecodeEPG = bDecEPG;}
-	_BOOLEAN	GetDecodeEPG() {return bDecodeEPG;}
 
   protected:
     class CDataUnit
@@ -138,11 +100,11 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     virtual void InitInternal (CParameter & ReceiverParam);
     virtual void ProcessDataInternal (CParameter & ReceiverParam);
 
-	_BOOLEAN	bDecodeEPG; /* enable/disable epg decoding */
-    int iEPGService;                                                               
+    int iEPGService;
     int iEPGPacketID;
     void DecodeEPG(const CParameter& ReceiverParam);
-	
+	EAppType GetAppType(const CDataParam&);
+
 };
 
 

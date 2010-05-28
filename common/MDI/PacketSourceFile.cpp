@@ -59,13 +59,21 @@ const size_t iAFCRCLen = 2;
 
 CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
 timeKeeper(), last_packet_time(0),
- pf(NULL), bRaw(TRUE)
+ pf(NULL), bRaw(TRUE), wanted_dest_port(-1)
 {
 }
 
 _BOOLEAN
-CPacketSourceFile::SetOrigin(const string& str)
+CPacketSourceFile::SetOrigin(const string& origin)
 {
+	string str = origin;
+	size_t p = str.find_last_of('#');
+	if(p!=string::npos)
+	{
+		wanted_dest_port = atoi(str.substr(p+1).c_str());
+		str = str.substr(0, p);
+		cerr << str << " with port " << wanted_dest_port << endl;
+	}
 	if(str.rfind(".pcap") == str.length()-5)
 	{
 #ifdef HAVE_LIBPCAP
@@ -251,6 +259,8 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
 	int link_len = 0;
 	const _BYTE* pkt_data = NULL;
 	timeval packet_time = { 0, 0 };
+	while(true)
+	{
 #ifdef HAVE_LIBPCAP
 	struct pcap_pkthdr *header;
 	int res;
@@ -286,18 +296,21 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
 
 	/* 4n bytes IP header, 8 bytes UDP header */
 	uint8_t proto = pkt_data[link_len+9];
-	if(proto != 0x11) // UDP
+	if(proto == 0x11) // UDP
 	{
-		 /* not a UDP datagram, skip it and ask for another immediately */
-		 QTimer::singleShot(1, this, SLOT(OnDataReceived()));
-		 return;
+		int udp_ip_hdr_len = 4*(pkt_data[link_len] & 0x0f) + 8;
+		int ip_packet_len = ntohs(*(uint16_t*)&pkt_data[link_len+2]);
+		int dest_port = ntohs(*(uint16_t*)&pkt_data[link_len+udp_ip_hdr_len-6]);
+		if((wanted_dest_port==-1) || (dest_port == wanted_dest_port)) // wanted port
+		{
+			int data_len = ip_packet_len - udp_ip_hdr_len;
+			vecbydata.resize (data_len);
+			for(int i=0; i<data_len; i++)
+				 vecbydata[i] = pkt_data[link_len+udp_ip_hdr_len+i];
+			break;
+		}
 	}
-	int udp_ip_hdr_len = 4*(pkt_data[link_len] & 0x0f) + 8;
-	int ip_packet_len = ntohs(*(uint16_t*)&pkt_data[link_len+2]);
-	int data_len = ip_packet_len - udp_ip_hdr_len;
-	vecbydata.resize (data_len);
-	for(int i=0; i<data_len; i++)
-		 vecbydata[i] = pkt_data[link_len+udp_ip_hdr_len+i];
+	}
 	if(last_packet_time == 0)
 	{
 		 last_packet_time = 1000*uint64_t(packet_time.tv_sec);

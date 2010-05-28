@@ -148,7 +148,7 @@ public:
 			strManufacturer(strNMan), strModelName(strNModN), eRigStatus(eNSt),
 			bIsSpecRig(bNsp)
 			{}
-		SDrRigCaps(const SDrRigCaps& nSDRC) : 
+		SDrRigCaps(const SDrRigCaps& nSDRC) :
 			strManufacturer(nSDRC.strManufacturer),
 			strModelName(nSDRC.strModelName),
 			eRigStatus(nSDRC.eRigStatus), bIsSpecRig(nSDRC.bIsSpecRig) {}
@@ -236,6 +236,7 @@ protected:
 struct CHamlib
 {
 	enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
+	void SetFrequency(int) {}
 };
 #endif
 
@@ -265,7 +266,7 @@ inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)
 		}
 
 		iVal = -1 * (iVal + 1);
-	}	
+	}
 
 	return iVal;
 }

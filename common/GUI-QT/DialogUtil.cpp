@@ -51,24 +51,6 @@
 # include <wtap.h>
 #endif
 
-#if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
-extern "C"
-{
-	extern rmode_t parse_mode(const char *);
-	extern vfo_t parse_vfo(const char *);
-	extern setting_t parse_func(const char *);
-	extern setting_t parse_level(const char *);
-	extern setting_t parse_parm(const char *);
-	extern const char* strstatus(enum rig_status_e);
-}
-# define rig_parse_mode parse_mode
-# define rig_parse_vfo parse_vfo
-# define rig_parse_func parse_func
-# define rig_parse_level parse_level
-# define rig_parse_parm parse_parm
-# define rig_strstatus strstatus
-#endif
-
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
@@ -109,7 +91,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"</b></p>"
 		"<ul>"
 		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
-#ifdef USE_FAAD2_LIBRARY
+#if 0
 		"<li><b>FAAD2</b> (" + QString(FAAD2_VERSION) + ") <i>AAC/HE-AAC/HE-AACv2/DRM decoder "
 		"(c) Ahead Software, www.nero.com (http://faac.sf.net)</i></li>"
 #endif
@@ -124,11 +106,9 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 #ifdef HAVE_LIBHAMLIB
 		"<li><b>Hamlib</b> (" + QString(hamlib_version) + ") <i>http://hamlib.sourceforge.net</i></li>"
 #endif
-#ifdef HAVE_JOURNALINE
 		"<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
 		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
 		"Germany. For more information visit http://www.iis.fhg.de/dab</i></li>"
-#endif
 #ifdef HAVE_LIBFREEIMAGE
 		"<li><b>FreeImage</b> (" + QString(FreeImage_GetVersion()) + ") <i>This software uses the FreeImage open source "
 		"image library. See http://freeimage.sourceforge.net for details. "

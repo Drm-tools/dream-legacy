@@ -1190,6 +1190,8 @@ public:
     CGPSData GPSData;
     CMinMaxMean SNRstat, SigStrstat;
 
+    string aacenc, aacdec;
+
 protected:
 
     _REAL rSysSimSNRdB;

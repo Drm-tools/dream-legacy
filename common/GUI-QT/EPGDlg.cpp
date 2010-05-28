@@ -77,11 +77,7 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     year->setMinValue(0000);
     year->setMaxValue(3000);
 
-    /* show a label if EPG decoding is disabled */
-    if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == TRUE)
-        TextEPGDisabled->hide();
-    else
-        TextEPGDisabled->show();
+	TextEPGDisabled->hide();
 }
 
 EPGDlg::~EPGDlg()

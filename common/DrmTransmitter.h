@@ -38,7 +38,7 @@
 #include "ofdmcellmapping/OFDMCellMapping.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
-#include "sourcedecoders/AudioSourceDecoder.h"
+#include "sourcedecoders/AudioSourceEncoder.h"
 #include "soundinterface.h"
 
 /* Classes ********************************************************************/

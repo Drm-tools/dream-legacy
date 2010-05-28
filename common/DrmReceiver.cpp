@@ -1505,9 +1505,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
     /* Number of iterations for MLC setting */
     MSCMLCDecoder.SetNumIterations(s.Get("Receiver", "mlciter", 0));
 
-    /* Activate/Deactivate EPG decoding */
-    DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", TRUE));
-
 	SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
 
     /* Tuned Frequency */
@@ -1569,10 +1566,6 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
     /* Tuned Frequency */
     s.Put("Receiver", "frequency", pReceiverParam->GetFrequency());
-
-    /* Active/Deactivate EPG decoding */
-    s.Put("EPG", "decodeepg", DataDecoder.GetDecodeEPG());
-
 
     /* AM Parameters */
 

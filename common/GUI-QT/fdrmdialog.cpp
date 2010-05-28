@@ -164,6 +164,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
     pButtonGroup = new QButtonGroup(this);
+    pButtonGroup->hide();
     pButtonGroup->setExclusive(true);
     pButtonGroup->insert(PushButtonService1, 0);
     pButtonGroup->insert(PushButtonService2, 1);

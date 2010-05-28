@@ -45,6 +45,7 @@
 #include "MSCMultiplexer.h"
 #include "InputResample.h"
 #include "datadecoding/DataDecoder.h"
+#include "sourcedecoders/AudioSourceEncoder.h"
 #include "sourcedecoders/AudioSourceDecoder.h"
 #include "mlc/MLC.h"
 #include "interleaver/SymbolInterleaver.h"

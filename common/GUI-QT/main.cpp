@@ -141,8 +141,8 @@ main(int argc, char **argv)
 			   routine since we cannot 100% assume that the working thread is
 			   ready before the GUI thread */
 
-#ifdef HAVE_LIBHAMLIB
 			CRig rig(DRMReceiver.GetParameters());
+#ifdef HAVE_LIBHAMLIB
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
 			DRMReceiver.LoadSettings(Settings);

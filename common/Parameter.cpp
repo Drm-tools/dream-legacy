@@ -109,6 +109,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
         eRunState(STOPPED),
         CellMappingTable(),
         GPSData(),
+        aacenc(""),aacdec(""),
         rSysSimSNRdB(0.0),
         iFrequency(0),
         bValidSignalStrength(FALSE),
@@ -207,6 +208,7 @@ CParameter::CParameter(const CParameter& p):
         eRunState(p.eRunState),
         CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
         GPSData(p.GPSData),
+		aacenc(p.aacenc),aacdec(p.aacdec),
         rSysSimSNRdB(p.rSysSimSNRdB),
         iFrequency(p.iFrequency),
         bValidSignalStrength(p.bValidSignalStrength),
@@ -301,6 +303,8 @@ CParameter& CParameter::operator=(const CParameter& p)
     eRunState = p.eRunState;
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
     GPSData = p.GPSData;
+	aacenc =  p.aacenc;
+	aacdec =  p.aacdec;
     rSysSimSNRdB = p.rSysSimSNRdB;
     iFrequency = p.iFrequency;
     bValidSignalStrength = p.bValidSignalStrength;
@@ -791,7 +795,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
             (Service[iNewService].DataParam.iStreamID != STREAM_ID_NOT_USED))
     {
         iCurSelDataService = iNewService;
-
+cerr << "data service shortid " << iNewService << " stream " << Service[iNewService].DataParam.iStreamID << " packet id " << Service[iNewService].DataParam.iPacketID << endl;
         LastDataService.Reset();
 
         /* Set init flags */
