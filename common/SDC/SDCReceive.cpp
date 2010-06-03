@@ -833,8 +833,11 @@ _BOOLEAN CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter)
 {
-    /* Check length -> must be 3 bytes */
-    if (iLengthOfBody != 3)
+    /* Check length -> must be 3 or 4 bytes */
+    if (iLengthOfBody < 3)
+        return TRUE;
+
+    if (iLengthOfBody > 4)
         return TRUE;
 
     /* Decode date */
@@ -848,6 +851,12 @@ _BOOLEAN CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
     /* UTC (hours and minutes) */
     Parameter.iUTCHour = (*pbiData).Separate(5);
     Parameter.iUTCMin = (*pbiData).Separate(6);
+
+    if (iLengthOfBody == 4)
+    {
+    	// TODO decode local time offset
+    }
+
     Parameter.Unlock();
 
     return FALSE;
