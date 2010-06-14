@@ -57,6 +57,11 @@
 
 #include <qwt/qwt_global.h> /* to extract the library version */
 
+#ifdef USE_FAAD2_LIBRARY
+# include <neaacdec.h>
+#else
+# include "neaacdec_dll.h"
+#endif
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */

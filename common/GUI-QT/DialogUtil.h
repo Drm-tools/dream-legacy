@@ -42,6 +42,9 @@
 #include "AboutDlgbase.h"
 #include "../Parameter.h"
 #include "../selectioninterface.h"
+#ifdef HAVE_LIBHAMLIB
+# include "../util/Utilities.h"
+#endif
 
 /* Definitions ****************************************************************/
 
