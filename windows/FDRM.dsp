@@ -192,10 +192,6 @@ SOURCE=.\moc\moc_GPSReceiver.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\moc\moc_DrmReceiver.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\moc\moc_LiveScheduleDlg.cpp
 # End Source File
 # Begin Source File
@@ -576,6 +572,10 @@ SOURCE=..\common\datadecoding\DataDecoder.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\datadecoding\DataEncoder.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\datadecoding\Journaline.cpp
 # End Source File
 # Begin Source File
@@ -613,6 +613,10 @@ SOURCE=..\common\util\Utilities.cpp
 # Begin Source File
 
 SOURCE=..\common\MDI\AFPacketGenerator.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\sourcedecoders\AudioSourceEncoder.cpp
 # End Source File
 # Begin Source File
 
@@ -1092,6 +1096,10 @@ SOURCE=..\common\datadecoding\DataDecoder.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\datadecoding\DataEncoder.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\datadecoding\Journaline.h
 # End Source File
 # Begin Source File
@@ -1145,6 +1153,10 @@ SOURCE=..\common\util\Vector.h
 # Begin Source File
 
 SOURCE=..\common\MDI\AFPacketGenerator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\sourcedecoders\AudioSourceEncoder.h
 # End Source File
 # Begin Source File
 
