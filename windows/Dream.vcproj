@@ -1601,10 +1601,6 @@
 				>
 			</File>
 			<File
-				RelativePath="moc\moc_DrmReceiver.cpp"
-				>
-			</File>
-			<File
 				RelativePath="moc\moc_EPGDlg.cpp"
 				>
 			</File>
