@@ -29,13 +29,15 @@
 
 #include "EPGDlg.h"
 #include <qregexp.h>
+#include <qsocketdevice.h>
+
 static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now);
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, WFlags f)
         :CEPGDlgbase(parent, name, modal, f),BitmCubeGreen(),date(QDate::currentDate()),
         do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
-        Settings(NSettings),Timer(),sids()
+        Settings(NSettings),Timer(),sids(),next(NULL)
 {
     /* recover window size and position */
     CWinGeom s;
@@ -56,12 +58,8 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     BitmCubeGreen.fill(QColor(0, 255, 0));
 
     /* Connections ---------------------------------------------------------- */
-    connect(&Timer, SIGNAL(timeout()),
-            this, SLOT(OnTimer()));
-
-    /* Deactivate real-time timer */
-    Timer.stop();
-
+    connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
+    connect(this, SIGNAL(NowNext(QString)), this, SLOT(sendNowNext(QString)));
     connect(Prev, SIGNAL(clicked()), this, SLOT(previousDay()));
     connect(Next, SIGNAL(clicked()), this, SLOT(nextDay()));
     connect(channel, SIGNAL(activated(const QString&)), this
@@ -69,6 +67,9 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     connect(day, SIGNAL(valueChanged(int)), this, SLOT(setDay(int)));
     connect(month, SIGNAL(valueChanged(int)), this, SLOT(setMonth(int)));
     connect(year, SIGNAL(valueChanged(int)), this, SLOT(setYear(int)));
+
+    /* Deactivate real-time timer */
+    Timer.stop();
 
     day->setMinValue(1);
     day->setMaxValue(31);
@@ -84,6 +85,35 @@ EPGDlg::~EPGDlg()
 {
 }
 
+void EPGDlg::setActive(QListViewItem* myItem)
+{
+	MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
+	if(item->IsActive())
+	{
+		item->setPixmap(COL_START, BitmCubeGreen);
+		Data->ensureItemVisible(myItem);
+		emit NowNext(item->text(COL_NAME));
+		next = item->itemBelow();
+	}
+	else
+	{
+		item->setPixmap(COL_START,QPixmap()); /* no pixmap */
+	}
+}
+
+void EPGDlg::sendNowNext(QString s)
+{
+	int port = -1; // disable the facility - edit Dream.ini to enable
+	string addr = Settings.Get("NowNext", "address", string("127.0.0.1"));
+	port = Settings.Get("NowNext", "port", port);
+	if(port==-1)
+		return;
+	Settings.Put("NowNext", "address", addr);
+	Settings.Put("NowNext", "port", port);
+	QSocketDevice sock(QSocketDevice::Datagram);
+	sock.writeBlock(s.utf8(), s.length(), QHostAddress(addr.c_str()), port);
+}
+
 void EPGDlg::OnTimer()
 {
     /* Get current UTC time */
@@ -91,6 +121,13 @@ void EPGDlg::OnTimer()
     time(&ltime);
     tm gmtCur = *gmtime(&ltime);
 
+    if(gmtCur.tm_sec==30) // 1/2 minute boundary
+    {
+	if(next)
+	{
+		emit NowNext(QString("next: ")+next->text(COL_NAME));
+	}
+    }
     if(gmtCur.tm_sec==0) // minute boundary
     {
         /* today in UTC */
@@ -102,6 +139,7 @@ void EPGDlg::OnTimer()
             /* not all information is loaded */
             select();
         }
+	next = NULL;
 
         if (date == todayUTC) /* if today */
         {
@@ -110,16 +148,9 @@ void EPGDlg::OnTimer()
 
             while( myItem )
             {
-                /* Check, if the programme is now on line. If yes, set
-                special pixmap */
-                MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
-                if (item && item->IsActive())
-                {
-                    myItem->setPixmap(COL_START, BitmCubeGreen);
-                    Data->ensureItemVisible(myItem);
-                }
-                else
-                    myItem->setPixmap(COL_START,QPixmap()); /* no pixmap */
+                /* Check, if the programme is now on line. */
+                if (myItem)
+			setActive(myItem);
 
                 myItem = myItem->nextSibling();
             }
@@ -342,12 +373,11 @@ void EPGDlg::select()
     special pixmap */
 		if (CurrItem->IsActive())
 		{
-			CurrItem->setPixmap(COL_START, BitmCubeGreen);
 			CurrActiveItem = CurrItem;
 		}
     }
     if (CurrActiveItem) /* programme is now on line */
-        Data->ensureItemVisible(CurrActiveItem);
+        setActive(CurrActiveItem);
 }
 
 _BOOLEAN EPGDlg::MyListViewItem::IsActive()

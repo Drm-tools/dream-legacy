@@ -1271,7 +1271,12 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
     QFile file (dir + "/" +fileName);
     if (!file.open (IO_ReadOnly))
     {
-        return NULL;
+	fileName = epgFilename_etsi(d, sid, 1, bAdvanced); // try the other filename convention
+	file.setName(dir + "/" +fileName);
+	if (!file.open (IO_ReadOnly))
+	{
+            return NULL;
+	}
     }
     vector<_BYTE> vecData;
     vecData.resize (file.size ());

@@ -36,5 +36,7 @@ void mkdirs (const string & path);
 
 string epgFilename (const CDateAndTime & date,
 		    uint32_t sid, int type, bool advanced);
+string epgFilename_etsi (const CDateAndTime & date,
+		    uint32_t sid, int type, bool advanced);
 
 #endif

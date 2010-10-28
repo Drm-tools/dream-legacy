@@ -81,8 +81,9 @@ public:
 
 protected:
 
-    virtual	void showEvent(QShowEvent *e);
+	virtual	void showEvent(QShowEvent *e);
 	virtual void hideEvent(QHideEvent* pEvent);
+	virtual void setActive(QListViewItem*);
 
     class MyListViewItem : public QListViewItem
     {
@@ -106,6 +107,10 @@ protected:
 	CSettings&		Settings;
 	QTimer			Timer;
 	map<QString,uint32_t> sids;
+	QListViewItem*		next;
+
+signals:
+	void NowNext(QString);
 
 public slots:
     void nextDay();
@@ -115,6 +120,7 @@ public slots:
     void setMonth(int);
     void setYear(int);
 	void OnTimer();
+	void sendNowNext(QString);
 };
 
 #endif

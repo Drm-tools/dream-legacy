@@ -73,7 +73,6 @@ epgFilename (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
     s << setfill ('0') << setw (4) << date.year;
     s << setw (2) << int (date.month) << setw(2) << int (date.day);
     s << hex << setw (4) << ((unsigned long) sid);
-    string fileName;
     switch (type)
       {
       case 0:
@@ -86,6 +85,21 @@ epgFilename (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
 	  s << 'G';
 	  break;
       }
+    if (advanced)
+	s << ".EHA";
+    else
+	s << ".EHB";
+    return s.str ();
+}
+
+string
+epgFilename_etsi (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
+{
+    string name;
+    ostringstream s (name);
+    s << "w" << setfill ('0') << setw (4) << date.year;
+    s << setw (2) << int (date.month) << setw(2) << int (date.day);
+    s << "d" << hex << setw (4) << ((unsigned long) sid);
     if (advanced)
 	s << ".EHA";
     else
