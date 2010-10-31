@@ -67,6 +67,7 @@ public:
 	void GetNews(int iObjID, CNews& News);
 	void AddDataUnit(CVector<_BINARY>& vecbiNewData);
 	void Reset() {ResetOpenJournalineDecoder();}
+	void AddFile(const string filename);
 
 protected:
 	DAB_DATAGROUP_DECODER_t	dgdec;

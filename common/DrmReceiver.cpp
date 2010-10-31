@@ -144,6 +144,7 @@ CDRMReceiver::SetAMFilterBW(int value)
 void
 CDRMReceiver::Run()
 {
+	static int x=0;
     _BOOLEAN bEnoughData = TRUE;
     _BOOLEAN bFrameToSend = FALSE;
     size_t i;
@@ -171,6 +172,11 @@ CDRMReceiver::Run()
             upstreamRSCI.ReadData(ReceiverParam, RSIPacketBuf);
             if (RSIPacketBuf.GetFillLevel() > 0)
             {
+            	x++;
+            	if(x>140)
+            	{
+            		cerr << "x" << endl;
+            	}
                 time_keeper = time(NULL);
                 DecodeRSIMDI.ProcessData(ReceiverParam, RSIPacketBuf, FACDecBuf, SDCDecBuf, MSCDecBuf);
                 PlotManager.UpdateParamHistoriesRSIIn();

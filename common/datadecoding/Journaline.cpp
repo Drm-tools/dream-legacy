@@ -26,6 +26,13 @@
 \******************************************************************************/
 
 #include "Journaline.h"
+#ifdef WIN32
+# include <winsock2.h>
+#else
+# include <netinet/in.h>
+#endif
+
+#include "journaline/newssvcdec_impl.h" // for log variables
 
 CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
 {
@@ -68,6 +75,43 @@ void CJournaline::ResetOpenJournalineDecoder()
 	dgdec = DAB_DATAGROUP_DECODER_createDec(dg_cb, this);
 	newsdec = NEWS_SVC_DEC_createDec(obj_avail_cb, max_memory, &max_objects,
 		extended_header_len, this);
+}
+
+void CJournaline::AddFile(const string filename)
+{
+	FILE *f = fopen(filename.c_str(), "rb");
+	bool err=false;
+	showDdNewsSvcDecInfo=1;
+	showDdNewsSvcDecErr=1;
+	while(!feof(f))
+	{
+		unsigned char buf[8192];
+		uint16_t s;
+		size_t n = fread(&s, 2, 1, f);
+		if(n!=1)
+		{
+			err=true;
+			break;
+		}
+		unsigned long size = ntohs(s);
+		if(size>8192)
+			break;
+		n = fread(buf, 1, size, f);
+		if(n==size)
+		{
+			if(NEWS_SVC_DEC_putData(newsdec, size, buf)!=1)
+				fprintf(stderr, "error decoding jml");
+		}
+		else
+		{
+			err=true;
+			break;
+		}
+	}
+	if(!err)
+		fclose(f);
+	showDdNewsSvcDecInfo=0;
+	showDdNewsSvcDecErr=0;
 }
 
 void CJournaline::AddDataUnit(CVector<_BINARY>& vecbiNewData)

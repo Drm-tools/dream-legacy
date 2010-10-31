@@ -225,7 +225,14 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 	   3:  <interface ip>:<group ip>:<port>
 	   4:  <interface ip>::<port>
 	   5:  :<group ip>:<port>
+	   6:  - for TCP - no need to separately set origin
 	 */
+
+	if(strNewAddr == "-")
+	{
+		return TRUE;
+	}
+
 	int iPort=-1;
 	QHostAddress AddrGroup, AddrInterface;
 	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);

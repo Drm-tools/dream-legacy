@@ -124,10 +124,8 @@ CPacketSourceFile::ResetPacketSink()
 void
 CPacketSourceFile::OnDataReceived ()
 {
-	if(pf==NULL)
-		return;
-
 	vector<_BYTE> vecbydata (iMaxPacketSize);
+	vecbydata.resize(0); // in case we don't find anything
 	int interval;
 	if(bRaw)
 		 readRawOrFF(vecbydata, interval);
@@ -143,6 +141,7 @@ CPacketSourceFile::OnDataReceived ()
 		 iDelay = 0;
 	QTimer::singleShot(iDelay, this, SLOT(OnDataReceived()));
 	timeKeeper = timeKeeper.addMSecs(interval);
+	cerr << "new data" << endl;
 }
 
 void
@@ -151,7 +150,7 @@ CPacketSourceFile::readRawOrFF(vector<_BYTE>& vecbydata, int& interval)
 	char header[8];
 	size_t len2;
 
-	vecbydata.resize(0); // in case we don't find anything
+	interval = 400;
 
 	// get the sync bytes
 	fread(header, sizeof(header), 1, (FILE *) pf);
@@ -251,7 +250,6 @@ CPacketSourceFile::readRawOrFF(vector<_BYTE>& vecbydata, int& interval)
 		 if(len>len2+8)
 				len -= len2+8;
 	}
-	interval = 400;
 }
 
 void

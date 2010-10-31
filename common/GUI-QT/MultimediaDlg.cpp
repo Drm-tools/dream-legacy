@@ -43,7 +43,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	QWidget* parent, const char* name, bool modal, WFlags f)
 	: MultimediaDlgBase(parent, name, modal, f),
 	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()),
-	strCurrentSavePath(".")
+	JournalineDecoder(),strCurrentSavePath("."),bGetFromFile(false)
 {
 
 	/* Add body's stylesheet */
@@ -90,11 +90,11 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	pFileMenu->insertItem(tr("C&lear all"), this, SLOT(OnClearAll()),
 		CTRL+Key_X, 0);
 	pFileMenu->insertSeparator();
-	pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), CTRL+Key_S, 1);
-	pFileMenu->insertItem(tr("Save &all..."), this, SLOT(OnSaveAll()),
-		CTRL+Key_A, 2);
+	pFileMenu->insertItem(tr("&Load..."), this, SLOT(OnLoad()), CTRL+Key_L, 1);
+	pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), CTRL+Key_S, 2);
+	pFileMenu->insertItem(tr("Save &all..."), this, SLOT(OnSaveAll()), CTRL+Key_A, 3);
 	pFileMenu->insertSeparator();
-	pFileMenu->insertItem(tr("&Close"), this, SLOT(close()), 0, 3);
+	pFileMenu->insertItem(tr("&Close"), this, SLOT(close()), 0, 4);
 
 
 	/* Settings menu  ------------------------------------------------------- */
@@ -194,32 +194,40 @@ void MultimediaDlg::OnTimer()
 	int			iCurNumPict;
 	_BOOLEAN	bMainPage;
 	_BOOLEAN	bShowInfo = TRUE;
+	CDataDecoder::EAppType eNewAppType;
 
-	Parameters.Lock();
-	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
-	Parameters.Unlock();
-	switch(status)
+	if(bGetFromFile)
 	{
-	case NOT_PRESENT:
-		LEDStatus->Reset(); /* GREY */
-		break;
-
-	case CRC_ERROR:
-		LEDStatus->SetLight(2); /* RED */
-		break;
-
-	case DATA_ERROR:
-		LEDStatus->SetLight(1); /* YELLOW */
-		break;
-
-	case RX_OK:
-		LEDStatus->SetLight(0); /* GREEN */
-		break;
+		eNewAppType = CDataDecoder::AT_JOURNALINE;
 	}
+	else
+	{
+		Parameters.Lock();
+		ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
+		Parameters.Unlock();
+		switch(status)
+		{
+		case NOT_PRESENT:
+			LEDStatus->Reset(); /* GREY */
+			break;
 
-	/* Check out which application is transmitted right now */
+		case CRC_ERROR:
+			LEDStatus->SetLight(2); /* RED */
+			break;
 
-	CDataDecoder::EAppType eNewAppType = DataDecoder.GetAppType();
+		case DATA_ERROR:
+			LEDStatus->SetLight(1); /* YELLOW */
+			break;
+
+		case RX_OK:
+			LEDStatus->SetLight(0); /* GREEN */
+			break;
+		}
+
+		/* Check out which application is transmitted right now */
+		eNewAppType = DataDecoder.GetAppType();
+
+	}
 
 	if (eNewAppType != eAppType)
 		InitApplication(eNewAppType);
@@ -383,7 +391,10 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 {
 	/* Get news from actual Journaline decoder */
 	CNews News;
-	DataDecoder.GetNews(iCurJourID, News);
+	if(bGetFromFile)
+		JournalineDecoder.GetNews(iCurJourID, News);
+	else
+		DataDecoder.GetNews(iCurJourID, News);
 
 	/* Decode UTF-8 coding for title */
 	strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));
@@ -457,16 +468,16 @@ void MultimediaDlg::SetJournalineText()
 		"<tr><td><hr></td></tr>" /* horizontial line */
 		"</table>"
 		+ strFhGIISText;
-
+//QMessageBox::information( this, "Dream", strAllText );
 	/* Only update text browser if text has changed */
 	if (TextBrowser->text().compare(strAllText) != 0)
 		TextBrowser->setText(strAllText);
 
 	/* Enable / disable "save" menu item if title is present or not */
 	if (strTitle == "")
-		pFileMenu->setItemEnabled(1, FALSE);
+		pFileMenu->setItemEnabled(2, FALSE);
 	else
-		pFileMenu->setItemEnabled(1, TRUE);
+		pFileMenu->setItemEnabled(2, TRUE);
 }
 
 void MultimediaDlg::LoadSettings(const CSettings& Settings)
@@ -682,14 +693,14 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 	if (iCurImagePos < 0)
 	{
 		pFileMenu->setItemEnabled(0, FALSE);
-		pFileMenu->setItemEnabled(1, FALSE);
 		pFileMenu->setItemEnabled(2, FALSE);
+		pFileMenu->setItemEnabled(3, FALSE);
 	}
 	else
 	{
 		pFileMenu->setItemEnabled(0, TRUE);
-		pFileMenu->setItemEnabled(1, TRUE);
 		pFileMenu->setItemEnabled(2, TRUE);
+		pFileMenu->setItemEnabled(3, TRUE);
 	}
 
 	if (iCurImagePos <= 0)
@@ -732,6 +743,19 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 		/* Init text browser window */
 		TextBrowser->setText("<center><h2>" +
 			tr("MOT Slideshow Viewer") + "</h2></center>");
+	}
+}
+
+void MultimediaDlg::OnLoad()
+{
+	QString strFileName;
+	strFileName =
+		QFileDialog::getOpenFileName("", "*.jml", this);
+	if(strFileName != "")
+	{
+		bGetFromFile = true;
+		JournalineDecoder.AddFile(strFileName.latin1());
+		InitApplication(CDataDecoder::AT_JOURNALINE);
 	}
 }
 
@@ -876,8 +900,9 @@ void MultimediaDlg::InitNotSupported()
 {
 	/* Hide all controls, disable menu items */
 	pFileMenu->setItemEnabled(0, FALSE);
-	pFileMenu->setItemEnabled(1, FALSE);
+	pFileMenu->setItemEnabled(1, TRUE);
 	pFileMenu->setItemEnabled(2, FALSE);
+	pFileMenu->setItemEnabled(3, FALSE);
 	PushButtonStepForw->hide();
 	PushButtonJumpBegin->hide();
 	PushButtonJumpEnd->hide();
@@ -896,6 +921,7 @@ void MultimediaDlg::InitBroadcastWebSite()
 	pFileMenu->setItemEnabled(0, FALSE);
 	pFileMenu->setItemEnabled(1, FALSE);
 	pFileMenu->setItemEnabled(2, FALSE);
+	pFileMenu->setItemEnabled(3, FALSE);
 	PushButtonStepForw->show();
 	PushButtonStepForw->setEnabled(FALSE);
 	PushButtonJumpBegin->hide();
@@ -958,9 +984,12 @@ void MultimediaDlg::InitJournaline()
 	/* Disable "clear all" menu item */
 	pFileMenu->setItemEnabled(0, FALSE);
 
+	/* Enable "load" menu items */
+	pFileMenu->setItemEnabled(1, TRUE);
+
 	/* Disable "save" menu items */
-	pFileMenu->setItemEnabled(1, FALSE);
 	pFileMenu->setItemEnabled(2, FALSE);
+	pFileMenu->setItemEnabled(3, FALSE);
 
 	/* Only one back button is visible and enabled */
 	PushButtonStepForw->hide();

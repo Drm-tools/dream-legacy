@@ -61,6 +61,7 @@
 
 #include "../DrmReceiver.h"
 #include "../datadecoding/DABMOT.h"
+#include "../datadecoding/Journaline.h"
 #include "../util/Settings.h"
 
 /* Definitions ****************************************************************/
@@ -118,6 +119,7 @@ protected:
 
 	CParameter&				Parameters;
 	CDataDecoder&			DataDecoder;
+	CJournaline				JournalineDecoder;
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
@@ -137,6 +139,7 @@ protected:
 	QFont					fontDefault;
 	_BOOLEAN				bAddRefresh;
 	int						iRefresh;
+	bool					bGetFromFile;
 
 	void SetSlideShowPicture();
 	void SetJournalineText();
@@ -168,6 +171,7 @@ public slots:
 	void OnButtonStepForw();
 	void OnButtonJumpBegin();
 	void OnButtonJumpEnd();
+	void OnLoad();
 	void OnSave();
 	void OnSaveAll();
 	void OnClearAll() {ClearAllSlideShow();}

@@ -120,13 +120,14 @@ void EPGDlg::OnTimer()
     time_t ltime;
     time(&ltime);
     tm gmtCur = *gmtime(&ltime);
+	static QListViewItem* next = NULL;
 
     if(gmtCur.tm_sec==30) // 1/2 minute boundary
     {
-	if(next)
-	{
-		emit NowNext(QString("next: ")+next->text(COL_NAME));
-	}
+		if(next)
+		{
+			emit NowNext(QString("next: ")+next->text(COL_NAME));
+		}
     }
     if(gmtCur.tm_sec==0) // minute boundary
     {
@@ -141,6 +142,8 @@ void EPGDlg::OnTimer()
         }
 	next = NULL;
 
+		next = NULL;
+
         if (date == todayUTC) /* if today */
         {
             /* Extract values from the list */
@@ -150,8 +153,7 @@ void EPGDlg::OnTimer()
             {
                 /* Check, if the programme is now on line. */
                 if (myItem)
-			setActive(myItem);
-
+					setActive(myItem);
                 myItem = myItem->nextSibling();
             }
         }

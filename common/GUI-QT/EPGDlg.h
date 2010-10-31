@@ -94,6 +94,7 @@ protected:
 
 
 	_BOOLEAN IsActive();
+
 	time_t start;
 	int duration;
     };

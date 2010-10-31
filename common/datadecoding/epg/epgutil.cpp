@@ -65,6 +65,7 @@ mkdirs (const string & path)
       }
 }
 
+// this is the old dream one
 string
 epgFilename (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
 {

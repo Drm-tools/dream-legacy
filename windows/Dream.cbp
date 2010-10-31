@@ -36,7 +36,6 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='&quot;RTLwithSlideshow_ModeB_10kHz.wav&quot;' />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />
@@ -166,6 +165,8 @@
 		<Unit filename="..\common\MDI\PacketSocketNull.h" />
 		<Unit filename="..\common\MDI\PacketSocketQT.cpp" />
 		<Unit filename="..\common\MDI\PacketSocketQT.h" />
+		<Unit filename="..\common\MDI\PacketSocketStomp.cpp" />
+		<Unit filename="..\common\MDI\PacketSocketStomp.h" />
 		<Unit filename="..\common\MDI\PacketSourceFile.cpp" />
 		<Unit filename="..\common\MDI\PacketSourceFile.h" />
 		<Unit filename="..\common\MDI\Pft.cpp" />
@@ -393,6 +394,7 @@
 		<Unit filename="moc\moc_MultimediaDlg.cpp" />
 		<Unit filename="moc\moc_MultimediaDlgbase.cpp" />
 		<Unit filename="moc\moc_PacketSocketQT.cpp" />
+		<Unit filename="moc\moc_PacketSocketStomp.cpp" />
 		<Unit filename="moc\moc_PacketSourceFile.cpp" />
 		<Unit filename="moc\moc_StationsDlg.cpp" />
 		<Unit filename="moc\moc_StationsDlgbase.cpp" />
