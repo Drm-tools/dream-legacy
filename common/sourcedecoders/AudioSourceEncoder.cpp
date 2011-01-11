@@ -32,14 +32,20 @@
 // dummy AAC Encoder implementation if dll not found
 
 int FAACAPI dummyfaacEncGetVersion(char **, char **) { return 0; }
-faacEncConfigurationPtr FAACAPI dummyfaacEncGetCurrentConfiguration(faacEncHandle) { return NULL; }
+faacEncConfigurationPtr FAACAPI dummyfaacEncGetCurrentConfiguration(faacEncHandle h) 
+{ 
+	return (faacEncConfigurationPtr)h; 
+}
 
 int FAACAPI dummyfaacEncSetConfiguration(faacEncHandle, faacEncConfigurationPtr) { return 0; }
 
 faacEncHandle FAACAPI dummyfaacEncOpen(unsigned long,
 				  unsigned int,
 				  unsigned long *,
-				  unsigned long *) { return NULL; }
+				  unsigned long *) 
+{
+	return (faacEncHandle) new faacEncConfiguration(); 
+}
 
 int FAACAPI dummyfaacEncGetDecoderSpecificInfo(faacEncHandle, unsigned char **,
 					  unsigned long *) { return 0; }
@@ -48,8 +54,11 @@ int FAACAPI dummyfaacEncEncode(faacEncHandle, int32_t *, unsigned int,
 			 unsigned char *,
 			 unsigned int) { return 0; }
 
-int FAACAPI dummyfaacEncClose(faacEncHandle) { return 0; }
-
+int FAACAPI dummyfaacEncClose(faacEncHandle h) 
+{
+	delete (faacEncConfigurationPtr)h;
+	return 0; 
+}
 
 /* Implementation *************************************************************/
 
@@ -60,7 +69,7 @@ CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
     faacEncGetVersion = dummyfaacEncGetVersion;
     faacEncGetCurrentConfiguration = dummyfaacEncGetCurrentConfiguration;
     faacEncSetConfiguration = dummyfaacEncSetConfiguration;
-    faacEncOpen = faacEncOpen;
+    faacEncOpen = dummyfaacEncOpen;
     faacEncGetDecoderSpecificInfo = dummyfaacEncGetDecoderSpecificInfo;
     faacEncEncode = dummyfaacEncEncode;
     faacEncClose = dummyfaacEncClose;
