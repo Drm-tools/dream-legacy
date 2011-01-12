@@ -506,8 +506,8 @@ CSettings::ParseArguments(int argc, char **argv)
 		if ((!strcmp(argv[i], "--help")) ||
 			(!strcmp(argv[i], "-h")) || (!strcmp(argv[i], "-?")))
 		{
-			Put("command", "mode", "help");
-			continue;
+			cerr << UsageArguments(argv) << endl;
+			exit(0);
 		}
 
 		/* not an option --------------------------------------------------- */
