@@ -1562,10 +1562,10 @@ CDRMReceiver::SaveSettings(CSettings& s)
     s.Put("Receiver", "modmetric", ChannelEstimation.GetIntCons());
 
     /* Sound In device */
-    s.Put("Receiver", "snddevin", pSoundInInterface->GetDev());
+    s.Put("command", "snddevin", pSoundInInterface->GetDev());
 
     /* Sound Out device */
-    s.Put("Receiver", "snddevout", pSoundOutInterface->GetDev());
+    s.Put("command", "snddevout", pSoundOutInterface->GetDev());
 
     /* Number of iterations for MLC setting */
     s.Put("Receiver", "mlciter", MSCMLCDecoder.GetInitNumIterations());

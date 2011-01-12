@@ -258,11 +258,12 @@ ErrorMessage(string strErrorString)
 int
 main(int argc, char **argv)
 {
+	CSettings Settings;
+	Settings.Load(argc, argv);
+	
 	try
 	{
-		CSettings Settings;
-		Settings.Load(argc, argv);
-		if (Settings.Get("command", "isreceiver", TRUE))
+		if (Settings.Get("command", "mode", string("receive")) == "receive")
 		{
 			CDRMSimulation DRMSimulation;
 			CDRMReceiver DRMReceiver;
@@ -271,18 +272,22 @@ main(int argc, char **argv)
 			DRMReceiver.LoadSettings(Settings);
 			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
 			DRMReceiver.Start();
+			DRMReceiver.SaveSettings(Settings);
 		}
 		else
 		{
 			CDRMTransmitter DRMTransmitter;
+			DRMTransmitter.LoadSettings(Settings);
 			DRMTransmitter.Start();
+			DRMTransmitter.SaveSettings(Settings);
 		}
 	}
 	catch(CGenErr GenErr)
 	{
 		ErrorMessage(GenErr.strError);
 	}
-
+	
+	Settings.Save();
 	return 0;
 }
 

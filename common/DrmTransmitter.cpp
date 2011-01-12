@@ -256,3 +256,21 @@ CDRMTransmitter::CDRMTransmitter() :
         TransmParam.SetStreamLen(0, 0, 0);
     }
 }
+
+void CDRMTransmitter::LoadSettings(CSettings& s)
+{
+    /* Sound In device */
+	pSoundInInterface->SetDev(s.Get("command", "snddevin", int(0)));
+	
+	 /* Sound Out device */
+	pSoundOutInterface->SetDev(s.Get("command", "snddevout", int(0)));
+}
+
+void CDRMTransmitter::SaveSettings(CSettings& s)
+{
+    /* Sound In device */
+    s.Put("command", "snddevin", pSoundInInterface->GetDev());
+
+    /* Sound Out device */
+    s.Put("command", "snddevout", pSoundOutInterface->GetDev());
+}

@@ -229,7 +229,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", -1,
 							   MAX_NUM_SND_DEV, rArgument) == TRUE)
 		{
-			Put("Receiver", "snddevin", int (rArgument));
+			Put("command", "snddevin", int (rArgument));
 			continue;
 		}
 
@@ -237,7 +237,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", -1,
 							   MAX_NUM_SND_DEV, rArgument) == TRUE)
 		{
-			Put("Receiver", "snddevout", int (rArgument));
+			Put("command", "snddevout", int (rArgument));
 			continue;
 		}
 
