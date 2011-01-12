@@ -51,6 +51,12 @@
 #endif
 #include <iostream>
 
+extern "C" 
+{
+#include <errno.h>
+#include <string.h> 
+}
+
 /* Implementation *************************************************************/
 #ifdef USE_QT_GUI
 /******************************************************************************\
@@ -283,7 +289,7 @@ main(int argc, char **argv)
 void
 ErrorMessage(string strErrorString)
 {
-	perror(strErrorString.c_str());
+	cerr<<strErrorString<<"(errno "<<errno<<":"<<strerror(errno)<<")"<<endl;
 }
 #endif /* USE_QT_GUI */
 
