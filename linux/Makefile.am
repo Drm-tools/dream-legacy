@@ -97,6 +97,7 @@ drmwithoutqt_SOURCES = \
 	source/Pacer.cpp \
 	source/pa_shm_ringbuffer.c \
 	source/shmsoundin.cpp \
+	source/PThread.cpp \
 	../common/Version.h \
 	../common/ReceptLog.h \
 	../common/PlotManager.h \
@@ -205,7 +206,8 @@ drmwithoutqt_SOURCES = \
 	../common/audiofilein.h \
 	source/pa_shm_ringbuffer.h \
 	source/shmsoundin.h \
-	source/sound.h
+	source/sound.h \
+	source/PThread.h
 
 if USE_OSS
 drm_sound_SOURCES = \

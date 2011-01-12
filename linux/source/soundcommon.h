@@ -31,9 +31,12 @@
 #ifdef USE_QT_GUI
 # if QT_VERSION >= 0x030000
 #  include <qmutex.h>
-# else
 # endif
 # include <qthread.h>
+#else
+# ifdef __linux__
+#  include "PThread.h"
+# endif
 #endif
 #include "../../common/util/Buffer.h"
 #ifdef USE_ALSA
@@ -78,42 +81,20 @@ string name;
 
 class CSoundBuf : public CCyclicBuffer<_SAMPLE> {
 
-    public:
-    CSoundBuf() : keep_running(TRUE)
-#ifdef USE_QT_GUI
-            , data_accessed()
-#endif
-{}
-bool keep_running;
-#ifdef USE_QT_GUI
-void lock () {
-    data_accessed.lock();
-}
-void unlock () {
-    data_accessed.unlock();
-}
+public:
+    CSoundBuf() : keep_running(TRUE), data_accessed(){}
+	bool keep_running;
+	void lock () { data_accessed.Lock(); }
+	void unlock () { data_accessed.Unlock(); }
 
 protected:
-QMutex	data_accessed;
-#else
-void lock () { }
-void unlock () { }
-#endif
+	CMutex	data_accessed;
 };
 
 #ifdef USE_QT_GUI
 typedef QThread CThread;
-#else
-class CThread {
-    public:
-void run() {}
-void start() {}
-void wait(int) {}
-void msleep(int) {}
-bool running() {
-    return true;
-}
-};
+#elif defined __linux__
+typedef PThread CThread;
 #endif
 
 void getdevices(vector<string>& names, vector<string>& devices, bool playback);

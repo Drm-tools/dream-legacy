@@ -274,6 +274,11 @@ public:
 protected:
     QMutex Mutex;
 };
+
+#elif __linux__
+# include "../linux/source/PThread.h"
+typedef PMutex CMutex;
+
 #else
 /* No GUI and no threads, we do not need mutex in this case */
 class CMutex
