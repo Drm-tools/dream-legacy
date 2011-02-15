@@ -47,7 +47,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\libs;&quot;$(QTDIR)\include&quot;;moc\;&quot;..\common\GUI-QT&quot;;&quot;$(QTDIR)\mkspecs\win32-msvc.net&quot;"
-				PreprocessorDefinitions="QMAKESPEC=win32-msvc.net;QT_NO_DEBUG;NDEBUG;_WINDOWS;WIN32;QT_DLL;QT_THREAD_SUPPORT;FAACAPI=_cdecl"
+				PreprocessorDefinitions="QMAKESPEC=win32-msvc.net;QT_NO_DEBUG;NDEBUG;_WINDOWS;WIN32;QT_DLL;QT_THREAD_SUPPORT;FAACAPI=_cdecl;HAVE_LIBHAMLIB"
 				GeneratePreprocessedFile="0"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -343,6 +343,10 @@
 			</File>
 			<File
 				RelativePath="..\common\datadecoding\epg\epgutil.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\common\datadecoding\Experiment.cpp"
 				>
 			</File>
 			<File
@@ -900,6 +904,10 @@
 			</File>
 			<File
 				RelativePath="..\common\datadecoding\epg\epgutil.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\datadecoding\Experiment.h"
 				>
 			</File>
 			<File
