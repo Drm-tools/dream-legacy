@@ -156,6 +156,8 @@ CParameter::CParameter(const CParameter& p):
         iDay(p.iDay),
         iUTCHour(p.iUTCHour),
         iUTCMin(p.iUTCMin),
+        iUTCOff(p.iUTCOff),
+        iUTCSense(p.iUTCSense),
         iFrameIDTransm(p.iFrameIDTransm),
         iFrameIDReceiv(p.iFrameIDReceiv),
         rFreqOffsetAcqui(p.rFreqOffsetAcqui),
@@ -413,6 +415,8 @@ void CParameter::ResetServicesStreams()
     iYear = 0;
     iUTCHour = 0;
     iUTCMin = 0;
+    iUTCOff = 0;
+    iUTCSense = 0;
 }
 
 void CParameter::GetActiveServices(set<int>& actServ)

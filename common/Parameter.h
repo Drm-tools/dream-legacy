@@ -1073,6 +1073,8 @@ public:
     /* UTC (hours and minutes) */
     int iUTCHour;
     int iUTCMin;
+    int iUTCOff;
+    int iUTCSense;
 
     /* Identifies the current frame. This parameter is set by FAC */
     int iFrameIDTransm;
