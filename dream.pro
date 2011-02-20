@@ -24,9 +24,11 @@ macx {
 }
 
 unix {
-    CONFIG      += pcap hamlib faac faad sndfile
+    CONFIG      += pcap faac faad sndfile hamlib
 	LIBS 		+= -lz -lqwt -lrfftw -lfftw
 	SOURCES		+= linux/source/Pacer.cpp
+	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
+	SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
 	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
@@ -71,7 +73,7 @@ win32 {
 faad {
 	DEFINES		+= HAVE_LIBFAAD USE_FAAD2_LIBRARY
 	unix {
-        LIBS 		+= -lfaad
+        LIBS 		+= -lfaad_drm
 	}
 	win32 {
         LIBS 		+= libfaad.lib
@@ -81,7 +83,7 @@ faad {
 faac {
 	DEFINES		+= HAVE_LIBFAAC USE_FAAC_LIBRARY
 	unix {
-        LIBS 		+= -lfaac
+        LIBS 		+= -lfaac_drm
 	}
 	win32 {
         LIBS 		+= libfaac.lib
