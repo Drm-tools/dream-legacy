@@ -46,6 +46,10 @@
 # include "../util/Utilities.h"
 #endif
 
+#ifndef HAVE_LIBHAMLIB
+typedef int rig_model_t;
+#endif
+
 /* Definitions ****************************************************************/
 
 /* Definition for Courier font */
