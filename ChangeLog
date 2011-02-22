@@ -1,3 +1,29 @@
+1.13
+ 
+  - change name of faac and faad libraries to permit cooexistance of normal and drm versions
+  - support run-time loading of faac and faad libraries to enable binary dream downloads
+  - support of WinRadio G313 on linux
+  - new FM mode
+  - New "experimental" data mode
+  - don't assume audio is scaled to 32768 peak
+  - improved Mutex locking on CParameter
+  - move signal strength monitoring from CDrmReceiver
+  - PSD Measurements are configurable in the ini file
+  - improved termination state machine (CParameter.bRunThread replaced by CParameter.eRunState)
+  - Make sure frequency gets in the log file when retuning
+  - improved code for version numbers, especially in rinf RSCI tag
+  - ability to send now/next EPG data to an external program via UDP
+  - improved Journaline decoding from Fraunhofer
+  - save Tx/Rx mode in ini file
+  - better use of Qt I18N features
+  - Don't send sdc_ tag if tag packet is empty
+  - tcp mode for RSCI/MDI subscription
+  -prefix source/destination with t
+  - Power Impulse response tag in RSCI
+  - # suffix in pcap file name should allow filtering on UDP port (does this work yet?)
+  - report AF sequence number discontinuities with print statements
+  - handle ETSI filenames for EPG files as well as the old dream ones.
+ 
 1.12
 
   - Fixed problem where users directories being cleared when clearing cache
@@ -99,46 +125,46 @@
   - store plot type selection for evaluation dialog
 
 1.2.2
-	- Lots of changes for AM demodulation: a separate main window for AM, noise reduction,
-	  PLL and CW demodulation, changed AM bandpass filter
-	- SNR spectrum plot implemented in DRM-mode, which information is used to improve
-	  reception under interference situations
-	- Added history plots for SNR/Audio, Delay/Doppler and Frequency/Sample Rate
-	- Small improvements and bug fixes
+  - Lots of changes for AM demodulation: a separate main window for AM, noise reduction,
+    PLL and CW demodulation, changed AM bandpass filter
+  - SNR spectrum plot implemented in DRM-mode, which information is used to improve
+    reception under interference situations
+  - Added history plots for SNR/Audio, Delay/Doppler and Frequency/Sample Rate
+  - Small improvements and bug fixes
 
 1.1
-	- AAC encoder for Dream TX (using faac library)
-	- jpg-support for Windows version (using Freeimage library)
-	- including Hamlib library for front-end remote control
-	- Journaline library
-	- Dream init file, storing some settings and window sizes/positions
+  - AAC encoder for Dream TX (using faac library)
+  - jpg-support for Windows version (using Freeimage library)
+  - including Hamlib library for front-end remote control
+  - Journaline library
+  - Dream init file, storing some settings and window sizes/positions
 
 1.0.6
-	- Improved AM demodulation (introduced new window) -> AM, USB, LSB; different filters
-	- Stations dialog with update function (using DRM schedule powered by Klaus Schneider www.drm-dx.de)
-	- Remote control for different front-ends (e.g., Winradio, AOR7030, Elektor)
-	- GUI for DRM transmitter (start with command line flag '-t')
-	- MOT Slide Show encoder + lots of fixes for DRM transmitter
+  - Improved AM demodulation (introduced new window) -> AM, USB, LSB; different filters
+  - Stations dialog with update function (using DRM schedule powered by Klaus Schneider www.drm-dx.de)
+  - Remote control for different front-ends (e.g., Winradio, AOR7030, Elektor)
+  - GUI for DRM transmitter (start with command line flag '-t')
+  - MOT Slide Show encoder + lots of fixes for DRM transmitter
 
 1.0
-	- New SNR estimation
-	- New algorithm for sample rate offset estimation
-	- I/O interface indicator
+  - New SNR estimation
+  - New algorithm for sample rate offset estimation
+  - I/O interface indicator
 
 0.9.3
-	- SBR support (needs new faad2 library)
-	- AM mode  (analog demodulation)
-	- MOT Slide Show decoding (DAB)
-	- improved log file
-	- command line parameters
+  - SBR support (needs new faad2 library)
+  - AM mode  (analog demodulation)
+  - MOT Slide Show decoding (DAB)
+  - improved log file
+  - command line parameters
 
 0.9.2
-	- Time synchronization acquisition algorithm improved
-	- Channel estimation: wiener filter with adaptation
-	- Log file support
-	- Improved metric for MLC decoder
-	- Improved (sample) frequency offset tracking, better averaging functions
-	- Bug fix in Windows sound interface
+  - Time synchronization acquisition algorithm improved
+  - Channel estimation: wiener filter with adaptation
+  - Log file support
+  - Improved metric for MLC decoder
+  - Improved (sample) frequency offset tracking, better averaging functions
+  - Bug fix in Windows sound interface
 
 0.9.1
-	Initial version
+  Initial version
