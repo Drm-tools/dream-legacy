@@ -27,10 +27,33 @@
 \******************************************************************************/
 
 #include "TransmDlg.h"
+#if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
+# include <qbuttongroup.h>
+# include <qwhatsthis.h>
+# include <qmultilineedit.h>
+# include <qlistview.h>
+# include <qfiledialog.h>
+# include <qpopupmenu.h>
+# include <qprogressbar.h>
+# define Q3PopupMenu QPopupMenu
+# define Q3WhatsThis QWhatsThis
+# define Q3MultiLineEdit QMultiLineEdit
+# define Q3FileDialog QFileDialog
+# define Q3ListViewItem QListViewItem
+# define Q3ListViewItemIterator QListViewItemIterator
+#else
+# include <q3filedialog.h>
+# include <q3whatsthis.h>
+# include <QCustomEvent>
+# include <QHideEvent>
+# include <Q3PopupMenu>
+# define CHECK_PTR(x) Q_CHECK_PTR(x)
+#endif
 
 
 TransmDialog::TransmDialog(CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f)
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 	:
 	TransmDlgBase(parent, name, modal, f), Settings(NSettings),
 	bIsStarted(FALSE),
@@ -51,7 +74,7 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	AddWhatsThisHelp();
 
 	/* Set controls to custom behavior */
-	MultiLineEditTextMessage->setWordWrap(QMultiLineEdit::WidgetWidth);
+	MultiLineEditTextMessage->setWordWrap(Q3MultiLineEdit::WidgetWidth);
 	MultiLineEditTextMessage->setEdited(FALSE);
 	ComboBoxTextMessage->insertItem(tr("new"), 0);
 	UpdateMSCProtLevCombo();
@@ -61,7 +84,11 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 
 	/* Init progress bar for input signal level */
 	ProgrInputLevel->setRange(-50.0, 0.0);
+#if QT_VERSION < 0x040000
 	ProgrInputLevel->setOrientation(QwtThermo::Horizontal, QwtThermo::Bottom);
+#else
+	ProgrInputLevel->setOrientation(Qt::Horizontal, QwtThermo::BottomScale);
+#endif
 	ProgrInputLevel->setFillColor(QColor(0, 190, 0));
 	ProgrInputLevel->setAlarmLevel(-5.0);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
@@ -293,7 +320,7 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 
 	/* Set Menu ***************************************************************/
 	/* Settings menu  ------------------------------------------------------- */
-	pSettingsMenu = new QPopupMenu(this);
+	pSettingsMenu = new Q3PopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(
@@ -309,7 +336,11 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
+#if QT_VERSION < 0x040000
 	TransmDlgBaseLayout->setMenuBar(pMenu);
+#else
+//TODO
+#endif
 
 
 	/* Connections ---------------------------------------------------------- */
@@ -387,6 +418,11 @@ TransmDialog::~TransmDialog()
 		TransThread.Stop();
 }
 
+void TransmDialog::OnHelpWhatsThis()
+{
+	Q3WhatsThis::enterWhatsThisMode();
+}
+
 void TransmDialog::OnTimer()
 {
 	/* Set value for input level meter (only in "start" mode) */
@@ -455,7 +491,7 @@ void TransmDialog::OnButtonStartStop()
 
 		/* Iteration through list view items. Code based on QT sample code for
 		   list view items */
-		QListViewItemIterator it(ListViewFileNames);
+		Q3ListViewItemIterator it(ListViewFileNames);
 
 		for (; it.current(); it++)
 		{
@@ -645,7 +681,7 @@ _BOOLEAN TransmDialog::GetMessageText(const int iID)
 
 		/* First line */
 		vecstrTextMessage[iID] =
-			MultiLineEditTextMessage->textLine(0).utf8();
+			MultiLineEditTextMessage->textLine(0).utf8().data();
 
 		/* Other lines */
 		const int iNumLines = MultiLineEditTextMessage->numLines();
@@ -707,7 +743,7 @@ void TransmDialog::OnButtonClearAllText()
 void TransmDialog::OnPushButtonAddFileName()
 {
 	/* Show "open file" dialog. Let the user select more than one file */
-	QStringList list = QFileDialog::getOpenFileNames(
+	QStringList list = Q3FileDialog::getOpenFileNames(
 		tr("Image Files (*.png *.jpg *.jpeg *.jfif)"), NULL, this);
 
 	/* Check if user not hit the cancel button */
@@ -722,7 +758,7 @@ void TransmDialog::OnPushButtonAddFileName()
 			   automatically destroyed by QT when the parent
 			   ("ListViewFileNames") is destroyed */
 			ListViewFileNames->insertItem(
-				new QListViewItem(ListViewFileNames, FileInfo.fileName(),
+				new Q3ListViewItem(ListViewFileNames, FileInfo.fileName(),
 				QString().setNum((float) FileInfo.size() / 1000.0, 'f', 2),
 				FileInfo.filePath()));
 		}
@@ -783,7 +819,7 @@ void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 	Parameters.Lock();
 	/* Set additional text for log file. Conversion from QString to STL
 	   string is needed (done with .utf8() function of QT string) */
-	Parameters.Service[0].strLabel = strLabel.utf8();
+	Parameters.Service[0].strLabel = strLabel.utf8().data();
 	Parameters.Unlock();
 }
 
@@ -1084,12 +1120,12 @@ void TransmDialog::EnableAllControlsForSet()
 void TransmDialog::AddWhatsThisHelp()
 {
 	/* Dream Logo */
-	QWhatsThis::add(PixmapLabelDreamLogo,
+	Q3WhatsThis::add(PixmapLabelDreamLogo,
 		tr("<b>Dream Logo:</b> This is the official logo of "
 		"the Dream software."));
 
 	/* Input Level */
-	QWhatsThis::add(ProgrInputLevel,
+	Q3WhatsThis::add(ProgrInputLevel,
 		tr("<b>Input Level:</b> The input level meter shows "
 		"the relative input signal peak level in dB. If the level is too high, "
 		"the meter turns from green to red."));
@@ -1107,10 +1143,10 @@ void TransmDialog::AddWhatsThisHelp()
 		"</i> As robustness mode B, but with severe delay and "
 		"Doppler spread</li></ul>");
 
-	QWhatsThis::add(RadioButtonRMA, strRobustnessMode);
-	QWhatsThis::add(RadioButtonRMB, strRobustnessMode);
-	QWhatsThis::add(RadioButtonRMC, strRobustnessMode);
-	QWhatsThis::add(RadioButtonRMD, strRobustnessMode);
+	Q3WhatsThis::add(RadioButtonRMA, strRobustnessMode);
+	Q3WhatsThis::add(RadioButtonRMB, strRobustnessMode);
+	Q3WhatsThis::add(RadioButtonRMC, strRobustnessMode);
+	Q3WhatsThis::add(RadioButtonRMD, strRobustnessMode);
 
 	/* Bandwidth */
 	const QString strBandwidth =
@@ -1119,12 +1155,12 @@ void TransmDialog::AddWhatsThisHelp()
 		"bandwidth constellations are possible, e.g., DRM robustness mode D "
 		"and C are only defined for the bandwidths 10 kHz and 20 kHz.");
 
-	QWhatsThis::add(RadioButtonBandwidth45, strBandwidth);
-	QWhatsThis::add(RadioButtonBandwidth5, strBandwidth);
-	QWhatsThis::add(RadioButtonBandwidth9, strBandwidth);
-	QWhatsThis::add(RadioButtonBandwidth10, strBandwidth);
-	QWhatsThis::add(RadioButtonBandwidth18, strBandwidth);
-	QWhatsThis::add(RadioButtonBandwidth20, strBandwidth);
+	Q3WhatsThis::add(RadioButtonBandwidth45, strBandwidth);
+	Q3WhatsThis::add(RadioButtonBandwidth5, strBandwidth);
+	Q3WhatsThis::add(RadioButtonBandwidth9, strBandwidth);
+	Q3WhatsThis::add(RadioButtonBandwidth10, strBandwidth);
+	Q3WhatsThis::add(RadioButtonBandwidth18, strBandwidth);
+	Q3WhatsThis::add(RadioButtonBandwidth20, strBandwidth);
 
 	/* Output intermediate frequency of DRM signal */
 	const QString strOutputIF =
@@ -1135,9 +1171,9 @@ void TransmDialog::AddWhatsThisHelp()
 		"should be chosen that the DRM signal lies entirely inside the "
 		"sound-card bandwidth.");
 
-	QWhatsThis::add(TextLabelIF, strOutputIF);
-	QWhatsThis::add(LineEditSndCrdIF, strOutputIF);
-	QWhatsThis::add(TextLabelIFUnit, strOutputIF);
+	Q3WhatsThis::add(TextLabelIF, strOutputIF);
+	Q3WhatsThis::add(LineEditSndCrdIF, strOutputIF);
+	Q3WhatsThis::add(TextLabelIFUnit, strOutputIF);
 
 	/* Output format */
 	const QString strOutputFormat =
@@ -1157,10 +1193,10 @@ void TransmDialog::AddWhatsThisHelp()
 		"is output on the left channel and the phase is output on the right "
 		"channel.</li></ul>");
 
-	QWhatsThis::add(RadioButtonOutReal, strOutputFormat);
-	QWhatsThis::add(RadioButtonOutIQPos, strOutputFormat);
-	QWhatsThis::add(RadioButtonOutIQNeg, strOutputFormat);
-	QWhatsThis::add(RadioButtonOutEP, strOutputFormat);
+	Q3WhatsThis::add(RadioButtonOutReal, strOutputFormat);
+	Q3WhatsThis::add(RadioButtonOutIQPos, strOutputFormat);
+	Q3WhatsThis::add(RadioButtonOutIQNeg, strOutputFormat);
+	Q3WhatsThis::add(RadioButtonOutEP, strOutputFormat);
 
 	/* MSC interleaver mode */
 	const QString strInterleaver =
@@ -1171,6 +1207,6 @@ void TransmDialog::AddWhatsThisHelp()
 		"the interleaver length the longer the delay until (after a "
 		"re-synchronization) audio can be heard.");
 
-	QWhatsThis::add(TextLabelInterleaver, strInterleaver);
-	QWhatsThis::add(ComboBoxMSCInterleaver, strInterleaver);
+	Q3WhatsThis::add(TextLabelInterleaver, strInterleaver);
+	Q3WhatsThis::add(ComboBoxMSCInterleaver, strInterleaver);
 }

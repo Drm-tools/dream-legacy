@@ -32,7 +32,11 @@
 #include <qfileinfo.h>
 #include <qfile.h>
 #include <qdir.h>
-#include <qtextstream.h>
+# if QT_VERSION < 0x040000
+# include <qtextstream.h>
+#else
+# include <q3textstream.h>
+#endif
 #include <qregexp.h>
 #include <iostream>
 #include <cstdlib>
@@ -1269,11 +1273,19 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
 
     QString fileName(epgFilename(d, sid, 1, bAdvanced).c_str ());
     QFile file (dir + "/" +fileName);
+# if QT_VERSION < 0x040000
     if (!file.open (IO_ReadOnly))
+#else
+    if (!file.open (QIODevice::ReadOnly))
+#endif
     {
-		fileName = epgFilename_etsi(d, sid, 1, bAdvanced); // try the other filename convention
+		fileName = epgFilename_etsi(d, sid, 1, bAdvanced).c_str(); // try the other filename convention
 		file.setName(dir + "/" +fileName);
+# if QT_VERSION < 0x040000
 		if (!file.open (IO_ReadOnly))
+#else
+		if (!file.open (QIODevice::ReadOnly))
+#endif
 		{
 				return NULL;
 		}
@@ -1424,7 +1436,11 @@ void
 EPG::saveChannels (const QString & fileName)
 {
     QFile f (fileName);
+# if QT_VERSION < 0x040000
     if (!f.open (IO_WriteOnly))
+#else
+    if (!f.open (QIODevice::WriteOnly))
+#endif
     {
         return;
     }
@@ -1450,7 +1466,11 @@ EPG::saveChannels (const QString & fileName)
         }
         ensemble.appendChild (service);
     }
+# if QT_VERSION < 0x040000
     QTextStream stream (&f);
+#else
+    Q3TextStream stream (&f);
+#endif
     stream << doc.toString ();
     f.close ();
 
@@ -1461,7 +1481,11 @@ EPG::loadChannels (const QString & fileName)
 {
     QDomDocument domTree;
     QFile f (fileName);
+# if QT_VERSION < 0x040000
     if (!f.open (IO_ReadOnly))
+#else
+    if (!f.open (QIODevice::ReadOnly))
+#endif
     {
         addChannel ("BBC & DW", 0xE1C248);
         return;
@@ -1487,7 +1511,7 @@ EPG::loadChannels (const QString & fileName)
                 {
                     QDomElement s = e.toElement ();
                     if (s.tagName () == "shortName")
-                        name = s.text().utf8();
+                        name = s.text().utf8().data();
                     if (s.tagName () == "serviceID")
                         sid = s.attribute ("id", "0");
                 }
@@ -1592,7 +1616,7 @@ int EPG::parseDuration (const QString& duration)
         bool date=true;
         for (size_t i=1; i<duration.length(); i++)
         {
-            switch (duration[int(i)])
+            switch (duration[int(i)].unicode())
             {
             case 'T':
                 d = 0;

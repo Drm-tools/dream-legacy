@@ -52,7 +52,7 @@ class CMultColorLED : public QLabel
     Q_OBJECT
 
 public:
-	CMultColorLED(QWidget* parent, const char * name = 0, WFlags f = 0);
+	CMultColorLED(QWidget* parent, const char * name = 0, Qt::WFlags f = 0);
 	virtual ~CMultColorLED() {}
 
 	void SetUpdateTime(int iNUTi);

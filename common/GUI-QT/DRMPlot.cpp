@@ -27,13 +27,26 @@
 \******************************************************************************/
 
 #include "DRMPlot.h"
+#if QT_VERSION < 0x040000
+# include <qwhatsthis.h>
+#define Q3Frame QFrame
+#define Q3WhatsThis QWhatsThis
+#else
+# include <q3whatsthis.h>
+# include <QPixmap>
+# include <Q3Frame>
+# include <QHideEvent>
+# include <QMouseEvent>
+# include <QShowEvent>
+#endif
 
 
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
-	QwtPlot (p, name), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
+	QwtPlot (p), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
 	bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL)
 {
+#if QT_VERSION < 0x040000
 	/* Grid defaults */
 	enableGridX(TRUE);
 	enableGridY(TRUE);
@@ -54,7 +67,7 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	setAxisTitleFont(QwtPlot::yRight, QFont("SansSerif", 8));
 
 	/* Global frame */
-	setFrameStyle(QFrame::Panel|QFrame::Sunken);
+	setFrameStyle(Q3Frame::Panel|Q3Frame::Sunken);
 	setLineWidth(2);
 	setMargin(10);
 
@@ -71,10 +84,12 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 		this, SLOT(OnTimerChart()));
 
 	TimerChart.stop();
+#endif
 }
 
 void CDRMPlot::OnTimerChart()
 {
+#if QT_VERSION < 0x040000
 	/* In some cases, if the user moves the mouse very fast over the chart
 	   selection list view, this function is called by two different threads.
 	   Somehow, using QMutex does not help. Therefore we introduce a flag for
@@ -255,10 +270,12 @@ void CDRMPlot::OnTimerChart()
 
 	/* "Unlock" mutex flag */
 	bOnTimerCharMutexFlag = FALSE;
+#endif
 }
 
 void CDRMPlot::SetupChart(const ECharType eNewType)
 {
+#if QT_VERSION < 0x040000
 	if (eNewType != NONE_OLD)
 	{
 		/* Set internal variable */
@@ -305,25 +322,31 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
 			break;
 		}
 	}
+#endif
 }
 
 void CDRMPlot::showEvent(QShowEvent*)
 {
+#if QT_VERSION < 0x040000
 	/* Activate real-time timers when window is shown */
 	SetupChart(CurCharType);
 
 	/* Update window */
 	OnTimerChart();
+#endif
 }
 
 void CDRMPlot::hideEvent(QHideEvent*)
 {
+#if QT_VERSION < 0x040000
 	/* Deactivate real-time timers when window is hide to save CPU power */
 	TimerChart.stop();
+#endif
 }
 
 void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 {
+#if QT_VERSION < 0x040000
 	QColor BckgrdColorPlot;
 
 	switch (iNewStyleID)
@@ -367,10 +390,12 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 
 	/* Make sure that plot are being initialized again */
 	InitCharType = NONE_OLD;
+#endif
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
+#if QT_VERSION < 0x040000
 	double* pdData = new double[vecrData.Size()];
 	double* pdScale = new double[vecrScale.Size()];
 
@@ -386,11 +411,13 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 
 	delete[] pdData;
 	delete[] pdScale;
+#endif
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
 					   CVector<_REAL>& vecrScale)
 {
+#if QT_VERSION < 0x040000
 	double* pdData1 = new double[vecrData1.Size()];
 	double* pdData2 = new double[vecrData2.Size()];
 	double* pdScale = new double[vecrScale.Size()];
@@ -410,10 +437,12 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
 	delete[] pdData1;
 	delete[] pdData2;
 	delete[] pdScale;
+#endif
 }
 
 void CDRMPlot::SetData(CVector<_COMPLEX>& veccData)
 {
+#if QT_VERSION < 0x040000
 	/* Copy data from vectors in temporary arrays */
 	const int iDataSize = veccData.Size();
 	for (int i = 0; i < iDataSize; i++)
@@ -422,12 +451,14 @@ void CDRMPlot::SetData(CVector<_COMPLEX>& veccData)
 		setMarkerSymbol(lMarkerKey, MarkerSym1);
 		setMarkerPos(lMarkerKey, veccData[i].real(), veccData[i].imag());
 	}
+#endif
 }
 
 void CDRMPlot::SetData(CVector<_COMPLEX>& veccMSCConst,
 					   CVector<_COMPLEX>& veccSDCConst,
 					   CVector<_COMPLEX>& veccFACConst)
 {
+#if QT_VERSION < 0x040000
 	int i;
 
 	/* Copy data from vectors in temporary arrays */
@@ -457,10 +488,12 @@ void CDRMPlot::SetData(CVector<_COMPLEX>& veccMSCConst,
 		setMarkerPos(lMarkerKey,
 			veccFACConst[i].real(), veccFACConst[i].imag());
 	}
+#endif
 }
 
 void CDRMPlot::SetupAvIR()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for averaged impulse response */
 	setTitle(tr("Channel Impulse Response"));
 	enableAxis(QwtPlot::yRight, FALSE);
@@ -497,6 +530,7 @@ void CDRMPlot::SetupAvIR()
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
+#endif
 }
 
 void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -504,6 +538,7 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					   const _REAL rStartGuard, const _REAL rEndGuard,
 					   const _REAL rBeginIR, const _REAL rEndIR)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != AVERAGED_IR)
 	{
@@ -575,10 +610,12 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		/* No input data, clear plot (by resetting it) */
 		SetupAvIR();
 	}
+#endif
 }
 
 void CDRMPlot::SetupTranFct()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for transfer function */
 	setTitle(tr("Channel Transfer Function / Group Delay"));
 	enableAxis(QwtPlot::yRight);
@@ -610,11 +647,13 @@ void CDRMPlot::SetupTranFct()
 	/* Legend */
 	enableLegend(TRUE, main1curve);
 	enableLegend(TRUE, main2curve);
+#endif
 }
 
 void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 						  CVector<_REAL>& vecrScale)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != TRANSFERFUNCTION)
 	{
@@ -627,10 +666,12 @@ void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 
 	SetData(vecrData, vecrData2, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupAudioSpec()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for audio spectrum */
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
@@ -655,10 +696,12 @@ void CDRMPlot::SetupAudioSpec()
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
+#endif
 }
 
 void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != AUDIO_SPECTRUM)
 	{
@@ -668,10 +711,12 @@ void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 
 	SetData(vecrData, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupFreqSamOffsHist()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for transfer function. Enable right axis, too */
 	setTitle(tr("Rel. Frequency Offset / Sample Rate Offset History"));
 	enableAxis(QwtPlot::yRight);
@@ -696,6 +741,7 @@ void CDRMPlot::SetupFreqSamOffsHist()
 	/* Legend */
 	enableLegend(TRUE, main1curve);
 	enableLegend(TRUE, main2curve);
+#endif
 }
 
 void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
@@ -703,6 +749,7 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 								  CVector<_REAL>& vecrScale,
 								  const _REAL rFreqOffAcquVal)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != FREQ_SAM_OFFS_HIST)
 	{
@@ -750,10 +797,12 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 
 	SetData(vecrData, vecrData2, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupDopplerDelayHist()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for transfer function. Enable right axis, too */
 	setTitle(tr("Delay / Doppler History"));
 	enableAxis(QwtPlot::yRight);
@@ -783,12 +832,14 @@ void CDRMPlot::SetupDopplerDelayHist()
 	/* Legend */
 	enableLegend(TRUE, main1curve);
 	enableLegend(TRUE, main2curve);
+#endif
 }
 
 void CDRMPlot::SetDopplerDelayHist(CVector<_REAL>& vecrData,
 								   CVector<_REAL>& vecrData2,
 								   CVector<_REAL>& vecrScale)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != DOPPLER_DELAY_HIST)
 	{
@@ -801,10 +852,12 @@ void CDRMPlot::SetDopplerDelayHist(CVector<_REAL>& vecrData,
 
 	SetData(vecrData, vecrData2, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupSNRAudHist()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for transfer function. Enable right axis, too */
 	setTitle(tr("SNR / Correctly Decoded Audio History"));
 	enableAxis(QwtPlot::yRight);
@@ -830,12 +883,14 @@ void CDRMPlot::SetupSNRAudHist()
 	/* Legend */
 	enableLegend(TRUE, main1curve);
 	enableLegend(TRUE, main2curve);
+#endif
 }
 
 void CDRMPlot::SetSNRAudHist(CVector<_REAL>& vecrData,
 							 CVector<_REAL>& vecrData2,
 							 CVector<_REAL>& vecrScale)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != SNR_AUDIO_HIST)
 	{
@@ -881,10 +936,12 @@ void CDRMPlot::SetSNRAudHist(CVector<_REAL>& vecrData,
 
 	SetData(vecrData, vecrData2, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupPSD()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for power spectram density estimation */
 	setTitle(tr("Shifted Power Spectral Density of Input Signal"));
 	enableAxis(QwtPlot::yRight, FALSE);
@@ -922,10 +979,12 @@ void CDRMPlot::SetupPSD()
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 1, SolidLine, RoundCap,
 		RoundJoin));
+#endif
 }
 
 void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != POWER_SPEC_DENSITY)
 	{
@@ -936,10 +995,12 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	/* Set actual data */
 	SetData(vecrData, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupSNRSpectrum()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for power spectram density estimation */
 	setTitle(tr("SNR Spectrum (Weighted MER on MSC Cells)"));
 	enableAxis(QwtPlot::yRight, FALSE);
@@ -957,11 +1018,13 @@ void CDRMPlot::SetupSNRSpectrum()
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
+#endif
 }
 
 void CDRMPlot::SetSNRSpectrum(CVector<_REAL>& vecrData,
 							  CVector<_REAL>& vecrScale)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != SNR_SPECTRUM)
 	{
@@ -998,10 +1061,12 @@ void CDRMPlot::SetSNRSpectrum(CVector<_REAL>& vecrData,
 	/* Set actual data */
 	SetData(vecrData, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupInpSpec()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for power spectram density estimation */
 	setTitle(tr("Input Spectrum"));
 	enableAxis(QwtPlot::yRight, FALSE);
@@ -1030,11 +1095,13 @@ void CDRMPlot::SetupInpSpec()
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 1, SolidLine, RoundCap,
 		RoundJoin));
+#endif
 }
 
 void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 						  const _REAL rDCFreq)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != INPUTSPECTRUM_NO_AV)
 	{
@@ -1055,10 +1122,12 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	/* Insert actual spectrum data */
 	SetData(vecrData, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupInpPSD()
 {
+#if QT_VERSION < 0x040000
 	int		i;
 	double	dX[2], dY[2];
 
@@ -1139,12 +1208,14 @@ void CDRMPlot::SetupInpPSD()
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
+#endif
 }
 
 void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 						  const _REAL rDCFreq, const _REAL rBWCenter,
 						  const _REAL rBWWidth)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up. The char type "INPUT_SIG_PSD_ANALOG"
 	   has the same initialization as "INPUT_SIG_PSD" */
 	if (InitCharType != INPUT_SIG_PSD)
@@ -1181,10 +1252,12 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	/* Insert actual spectrum data */
 	SetData(vecrData, vecrScale);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupInpSpecWaterf()
 {
+#if QT_VERSION < 0x040000
 	setTitle(tr("Waterfall Input Spectrum"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(FALSE);
@@ -1204,10 +1277,12 @@ void CDRMPlot::SetupInpSpecWaterf()
 	QPixmap Canvas(LastCanvasSize);
 	Canvas.fill(backgroundColor());
 	canvas()->setBackgroundPixmap(Canvas);
+#endif
 }
 
 void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 {
+#if QT_VERSION < 0x040000
 	int i, iStartScale, iEndScale;
 
 	/* First check if plot must be set up */
@@ -1324,10 +1399,12 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 	canvas()->setBackgroundPixmap(Canvas);
 
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupFACConst()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for FAC constellation */
 	setTitle(tr("FAC Constellation"));
 	enableAxis(QwtPlot::yRight, FALSE);
@@ -1351,10 +1428,12 @@ void CDRMPlot::SetupFACConst()
 	/* Insert grid */
 	clear();
 	SetQAM4Grid();
+#endif
 }
 
 void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != FAC_CONSTELLATION)
 	{
@@ -1365,10 +1444,12 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 	removeMarkers();
 	SetData(veccData);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for SDC constellation */
 	setTitle(tr("SDC Constellation"));
 	enableAxis(QwtPlot::yRight, FALSE);
@@ -1395,10 +1476,12 @@ void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
 	MarkerSym1.setSize(4);
 	MarkerSym1.setPen(QPen(MainPenColorConst));
 	MarkerSym1.setBrush(QBrush(MainPenColorConst));
+#endif
 }
 
 void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc)
 {
+#if QT_VERSION < 0x040000
 	/* Always set up plot. TODO: only set up plot if constellation
 	   scheme has changed */
 	InitCharType = SDC_CONSTELLATION;
@@ -1407,10 +1490,12 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc)
 	removeMarkers();
 	SetData(veccData);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for MSC constellation */
 	setTitle(tr("MSC Constellation"));
 	enableAxis(QwtPlot::yRight, FALSE);
@@ -1437,10 +1522,12 @@ void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
 	MarkerSym1.setSize(2);
 	MarkerSym1.setPen(QPen(MainPenColorConst));
 	MarkerSym1.setBrush(QBrush(MainPenColorConst));
+#endif
 }
 
 void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc)
 {
+#if QT_VERSION < 0x040000
 	/* Always set up plot. TODO: only set up plot if constellation
 	   scheme has changed */
 	InitCharType = MSC_CONSTELLATION;
@@ -1449,10 +1536,12 @@ void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc)
 	removeMarkers();
 	SetData(veccData);
 	replot();
+#endif
 }
 
 void CDRMPlot::SetupAllConst()
 {
+#if QT_VERSION < 0x040000
 	/* Init chart for constellation */
 	setTitle(tr("MSC / SDC / FAC Constellation"));
 	enableAxis(QwtPlot::yRight, FALSE);
@@ -1502,12 +1591,14 @@ void CDRMPlot::SetupAllConst()
 	setCurveSymbol(curve3, MarkerSym3);
 	setCurvePen(curve3, QPen(Qt::NoPen));
 	enableLegend(TRUE, curve3);
+#endif
 }
 
 void CDRMPlot::SetAllConst(CVector<_COMPLEX>& veccMSC,
 						   CVector<_COMPLEX>& veccSDC,
 						   CVector<_COMPLEX>& veccFAC)
 {
+#if QT_VERSION < 0x040000
 	/* First check if plot must be set up */
 	if (InitCharType != ALL_CONSTELLATION)
 	{
@@ -1520,10 +1611,12 @@ void CDRMPlot::SetAllConst(CVector<_COMPLEX>& veccMSC,
 	SetData(veccMSC, veccSDC, veccFAC);
 
 	replot();
+#endif
 }
 
 void CDRMPlot::SetQAM4Grid()
 {
+#if QT_VERSION < 0x040000
 	long	curve;
 	double	dXMax[2], dYMax[2];
 	double	dX[2];
@@ -1545,10 +1638,12 @@ void CDRMPlot::SetQAM4Grid()
 	curve = insertCurve("line");
 	setCurvePen(curve, ScalePen);
 	setCurveData(curve, dXMax, dX, 2);
+#endif
 }
 
 void CDRMPlot::SetQAM16Grid()
 {
+#if QT_VERSION < 0x040000
 	long	curve;
 	double	dXMax[2], dYMax[2];
 	double	dX[2];
@@ -1588,10 +1683,12 @@ void CDRMPlot::SetQAM16Grid()
 	curve = insertCurve("line");
 	setCurvePen(curve, ScalePen);
 	setCurveData(curve, dXMax, dX, 2);
+#endif
 }
 
 void CDRMPlot::SetQAM64Grid()
 {
+#if QT_VERSION < 0x040000
 	long	curve;
 	double	dXMax[2], dYMax[2];
 	double	dX[2];
@@ -1667,10 +1764,12 @@ void CDRMPlot::SetQAM64Grid()
 	curve = insertCurve("line");
 	setCurvePen(curve, ScalePen);
 	setCurveData(curve, dXMax, dX, 2);
+#endif
 }
 
 void CDRMPlot::OnClicked(const QMouseEvent& e)
 {
+#if QT_VERSION < 0x040000
 	/* Get frequency from current cursor position */
 	const double dFreq = invTransform(QwtPlot::xBottom, e.x());
 
@@ -1683,10 +1782,12 @@ void CDRMPlot::OnClicked(const QMouseEvent& e)
 		/* Emit signal containing normalized selected frequency */
 		emit xAxisValSet(dFreq / dMaxxBottom);
 	}
+#endif
 }
 
 void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 {
+#if QT_VERSION < 0x040000
 	QString strCurPlotHelp;
 
 	switch (NCharType)
@@ -1836,5 +1937,6 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	}
 
 	/* Main plot */
-	QWhatsThis::add(this, strCurPlotHelp);
+	Q3WhatsThis::add(this, strCurPlotHelp);
+#endif
 }

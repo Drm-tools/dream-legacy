@@ -26,29 +26,44 @@
  *
 \******************************************************************************/
 
-#include <qheader.h>
-#include <qlistview.h>
 #include <qpixmap.h>
-#include <qbuttongroup.h>
 #include <qradiobutton.h>
 #include <qtimer.h>
 #include <qmessagebox.h>
 #include <qcombobox.h>
-#include <qurloperator.h>
-#include <qnetworkprotocol.h>
 #include <qdir.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
 #include <qlayout.h>
-#include <qftp.h>
 #include <qthread.h>
 #include <qaction.h>
-#include <qwhatsthis.h>
 #include <qlabel.h>
 #include <qfileinfo.h>
 #include <qdatetime.h>
+#if QT_VERSION < 0x040000
 #include <qwt/qwt_thermo.h>
 #include <qwt/qwt_counter.h>
+# include <qpopupmenu.h>
+#include <qurloperator.h>
+#include <qlistview.h>
+# define Q3PopupMenu QPopupMenu
+# define Q3ListView QListView
+# define Q3ListViewItem QListViewItem
+# define Q3UrlOperator QUrlOperator
+# define Q3NetworkOperation QNetworkOperation
+# define Q3NetworkProtocol QNetworkProtocol
+# define Q3NetworkProtocolFactory QNetworkProtocolFactory
+# define Q3Ftp QFtp
+#else
+#include <qwt_thermo.h>
+#include <qwt_counter.h>
+#include <q3ftp.h>
+#include <q3popupmenu.h>
+#include <q3header.h>
+#include <q3listview.h>
+#include <q3buttongroup.h>
+#include <q3urloperator.h>
+#include <q3networkprotocol.h>
+#endif
 
 #include "StationsDlgbase.h"
 #include "../DrmReceiver.h"
@@ -182,16 +197,16 @@ protected:
 };
 
 
-class MyListViewItem : public QListViewItem
+class MyListViewItem : public Q3ListViewItem
 {
 public:
 	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
 	   Settings.h! */
-	MyListViewItem(QListView* parent, QString s1, QString s2 = QString::null,
+	MyListViewItem(Q3ListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
 		QString s7 = QString::null, QString s8 = QString::null) :
-		QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
+		Q3ListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
 
 	/* Custom "key()" function for correct sorting behaviour */
 	virtual QString key(int column, bool ascending) const;
@@ -207,7 +222,7 @@ class StationsDlg : public CStationsDlgBase
 public:
 
 	StationsDlg(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~StationsDlg();
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
@@ -246,10 +261,10 @@ protected:
 	QTimer						TimerUTCLabel;
 	_BOOLEAN					bShowAll;
 	_BOOLEAN					bReInitOnFrequencyChange;
-	QUrlOperator				UrlUpdateSchedule;
-	QPopupMenu*					pViewMenu;
-	QPopupMenu*					pPreviewMenu;
-	QPopupMenu*					pUpdateMenu;
+	Q3UrlOperator				UrlUpdateSchedule;
+	Q3PopupMenu*					pViewMenu;
+	Q3PopupMenu*					pPreviewMenu;
+	Q3PopupMenu*					pUpdateMenu;
 
 	vector<MyListViewItem*>		vecpListItems;
 	QMutex						ListItemsMutex;
@@ -263,8 +278,13 @@ public slots:
 	void OnSigStr(double);
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
+#if QT_VERSION < 0x040000
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
+#else
+	void OnListItemClicked(Q3ListViewItem* item);
+	void OnUrlFinished(Q3NetworkOperation* pNetwOp);
+#endif
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);
 	void OnGetUpdate();

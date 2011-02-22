@@ -31,7 +31,12 @@
 
 #include "Parameter.h"
 #include "util/Settings.h"
-#include <qsocket.h>
+#if QT_VERSION < 0x040000
+# include <qsocket.h>
+#else
+# include <q3socket.h>
+# include <q3signal.h>
+#endif
 #include <qthread.h>
 #if QT_VERSION >= 0x030000
 # include <qmutex.h>
@@ -59,7 +64,11 @@ protected:
 
     CParameter&	Parameters;
     CSettings&	m_Settings;
+#if QT_VERSION < 0x040000
     QSocket*	m_pSocket;
+#else
+    Q3Socket*	m_pSocket;
+#endif
     QTimer*		m_pTimer;
     QTimer*		m_pTimerDataTimeout;
     int			m_iCounter;

@@ -29,12 +29,22 @@
 
 #include "EPGDlg.h"
 #include <qregexp.h>
-#include <qsocketdevice.h>
+#if QT_VERSION < 0x040000
+# include <qtextbrowser.h>
+# include <qsocketdevice.h>
+# define Q3SocketDevice QSocketDevice
+#else
+# include <q3socketdevice.h>
+# include <q3textbrowser.h>
+# include <QShowEvent>
+# include <QHideEvent>
+# include <QPixmap>
+#endif
 
 static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now);
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
-               const char* name, bool modal, WFlags f)
+               const char* name, bool modal, Qt::WFlags f)
         :CEPGDlgbase(parent, name, modal, f),BitmCubeGreen(),date(QDate::currentDate()),
         do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
         Settings(NSettings),Timer(),sids(),next(NULL)
@@ -47,7 +57,7 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
         setGeometry(WinGeom);
 
     /* auto resize of the programme name column */
-    Data->setColumnWidthMode(COL_NAME, QListView::Maximum);
+    Data->setColumnWidthMode(COL_NAME, Q3ListView::Maximum);
 
     /* Define size of the bitmaps */
     const int iXSize = 8;
@@ -85,7 +95,7 @@ EPGDlg::~EPGDlg()
 {
 }
 
-void EPGDlg::setActive(QListViewItem* myItem)
+void EPGDlg::setActive(Q3ListViewItem* myItem)
 {
 	MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
 	if(item->IsActive())
@@ -110,7 +120,7 @@ void EPGDlg::sendNowNext(QString s)
 		return;
 	Settings.Put("NowNext", "address", addr);
 	Settings.Put("NowNext", "port", port);
-	QSocketDevice sock(QSocketDevice::Datagram);
+	Q3SocketDevice sock(Q3SocketDevice::Datagram);
 	sock.writeBlock(s.utf8(), s.length(), QHostAddress(addr.c_str()), port);
 }
 
@@ -120,7 +130,7 @@ void EPGDlg::OnTimer()
     time_t ltime;
     time(&ltime);
     tm gmtCur = *gmtime(&ltime);
-	static QListViewItem* next = NULL;
+	static Q3ListViewItem* next = NULL;
 
     if(gmtCur.tm_sec==30) // 1/2 minute boundary
     {
@@ -147,7 +157,7 @@ void EPGDlg::OnTimer()
         if (date == todayUTC) /* if today */
         {
             /* Extract values from the list */
-            QListViewItem * myItem = Data->firstChild();
+            Q3ListViewItem * myItem = Data->firstChild();
 
             while( myItem )
             {
@@ -259,7 +269,7 @@ void EPGDlg::setYear(int n)
 
 void EPGDlg::select()
 {
-    QListViewItem* CurrActiveItem = NULL;
+    Q3ListViewItem* CurrActiveItem = NULL;
 
     if (!do_updates)
         return;
@@ -304,7 +314,7 @@ void EPGDlg::select()
     }
 
     if (epg.progs.count()==0) {
-        (void) new QListViewItem(Data, tr("no data"));
+        (void) new Q3ListViewItem(Data, tr("no data"));
         return;
     }
     Data->setSorting(COL_START);

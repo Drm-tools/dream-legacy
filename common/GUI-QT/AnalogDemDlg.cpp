@@ -30,11 +30,38 @@
 
 #include "AnalogDemDlg.h"
 #include <qmessagebox.h>
+#include <qdatetime.h>
+#if QT_VERSION < 0x040000
+# include <qwt/qwt_dial.h>
+# include <qwt/qwt_dial_needle.h>
+# include <qbuttongroup.h>
+# include <qfiledialog.h>
+# include <qprogressbar.h>
+# include <qlistbox.h>
+# include <qwhatsthis.h>
+# define Q3WhatsThis QWhatsThis
+# define Q3FileDialog QFileDialog
+# define Q3CString QCString
+#else
+# include <qwt_dial.h>
+# include <qwt_dial_needle.h>
+# include <q3buttongroup.h>
+# include <q3filedialog.h>
+# include <q3progressbar.h>
+# include <q3listbox.h>
+# include <q3whatsthis.h>
+# include <Q3CString>
+# include <QHideEvent>
+# include <Q3PopupMenu>
+# include <QShowEvent>
+# include <QCloseEvent>
+# define CHECK_PTR(x) Q_CHECK_PTR(x)
+#endif
 
 
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f):
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f):
 	AnalogDemDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR), Settings(NSettings), AMSSDlg(NDRMR, Settings, parent, name, modal, f)
 {
@@ -49,26 +76,26 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
-	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
+	Q3PopupMenu* EvalWinMenu = new Q3PopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
 	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
-		SIGNAL(ViewStationsDlg()), CTRL+Key_T);
+		SIGNAL(ViewStationsDlg()), Qt::CTRL+Qt::Key_T);
 	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
-		SIGNAL(ViewLiveScheduleDlg()), CTRL+Key_L);
+		SIGNAL(ViewLiveScheduleDlg()), Qt::CTRL+Qt::Key_L);
 	EvalWinMenu->insertSeparator();
-	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q);
+	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q);
 
 	/* Settings menu  ------------------------------------------------------- */
-	QPopupMenu* pSettingsMenu = new QPopupMenu(this);
+	Q3PopupMenu* pSettingsMenu = new Q3PopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
-		SLOT(OnSwitchToDRM()), CTRL+Key_D);
+		SLOT(OnSwitchToDRM()), Qt::CTRL+Qt::Key_D);
 	pSettingsMenu->insertItem(tr("&FM (analog)"), this,
-		SLOT(OnSwitchToFM()), CTRL+Key_F);
+		SLOT(OnSwitchToFM()), Qt::CTRL+Qt::Key_F);
 	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
-		SIGNAL(NewAMAcquisition()), CTRL+Key_A);
+		SIGNAL(NewAMAcquisition()), Qt::CTRL+Qt::Key_A);
 
 
 	/* Main menu bar -------------------------------------------------------- */
@@ -80,7 +107,11 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
+#if QT_VERSION < 0x040000
 	AnalogDemDlgBaseLayout->setMenuBar(pMenu);
+#else
+// TODO
+#endif
 
 
 	/* Init main plot */
@@ -475,7 +506,7 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 	{
 		/* Show "save file" dialog */
 		QString strFileName =
-			QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
+			Q3FileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
 
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isEmpty())
@@ -505,7 +536,11 @@ void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 void AnalogDemDlg::OnButtonWaterfall()
 {
 	/* Toggle between normal spectrum plot and waterfall spectrum plot */
-	if (ButtonWaterfall->state() == QButton::On)
+#if QT_VERSION < 0x040000
+	if (ButtonWaterfall->state() == QCheckBox::On)
+#else
+	if (ButtonWaterfall->isChecked())
+#endif
 		MainPlot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
 	else
 		MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
@@ -532,11 +567,11 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"reduction, a compromise between distortion of the useful signal "
 		"and actual noise reduction can be made.");
 
-	QWhatsThis::add(ButtonGroupNoiseReduction, strNoiseReduction);
-	QWhatsThis::add(RadioButtonNoiRedOff, strNoiseReduction);
-	QWhatsThis::add(RadioButtonNoiRedLow, strNoiseReduction);
-	QWhatsThis::add(RadioButtonNoiRedMed, strNoiseReduction);
-	QWhatsThis::add(RadioButtonNoiRedHigh, strNoiseReduction);
+	Q3WhatsThis::add(ButtonGroupNoiseReduction, strNoiseReduction);
+	Q3WhatsThis::add(RadioButtonNoiRedOff, strNoiseReduction);
+	Q3WhatsThis::add(RadioButtonNoiRedLow, strNoiseReduction);
+	Q3WhatsThis::add(RadioButtonNoiRedMed, strNoiseReduction);
+	Q3WhatsThis::add(RadioButtonNoiRedHigh, strNoiseReduction);
 
 	/* Automatic Gain Control */
 	const QString strAGC =
@@ -545,11 +580,11 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"for that, an automatic gain control can be applied. The AGC has "
 		"four settings: Off, Slow, Medium and Fast.");
 
-	QWhatsThis::add(ButtonGroupAGC, strAGC);
-	QWhatsThis::add(RadioButtonAGCOff, strAGC);
-	QWhatsThis::add(RadioButtonAGCSlow, strAGC);
-	QWhatsThis::add(RadioButtonAGCMed, strAGC);
-	QWhatsThis::add(RadioButtonAGCFast, strAGC);
+	Q3WhatsThis::add(ButtonGroupAGC, strAGC);
+	Q3WhatsThis::add(RadioButtonAGCOff, strAGC);
+	Q3WhatsThis::add(RadioButtonAGCSlow, strAGC);
+	Q3WhatsThis::add(RadioButtonAGCMed, strAGC);
+	Q3WhatsThis::add(RadioButtonAGCFast, strAGC);
 
 	/* Filter Bandwidth */
 	const QString strFilterBW =
@@ -561,9 +596,9 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"<br>The current filter bandwidth is indicated in the spectrum plot "
 		"by a selection bar.");
 
-	QWhatsThis::add(ButtonGroupBW, strFilterBW);
-	QWhatsThis::add(TextLabelBandWidth, strFilterBW);
-	QWhatsThis::add(SliderBandwidth, strFilterBW);
+	Q3WhatsThis::add(ButtonGroupBW, strFilterBW);
+	Q3WhatsThis::add(TextLabelBandWidth, strFilterBW);
+	Q3WhatsThis::add(SliderBandwidth, strFilterBW);
 
 	/* Demodulation type */
 	const QString strDemodType =
@@ -589,27 +624,27 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"<li><b>FM:</b> This is a narrow band frequency demodulation.</li>"
 		"</ul>");
 
-	QWhatsThis::add(ButtonGroupDemodulation, strDemodType);
-	QWhatsThis::add(RadioButtonDemAM, strDemodType);
-	QWhatsThis::add(RadioButtonDemLSB, strDemodType);
-	QWhatsThis::add(RadioButtonDemUSB, strDemodType);
-	QWhatsThis::add(RadioButtonDemCW, strDemodType);
-	QWhatsThis::add(RadioButtonDemFM, strDemodType);
+	Q3WhatsThis::add(ButtonGroupDemodulation, strDemodType);
+	Q3WhatsThis::add(RadioButtonDemAM, strDemodType);
+	Q3WhatsThis::add(RadioButtonDemLSB, strDemodType);
+	Q3WhatsThis::add(RadioButtonDemUSB, strDemodType);
+	Q3WhatsThis::add(RadioButtonDemCW, strDemodType);
+	Q3WhatsThis::add(RadioButtonDemFM, strDemodType);
 
 	/* Mute Audio (same as in systemevaldlg.cpp!) */
-	QWhatsThis::add(CheckBoxMuteAudio,
+	Q3WhatsThis::add(CheckBoxMuteAudio,
 		tr("<b>Mute Audio:</b> The audio can be muted by "
 		"checking this box. The reaction of checking or unchecking this box "
 		"is delayed by approx. 1 second due to the audio buffers."));
 
 	/* Save audio as wave (same as in systemevaldlg.cpp!) */
-	QWhatsThis::add(CheckBoxSaveAudioWave,
+	Q3WhatsThis::add(CheckBoxSaveAudioWave,
 		tr("<b>Save Audio as WAV:</b> Save the audio signal "
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
 
 	/* Carrier Frequency */
-	QWhatsThis::add(TextFreqOffset,
+	Q3WhatsThis::add(TextFreqOffset,
 		tr("<b>Carrier Frequency:</b> The (estimated) carrier frequency of the "
 		"analog signal is shown. (The estimation of this parameter can be done "
 		"by the Autom Frequency Acquisition which uses the estimated PSD of "
@@ -625,10 +660,10 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"out of lock. To get the PLL locked, the frequency offset to "
 		"the true carrier frequency must not exceed a few Hz.");
 
-	QWhatsThis::add(GroupBoxPLL, strPLL);
-	QWhatsThis::add(CheckBoxPLL, strPLL);
-	QWhatsThis::add(PhaseDial, strPLL);
-	QWhatsThis::add(TextLabelPhaseOffset, strPLL);
+	Q3WhatsThis::add(GroupBoxPLL, strPLL);
+	Q3WhatsThis::add(CheckBoxPLL, strPLL);
+	Q3WhatsThis::add(PhaseDial, strPLL);
+	Q3WhatsThis::add(TextLabelPhaseOffset, strPLL);
 
 	/* Auto frequency acquisition */
 	const QString strAutoFreqAcqu =
@@ -637,8 +672,8 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"If the Auto Frequency Acquisition is enabled, the largest peak "
 		"near the curser is selected.");
 
-	QWhatsThis::add(GroupBoxAutoFreqAcq, strAutoFreqAcqu);
-	QWhatsThis::add(CheckBoxAutoFreqAcq, strAutoFreqAcqu);
+	Q3WhatsThis::add(GroupBoxAutoFreqAcq, strAutoFreqAcqu);
+	Q3WhatsThis::add(CheckBoxAutoFreqAcq, strAutoFreqAcqu);
 }
 
 
@@ -663,7 +698,7 @@ void AnalogDemDlg::AddWhatsThisHelp()
 	Added phase offset display for AMSS demodulation loop.
 */
 CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f) :
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	CAMSSDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings)
@@ -747,7 +782,7 @@ void CAMSSDlg::OnTimer()
 	if ((Parameters.Service[0].IsActive()) && (Parameters.Service[0].strLabel != ""))
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
-		TextAMSSServiceLabel->setText(QString().fromUtf8(QCString(
+		TextAMSSServiceLabel->setText(QString().fromUtf8(Q3CString(
 			Parameters.Service[0].strLabel.c_str())));
 	}
 	else

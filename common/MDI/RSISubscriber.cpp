@@ -124,7 +124,7 @@ _BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 {
 #ifdef USE_QT_GUI
 	string d = dest;
-	QSocketDevice::Type type = QSocketDevice::Datagram;
+	Q3SocketDevice::Type type = Q3SocketDevice::Datagram;
 	switch(d[0])
 	{
 		case 'P': case 'p':
@@ -133,14 +133,14 @@ _BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 			break;
 		case 'T': case 't':
 			d.erase(0, 1);
-			type = QSocketDevice::Stream;
+			type = Q3SocketDevice::Stream;
 			break;
 	}
 	delete pSocket;
 	pSocket = new CPacketSocketQT(type);
 	pPacketSink = pSocket;
     _BOOLEAN bOk = pSocket->SetDestination(d);
-    if(bOk && type == QSocketDevice::Stream)
+    if(bOk && type == Q3SocketDevice::Stream)
 		pSocket->SetPacketSink(this);
 	return bOk;
 #else

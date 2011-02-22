@@ -54,7 +54,7 @@ typedef int SOCKET;
 # define INVALID_SOCKET				(-1)
 #endif
 
-CPacketSocketQT::CPacketSocketQT(QSocketDevice::Type type):
+CPacketSocketQT::CPacketSocketQT(Q3SocketDevice::Type type):
 	pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
 	SocketDevice(type),
 	pSocketNotivRead(NULL), pSocketNotivWrite(NULL),
@@ -69,7 +69,7 @@ CPacketSocketQT::CPacketSocketQT(QSocketDevice::Type type):
 					  this, SLOT(OnDataReceived()));
 
 	// UDP can get away with blocking mode but TCP needs async I/O
-	if(type == QSocketDevice::Stream)
+	if(type == Q3SocketDevice::Stream)
 	{
 		pSocketNotivWrite = new QSocketNotifier(SocketDevice.socket(),
 												QSocketNotifier::Write);
@@ -113,7 +113,7 @@ CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, ui
 	/* Send packet to network */
 	//cout << "CPacketSocketQT::SendPacket(" << vecbydata.size() << " bytes, " << addr << ", " << port << ") " << HostAddrOut.toString() << ":" << iHostPortOut << endl;
 
-	if(SocketDevice.type() == QSocketDevice::Datagram)
+	if(SocketDevice.type() == Q3SocketDevice::Datagram)
 	{
 		if(addr==0)
 			bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
@@ -124,8 +124,8 @@ CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, ui
 		   is listening, or the interface is down, there is no route */
 		if(bytes_written == -1)
 		{
-			QSocketDevice::Error x = SocketDevice.error();
-			if(x != QSocketDevice::NetworkFailure)
+			Q3SocketDevice::Error x = SocketDevice.error();
+			if(x != Q3SocketDevice::NetworkFailure)
 				qDebug("error sending packet");
 		}
 	}
@@ -160,7 +160,7 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	case 2:
 		bAddressOK = HostAddrOut.setAddress(parts[0]);
 		iHostPortOut = parts[1].toUInt();
-		if(SocketDevice.type() == QSocketDevice::Stream)
+		if(SocketDevice.type() == Q3SocketDevice::Stream)
 		{
 			bool connected = SocketDevice.connect(HostAddrOut, iHostPortOut);
 			if(!connected)
@@ -262,7 +262,7 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		return FALSE;
 	}
 
-	if(SocketDevice.type() == QSocketDevice::Datagram)
+	if(SocketDevice.type() == Q3SocketDevice::Datagram)
 	{
 		/* Multicast ? */
 

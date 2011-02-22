@@ -36,20 +36,20 @@
 #include <qtabwidget.h>
 #include <qcombobox.h>
 #include <qstring.h>
-#include <qbuttongroup.h>
-#include <qmultilineedit.h>
-#include <qlistview.h>
-#include <qfiledialog.h>
 #include <qfileinfo.h>
 #include <qstringlist.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
 #include <qlayout.h>
 #include <qthread.h>
 #include <qtimer.h>
-#include <qwhatsthis.h>
-#include <qprogressbar.h>
+#if QT_VERSION < 0x040000
 #include <qwt/qwt_thermo.h>
+# include <qpopupmenu.h>
+# define Q3PopupMenu QPopupMenu
+#else
+#include <qwt_thermo.h>
+# include <q3popupmenu.h>
+#endif
 
 #ifdef _WIN32
 # include "windows.h"
@@ -105,7 +105,7 @@ class TransmDialog : public TransmDlgBase
 
 public:
 	TransmDialog(CSettings&,
-		QWidget* parent=0, const char* name=0, bool modal=FALSE, WFlags f=0);
+		QWidget* parent=0, const char* name=0, bool modal=FALSE, Qt::WFlags f=0);
 	virtual ~TransmDialog();
 
 protected:
@@ -114,7 +114,7 @@ protected:
 
 	CSettings&			Settings;
 	QMenuBar*			pMenu;
-	QPopupMenu*			pSettingsMenu;
+	Q3PopupMenu*			pSettingsMenu;
 	QTimer				Timer;
 
 	CTransmitterThread	TransThread; /* Working thread object */
@@ -152,5 +152,5 @@ public slots:
 	void OnTextChangedServiceID(const QString& strID);
 	void OnTextChangedSndCrdIF(const QString& strIF);
 	void OnTimer();
-	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
+	void OnHelpWhatsThis();
 };

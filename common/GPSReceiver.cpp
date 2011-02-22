@@ -29,11 +29,6 @@
 
 #include "GPSReceiver.h"
 
-#ifdef USE_QT_GUI
-# include <qsocket.h>
-# include <qsignal.h>
-#endif
-
 #include <sstream>
 #include <iomanip>
 using namespace std;
@@ -65,7 +60,11 @@ void CGPSReceiver::open()
     Parameters.Unlock();
     if (m_pSocket == NULL)
     {
+#if QT_VERSION < 0x040000
         m_pSocket = new QSocket();
+#else
+        m_pSocket = new Q3Socket();
+#endif
         if (m_pSocket == NULL)
             return;
 

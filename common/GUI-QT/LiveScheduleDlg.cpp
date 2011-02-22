@@ -26,6 +26,26 @@
 \******************************************************************************/
 
 #include "LiveScheduleDlg.h"
+# include <qfile.h>
+# include <qdir.h>
+#if QT_VERSION < 0x040000
+# include <qfiledialog.h>
+# include <qtextstream.h>
+# include <qheader.h>
+# include <qwhatsthis.h>
+# define Q3WhatsThis QWhatsThis
+# define Q3TextStream QTextStream
+# define Q3CString QCString
+# define Q3FileDialog QFileDialog
+#else
+# include <q3filedialog.h>
+#include <Q3TextStream>
+#include <Q3CString>
+#include <QDateTime>
+#include <QHideEvent>
+#include <QShowEvent>
+# define CHECK_PTR(x) Q_CHECK_PTR(x)
+#endif
 
 /* Implementation *************************************************************/
 
@@ -321,7 +341,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 
 LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
 								 QWidget * parent, const char *name,
-								 bool modal, WFlags f):
+								 bool modal, Qt::WFlags f):
 CLiveScheduleDlgBase(parent, name, modal, f),
 DRMReceiver(NDRMR),
 vecpListItems(),
@@ -377,7 +397,7 @@ iWidthColStationID(0)
 
 	/* Set Menu ************************************************************** */
 	/* View menu ------------------------------------------------------------ */
-	pViewMenu = new QPopupMenu(this);
+	pViewMenu = new Q3PopupMenu(this);
 	CHECK_PTR(pViewMenu);
 	pViewMenu->insertItem(tr("Show &only active stations"), this,
 						  SLOT(OnShowStationsMenu(int)), 0, 0);
@@ -385,7 +405,7 @@ iWidthColStationID(0)
 						  SLOT(OnShowStationsMenu(int)), 0, 1);
 
 	/* Stations Preview menu ------------------------------------------------ */
-	pPreviewMenu = new QPopupMenu(this);
+	pPreviewMenu = new Q3PopupMenu(this);
 	CHECK_PTR(pPreviewMenu);
 	pPreviewMenu->insertItem(tr("&Disabled"), this,
 							 SLOT(OnShowPreviewMenu(int)), 0, 0);
@@ -402,10 +422,9 @@ iWidthColStationID(0)
 	SetStationsView();
 
 	/* File menu ------------------------------------------------------------ */
-	pFileMenu = new QPopupMenu(this);
+	pFileMenu = new Q3PopupMenu(this);
 	CHECK_PTR(pFileMenu);
-	pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), CTRL + Key_S,
-						  0);
+	pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), Qt::CTRL+Qt::Key_S,0);
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar *pMenu = new QMenuBar(this);
@@ -419,14 +438,18 @@ iWidthColStationID(0)
 	pFileMenu->setItemEnabled(0, FALSE);
 
 	/* Now tell the layout about the menu */
+#if QT_VERSION < 0x040000
 	CLiveScheduleDlgBaseLayout->setMenuBar(pMenu);
+#else
+//TODO
+#endif
 
 	/* Connections ---------------------------------------------------------- */
 	connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
 	connect(&TimerUTCLabel, SIGNAL(timeout()), this, SLOT(OnTimerUTCLabel()));
 
 	connect(ListViewStations->header(), SIGNAL(clicked(int)),
-			this, SLOT(OnHeaderClicked(int)));
+		this, SLOT(OnHeaderClicked(int)));
 
 	/* Check boxes */
 	connect(CheckBoxFreeze, SIGNAL(clicked()), this, SLOT(OnCheckFreeze()));
@@ -699,7 +722,7 @@ LiveScheduleDlg::LoadSchedule()
 			/* Do UTF-8 to string conversion with the label strings */
 			QString strStationName =
 				QString().
-				fromUtf8(QCString
+				fromUtf8(Q3CString
 						 (Parameters.
 						  Service[iCurSelAudioServ].strLabel.c_str()));
 
@@ -911,7 +934,7 @@ LiveScheduleDlg::OnSave()
 												   bCurrentSortAscending);
 
 	/* Extract values from the list */
-	QListViewItem *myItem = ListViewStations->firstChild();
+	Q3ListViewItem *myItem = ListViewStations->firstChild();
 
 	while (myItem)
 	{
@@ -954,7 +977,7 @@ LiveScheduleDlg::OnSave()
 
 		QString strPath = strCurrentSavePath + "/"
 				+ strStationName + "_" + "LiveSchedule.html";
-		strFileName = QFileDialog::getSaveFileName(strPath, "*.html", this);
+		strFileName = Q3FileDialog::getSaveFileName(strPath, "*.html", this);
 
 		if (!strFileName.isEmpty())
 		{
@@ -962,9 +985,13 @@ LiveScheduleDlg::OnSave()
 			/* Save as a text stream */
 			QFile FileObj(strFileName);
 
+#if QT_VERSION < 0x040000
 			if (FileObj.open(IO_WriteOnly))
+#else
+			if (FileObj.open(QIODevice::WriteOnly))
+#endif
 			{
-				QTextStream TextStream(&FileObj);
+				Q3TextStream TextStream(&FileObj);
 				TextStream << strText;	/* Actual writing */
 				FileObj.close();
 				/* TODO ini files are latin 1 but the storage path could contain non-latin characters,
@@ -980,7 +1007,7 @@ void
 LiveScheduleDlg::AddWhatsThisHelp()
 {
 	/* Stations List */
-	QWhatsThis::add(ListViewStations,
+	Q3WhatsThis::add(ListViewStations,
 					tr("<b>Live Schedule List:</b> In the live schedule list "
 					   "it's possible to view AFS (Alternative Frequency Signalling) "
 					   "information transmitted with the current DRM or AMSS signal.</b>"
@@ -999,13 +1026,13 @@ LiveScheduleDlg::AddWhatsThisHelp()
 					   "The list can be sorted by clicking on the headline of the column."));
 
 	/* UTC time label */
-	QWhatsThis::add(TextLabelUTCTime,
+	Q3WhatsThis::add(TextLabelUTCTime,
 					tr("<b>UTC Time:</b> Shows the current Coordinated "
 					   "Universal Time (UTC) which is also known as Greenwich Mean Time "
 					   "(GMT)."));
 
 	/* Check box freeze */
-	QWhatsThis::add(CheckBoxFreeze,
+	Q3WhatsThis::add(CheckBoxFreeze,
 					tr
 					("<b>Freeze:</b> If this check box is selected the live schedule is frozen."));
 }

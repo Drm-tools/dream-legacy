@@ -31,14 +31,23 @@
 #include <qtimer.h>
 #include <qstring.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
-#include <qwt/qwt_thermo.h>
 #include <qevent.h>
-#include <qcstring.h>
 #include <qlayout.h>
-#include <qwhatsthis.h>
 #include <qpalette.h>
 #include <qcolordialog.h>
+#if QT_VERSION < 0x040000
+# define Q3PopupMenu QPopupMenu
+# define Q3ButtonGroup QButtonGroup
+# include <qwt/qwt_thermo.h>
+# include <qpopupmenu.h>
+#else
+# include <qwt_thermo.h>
+# include <q3popupmenu.h>
+# include <QShowEvent>
+# include <QHideEvent>
+# include <QCustomEvent>
+# include <QCloseEvent>
+#endif
 
 #include "fdrmdialogbase.h"
 #include "DialogUtil.h"
@@ -65,7 +74,7 @@ class FDRMDialog : public FDRMDialogBase
 
 public:
 	FDRMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE,	WFlags f = 0);
+		bool modal = FALSE,	Qt::WFlags f = 0);
 
 	virtual ~FDRMDialog();
 
@@ -85,10 +94,10 @@ protected:
 	FMDialog*			pFMDlg;
 	GeneralSettingsDlg* pGeneralSettingsDlg;
 	QMenuBar*			pMenu;
-	QPopupMenu*			pReceiverModeMenu;
-	QPopupMenu*			pSettingsMenu;
-	QPopupMenu*			pPlotStyleMenu;
-    QButtonGroup*		pButtonGroup;
+	Q3PopupMenu*			pReceiverModeMenu;
+	Q3PopupMenu*			pSettingsMenu;
+	Q3PopupMenu*			pPlotStyleMenu;
+	Q3ButtonGroup*		pButtonGroup;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	virtual void	customEvent(QCustomEvent* Event);

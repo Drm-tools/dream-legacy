@@ -28,16 +28,23 @@
 #include "GeneralSettingsDlg.h"
 #include <qlineedit.h>
 #include <qpushbutton.h>
-#include <qwhatsthis.h>
 #include <qvalidator.h>
 #include <qmessagebox.h>
 #include <qcheckbox.h>
+#if QT_VERSION < 0x040000
+# include <qwhatsthis.h>
+# define Q3WhatsThis QWhatsThis
+#else
+# include <q3whatsthis.h>
+# include <QShowEvent>
+# include <QHideEvent>
+#endif
 
 
 /* Implementation *************************************************************/
 
 GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f) :
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	CGeneralSettingsDlgBase(parent, name, modal, f), Parameters(NParam),Settings(NSettings),
 	host("localhost"),port(2947),bUseGPS(FALSE)
 {
@@ -356,7 +363,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 
 void GeneralSettingsDlg::AddWhatsThisHelp()
 {
-	QWhatsThis::add(this,
+	Q3WhatsThis::add(this,
 		tr("<b>Receiver coordinates:</b> Are used on "
 		"Live Schedule Dialog to show a little green cube on the left"
 		" of the target column if the receiver coordinates (latitude and longitude)"

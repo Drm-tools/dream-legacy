@@ -735,7 +735,7 @@ Phase Offset</string>
 <customwidgets>
     <customwidget>
         <class>CDRMPlot</class>
-        <header location="local">DRMPlot.h</header>
+        <header location="global">DRMPlot.h</header>
         <sizehint>
             <width>-1</width>
             <height>-1</height>
@@ -749,7 +749,7 @@ Phase Offset</string>
     </customwidget>
     <customwidget>
         <class>QwtDial</class>
-        <header location="global">qwt/qwt_dial.h</header>
+        <header location="global">qwt_dial.h</header>
         <sizehint>
             <width>40</width>
             <height>40</height>

@@ -29,26 +29,27 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
-#include <qtextbrowser.h>
 #include <qmime.h>
 #include <qimage.h>
 #include <qtimer.h>
 #include <qpushbutton.h>
 #include <qlabel.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
 #include <qlayout.h>
-#include <qfiledialog.h>
 #include <qdatetime.h>
 #include <qregexp.h>
 #include <qtooltip.h>
-#include <qtextstream.h>
 #include <qfileinfo.h>
 #include <qdir.h>
 #include <qmessagebox.h>
 #include <qfontdialog.h>
 #include <qfont.h>
-#include <qstylesheet.h>
+#if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
+# define Q3PopupMenu QPopupMenu
+#else
+# include <q3popupmenu.h>
+#endif
 
 #include "MultimediaDlgbase.h"
 #include "MultColorLED.h"
@@ -106,7 +107,7 @@ class MultimediaDlg : public MultimediaDlgBase
 
 public:
 	MultimediaDlg(CDRMReceiver&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
 	virtual ~MultimediaDlg();
 
@@ -123,7 +124,7 @@ protected:
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
-	QPopupMenu*				pFileMenu;
+	Q3PopupMenu*				pFileMenu;
 	virtual void			showEvent(QShowEvent* pEvent);
 	virtual void			hideEvent(QHideEvent* pEvent);
 	CVector<CMOTObject>		vecRawImages;

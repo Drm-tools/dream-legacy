@@ -26,11 +26,19 @@
 \******************************************************************************/
 
 #include "MultSettingsDlg.h"
+#if QT_VERSION < 0x040000
+# include <qfiledialog.h>
+# define Q3FileDialog QFileDialog
+#else
+# include <q3filedialog.h>
+# include <QShowEvent>
+# include <QHideEvent>
+#endif
 
 /* Implementation *************************************************************/
 
 MultSettingsDlg::MultSettingsDlg(CParameter& NP, CSettings& NSettings, QWidget* parent,
-	const char* name, bool modal, WFlags f) :
+	const char* name, bool modal, Qt::WFlags f) :
 	CMultSettingsDlgBase(parent, name, modal, f), Parameters(NP), Settings(NSettings)
 {
 	/* Set help text for the controls */
@@ -100,11 +108,17 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 
 		dir.setSorting( QDir::DirsFirst );
 
+#if QT_VERSION < 0x040000
 		const QFileInfoList *list = dir.entryInfoList();
 		QFileInfoListIterator it( *list ); /* create list iterator */
-
 		for(QFileInfo *fi; (fi=it.current()); ++it )
 		{
+#else
+		const QList<QFileInfo> list = dir.entryInfoList();
+		for(QList<QFileInfo>::const_iterator fi = list.begin(); fi!=list.end(); fi++)
+		{
+#endif
+
 			/* for each file/dir */
 			/* if directory...=> scan recursive */
 			if (fi->isDir())
@@ -129,7 +143,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 
 void MultSettingsDlg::OnbuttonChooseDir()
 {
-    QString strFileName = QFileDialog::getExistingDirectory(TextLabelDir->text(), this);
+    QString strFileName = Q3FileDialog::getExistingDirectory(TextLabelDir->text(), this);
     /* Check if user not hit the cancel button */
     if (!strFileName.isEmpty())
     {

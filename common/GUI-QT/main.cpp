@@ -42,17 +42,18 @@
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
 
+#include <iostream>
+
+/* Implementation *************************************************************/
 #ifdef USE_QT_GUI
 # include <qapplication.h>
 # include <qthread.h>
 # include <qmessagebox.h>
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
+#if QT_VERSION >= 0x040000
+# include <QTranslator>
 #endif
-#include <iostream>
-
-/* Implementation *************************************************************/
-#ifdef USE_QT_GUI
 /******************************************************************************\
 * Using GUI with QT                                                            *
 \******************************************************************************/

@@ -37,12 +37,17 @@
 #include <qcombobox.h>
 #include <qstringlist.h>
 #include <qmessagebox.h>
-#include <qtextbrowser.h>
-#include <qlistview.h>
 #include <qlabel.h>
 #include <qtimer.h>
 #include <qpixmap.h>
 #include <map>
+#if QT_VERSION < 0x040000
+# include <qlistview.h>
+# define Q3ListView QListView
+# define Q3ListViewItem QListViewItem
+#else
+# include <q3listview.h>
+#endif
 
 #include "EPGDlgbase.h"
 #include "../DrmReceiver.h"
@@ -70,7 +75,7 @@ class EPGDlg : public CEPGDlgbase
 public:
 
 	EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~EPGDlg();
 	/* dummy assignment operator to help MSVC8 */
 	EPGDlg& operator=(const EPGDlg&)
@@ -83,14 +88,14 @@ protected:
 
 	virtual	void showEvent(QShowEvent *e);
 	virtual void hideEvent(QHideEvent* pEvent);
-	virtual void setActive(QListViewItem*);
+	virtual void setActive(Q3ListViewItem*);
 
-    class MyListViewItem : public QListViewItem
+    class MyListViewItem : public Q3ListViewItem
     {
     	public:
 
-    	MyListViewItem( QListView * parent, QString a, QString b, QString c, QString d, QString e,
-    	time_t s, int dr):QListViewItem(parent,a,b,c,d,e),start(s),duration(dr){}
+    	MyListViewItem( Q3ListView * parent, QString a, QString b, QString c, QString d, QString e,
+    	time_t s, int dr):Q3ListViewItem(parent,a,b,c,d,e),start(s),duration(dr){}
 
 
 	_BOOLEAN IsActive();
@@ -108,7 +113,7 @@ protected:
 	CSettings&		Settings;
 	QTimer			Timer;
 	map<QString,uint32_t> sids;
-	QListViewItem*		next;
+	Q3ListViewItem*		next;
 
 signals:
 	void NowNext(QString);

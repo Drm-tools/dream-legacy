@@ -40,7 +40,7 @@ class GeneralSettingsDlg : public CGeneralSettingsDlgBase
 public:
 
 	GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~GeneralSettingsDlg();
 
 protected:

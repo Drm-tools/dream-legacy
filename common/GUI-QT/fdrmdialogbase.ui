@@ -4702,7 +4702,7 @@
     </customwidget>
     <customwidget>
         <class>QwtThermo</class>
-        <header location="global">qwt/qwt_thermo.h</header>
+        <header location="global">qwt_thermo.h</header>
         <sizehint>
             <width>10</width>
             <height>40</height>

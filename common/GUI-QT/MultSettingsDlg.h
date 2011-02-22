@@ -30,7 +30,6 @@
 #include <qdir.h>
 #include <qpushbutton.h>
 #include <qvalidator.h>
-#include <qwhatsthis.h>
 
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/epgutil.h"
@@ -48,7 +47,7 @@ class MultSettingsDlg : public CMultSettingsDlgBase
 public:
 
 	MultSettingsDlg(CParameter&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~MultSettingsDlg();
 
 protected:

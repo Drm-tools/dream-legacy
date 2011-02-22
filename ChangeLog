@@ -1,3 +1,6 @@
+1.14
+  - allows building with Qt4
+
 1.13
  
   - change name of faac and faad libraries to permit cooexistance of normal and drm versions

@@ -31,6 +31,17 @@
 #endif
 #include "DialogUtil.h"
 #include <qaction.h>
+//Added by qt3to4:
+#if QT_VERSION < 0x040000
+# define Q3WhatsThis QWhatsThis
+# include <qwhatsthis.h>
+#define Q3ActionGroup QActionGroup
+#else
+# include <q3whatsthis.h>
+# include <Q3PopupMenu>
+# include <Q3ActionGroup>
+# define CHECK_PTR(x) Q_CHECK_PTR(x)
+#endif
 #include "../Version.h"
 #ifdef USE_ALSA
 # include <alsa/version.h>
@@ -65,7 +76,7 @@
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
-CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
+CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 	: CAboutDlgBase(parent, name, modal, f)
 {
 #ifdef HAVE_LIBSNDFILE
@@ -214,24 +225,28 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 
 
 /* Help menu ---------------------------------------------------------------- */
-CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
+CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : Q3PopupMenu(parent)
 {
 	/* Standard help menu consists of about and what's this help */
 	insertItem(tr("What's &This"), this ,
-		SLOT(OnHelpWhatsThis()), SHIFT+Key_F1);
+		SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
 	insertSeparator();
 	insertItem(tr("&About..."), this, SLOT(OnHelpAbout()));
 }
 
+void CDreamHelpMenu::OnHelpWhatsThis()
+{
+	Q3WhatsThis::enterWhatsThisMode();
+}
 
 /* Sound card selection menu ------------------------------------------------ */
 CSoundCardSelMenu::CSoundCardSelMenu(
 	CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
-	QPopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
+	Q3PopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
 {
-	pSoundInMenu = new QPopupMenu(parent);
+	pSoundInMenu = new Q3PopupMenu(parent);
 	CHECK_PTR(pSoundInMenu);
-	pSoundOutMenu = new QPopupMenu(parent);
+	pSoundOutMenu = new Q3PopupMenu(parent);
 	CHECK_PTR(pSoundOutMenu);
 	int i;
 
@@ -296,10 +311,10 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 	:rigmenus(),specials(),rig(nrig)
 #endif
 {
-	pRemoteMenu = new QPopupMenu(parent);
+	pRemoteMenu = new Q3PopupMenu(parent);
 	CHECK_PTR(pRemoteMenu);
 
-	pRemoteMenuOther = new QPopupMenu(parent);
+	pRemoteMenuOther = new Q3PopupMenu(parent);
 	CHECK_PTR(pRemoteMenuOther);
 
 #ifdef HAVE_LIBHAMLIB
@@ -329,7 +344,7 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 		if(k == rigmenus.end())
 		{
 			m.mfr = rig.strManufacturer;
-			m.pMenu = new QPopupMenu(pRemoteMenuOther);
+			m.pMenu = new Q3PopupMenu(pRemoteMenuOther);
 			CHECK_PTR(m.pMenu);
 		}
 		else
@@ -380,7 +395,7 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 
 	/* COM port selection --------------------------------------------------- */
 	/* Toggle action for com port selection menu entries */
-	QActionGroup* agCOMPortSel = new QActionGroup(parent, "Com port", TRUE);
+	Q3ActionGroup* agCOMPortSel = new Q3ActionGroup(parent, "Com port", TRUE);
 	map<string,string> ports;
 	rig.GetPortList(ports);
 	string strPort = rig.GetComPort();
@@ -431,7 +446,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
 	// if an "others" rig was selected add it to the specials list
 	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
 	{
-		QPopupMenu* pMenu = i->second.pMenu;
+		Q3PopupMenu* pMenu = i->second.pMenu;
 		for(size_t j=0; j<pMenu->count(); j++)
 		{
 			int mID = pMenu->idAt(j);

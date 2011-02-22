@@ -2755,7 +2755,7 @@
 <customwidgets>
     <customwidget>
         <class>QwtDial</class>
-        <header location="global">qwt/qwt_dial.h</header>
+        <header location="global">qwt_dial.h</header>
         <sizehint>
             <width>40</width>
             <height>40</height>

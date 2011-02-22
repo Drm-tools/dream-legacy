@@ -36,13 +36,20 @@
 #include <qdatetime.h>
 #include <qlineedit.h>
 #include <qtooltip.h>
-#include <qfiledialog.h>
-#include <qwhatsthis.h>
-#include <qlistview.h>
-#include <qbuttongroup.h>
-#include <qpopupmenu.h>
-#include <qpixmap.h>
+#if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
+# include <qlistview.h>
+typedef QListView Q3ListView;
+typedef QListViewItem Q3ListViewItem;
+# define Q3PopupMenu QPopupMenu
 #include <qwt/qwt_thermo.h>
+#else
+# include <q3listview.h>
+# include <q3buttongroup.h>
+# include <q3popupmenu.h>
+#include <qwt_thermo.h>
+#endif
+#include <qpixmap.h>
 
 #include "systemevalDlgbase.h"
 #include "DRMPlot.h"
@@ -68,7 +75,7 @@ class systemevalDlg : public systemevalDlgBase
 
 public:
 	systemevalDlg(CDRMReceiver&, CRig&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
 	virtual ~systemevalDlg();
 
@@ -78,16 +85,16 @@ public:
 	void StopLogTimers();
 
 protected:
-	class CCharSelItem : public QListViewItem
+	class CCharSelItem : public Q3ListViewItem
 	{
 	public:
-		CCharSelItem(QListView* parent, QString str1,
+		CCharSelItem(Q3ListView* parent, QString str1,
 			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
-			QListViewItem(parent, str1), eCharTy(eNewCharTy)
+			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
 			{setSelectable(bSelble);}
-		CCharSelItem(QListViewItem* parent, QString str1,
+		CCharSelItem(Q3ListViewItem* parent, QString str1,
 			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
-			QListViewItem(parent, str1), eCharTy(eNewCharTy)
+			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
 			{setSelectable(bSelble);}
 
 		CDRMPlot::ECharType GetCharType() {return eCharTy;}
@@ -121,7 +128,7 @@ protected:
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();
 
-	QPopupMenu*		pListViewContextMenu;
+	Q3PopupMenu*		pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
 	CGPSReceiver*		pGPSReceiver;
@@ -147,11 +154,15 @@ public slots:
 	void OnCheckSaveAudioWAV();
 	void OnCheckRecFilter();
 	void OnCheckModiMetric();
-	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListViContMenu();
 	void OnFrequencyEdited (const QString&);
-	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
-		int iCol);
+#if QT_VERSION < 0x040000
+	void OnListSelChanged(QListViewItem* NewSelIt);
+	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
+#else
+	void OnListSelChanged(Q3ListViewItem* NewSelIt);
+	void OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
+#endif
 	void EnableGPS();
 	void DisableGPS();
 };

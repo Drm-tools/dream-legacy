@@ -35,21 +35,15 @@
 #include <qradiobutton.h>
 #include <qcheckbox.h>
 #include <qtooltip.h>
-#include <qbuttongroup.h>
 #include <qpushbutton.h>
 #include <qcheckbox.h>
-#include <qfiledialog.h>
 #include <qslider.h>
-#include <qwt/qwt_dial.h>
-#include <qwt/qwt_dial_needle.h>
 #include <qlayout.h>
-#include <qprogressbar.h>
 #include <qcombobox.h>
-#include <qlistbox.h>
 /* This include is for setting the progress bar style */
 #include <qmotifstyle.h>
 
-#include "AnalogDemDlgbase.h"
+#include <AnalogDemDlgbase.h>
 #include "AMSSDlgbase.h"
 #include "DialogUtil.h"
 #include "DRMPlot.h"
@@ -72,7 +66,7 @@ class CAMSSDlg : public CAMSSDlgBase
 
 public:
 	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, WFlags f = 0);
+		bool modal = FALSE, Qt::WFlags f = 0);
 
 protected:
 	CDRMReceiver&	DRMReceiver;
@@ -97,7 +91,7 @@ class AnalogDemDlg : public AnalogDemDlgBase
 
 public:
 	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
 	void 			UpdatePlotsStyle();
 

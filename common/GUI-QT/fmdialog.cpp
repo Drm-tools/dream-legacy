@@ -30,10 +30,23 @@
 #include "DialogUtil.h"
 #include <qmessagebox.h>
 #include <qinputdialog.h>
+#if QT_VERSION < 0x040000
+# include <qwhatsthis.h>
+# define Q3WhatsThis QWhatsThis
+#else
+# include <q3whatsthis.h>
+# include <q3cstring.h>
+# include <QShowEvent>
+# include <QHideEvent>
+# include <QCustomEvent>
+# include <QCloseEvent>
+# include <QEvent>
+# define CHECK_PTR(x) Q_CHECK_PTR(x)
+#endif
 
 /* Implementation *************************************************************/
 FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
-	QWidget* parent, const char* name, bool modal, WFlags f)
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 	: FMDialogBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
@@ -51,28 +64,28 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
-	QPopupMenu* ViewMenu = new QPopupMenu(this);
+	Q3PopupMenu* ViewMenu = new Q3PopupMenu(this);
 	CHECK_PTR(ViewMenu);
-	ViewMenu->insertItem(tr("&Tune"), this, SLOT(OnTune()), CTRL+Key_T);
+	ViewMenu->insertItem(tr("&Tune"), this, SLOT(OnTune()), Qt::CTRL+Qt::Key_T);
 	ViewMenu->insertSeparator();
-	ViewMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 5);
+	ViewMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q, 5);
 
 	/* Settings menu  ------------------------------------------------------- */
-	pSettingsMenu = new QPopupMenu(this);
+	pSettingsMenu = new Q3PopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(),
 		DRMReceiver.GetSoundOutInterface(), this));
 
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
-		SLOT(OnSwitchToDRM()), CTRL+Key_D);
+		SLOT(OnSwitchToDRM()), Qt::CTRL+Qt::Key_D);
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
-		SLOT(OnSwitchToAM()), CTRL+Key_A);
+		SLOT(OnSwitchToAM()), Qt::CTRL+Qt::Key_A);
 	pSettingsMenu->insertSeparator();
 
 	/* Remote menu  --------------------------------------------------------- */
 	RemoteMenu* pRemoteMenu = new RemoteMenu(this, rig);
-	pSettingsMenu->insertItem(tr("Set &Rig..."), pRemoteMenu->menu(), CTRL+Key_R);
+	pSettingsMenu->insertItem(tr("Set &Rig..."), pRemoteMenu->menu(), Qt::CTRL+Qt::Key_R);
 
 	pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
 		SLOT(OnMenuSetDisplayColor()));
@@ -86,7 +99,11 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
+#if QT_VERSION < 0x040000
 	FMDialogBaseLayout->setMenuBar(pMenu);
+#else
+// TODO
+#endif
 
 
 	/* Digi controls */
@@ -105,7 +122,11 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 	/* Init progress bar for input signal level */
 	ProgrInputLevel->setRange(-50.0, 0.0);
+#if QT_VERSION < 0x040000
 	ProgrInputLevel->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
+#else
+	ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
+#endif
 	ProgrInputLevel->setFillColor(QColor(0, 190, 0));
 	ProgrInputLevel->setAlarmLevel(-12.5);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
@@ -628,8 +649,8 @@ void FMDialog::AddWhatsThisHelp()
 		"performance. Too low levels should be avoided too, since in this case "
 		"the Signal-to-Noise Ratio (SNR) degrades.");
 
-	QWhatsThis::add(TextLabelInputLevel, strInputLevel);
-	QWhatsThis::add(ProgrInputLevel, strInputLevel);
+	Q3WhatsThis::add(TextLabelInputLevel, strInputLevel);
+	Q3WhatsThis::add(ProgrInputLevel, strInputLevel);
 
 	/* Status LEDs */
 	const QString strStatusLEDS =
@@ -637,9 +658,9 @@ void FMDialog::AddWhatsThisHelp()
 		"the current CRC status of the three logical channels of a DRM stream. "
 		"These LEDs are the same as the top LEDs on the Evaluation Dialog.");
 
-	QWhatsThis::add(CLED_MSC, strStatusLEDS);
-	QWhatsThis::add(CLED_SDC, strStatusLEDS);
-	QWhatsThis::add(CLED_FAC, strStatusLEDS);
+	Q3WhatsThis::add(CLED_MSC, strStatusLEDS);
+	Q3WhatsThis::add(CLED_SDC, strStatusLEDS);
+	Q3WhatsThis::add(CLED_FAC, strStatusLEDS);
 
 	/* Station Label and Info Display */
 	const QString strStationLabelOther =
@@ -664,14 +685,14 @@ void FMDialog::AddWhatsThisHelp()
 		"transmitted in a different logical channel of a DRM stream. On the "
 		"right, the ID number connected with this service is shown.");
 
-	QWhatsThis::add(LabelBitrate, strStationLabelOther);
-	QWhatsThis::add(LabelCodec, strStationLabelOther);
-	QWhatsThis::add(LabelStereoMono, strStationLabelOther);
-	QWhatsThis::add(LabelServiceLabel, strStationLabelOther);
-	QWhatsThis::add(LabelProgrType, strStationLabelOther);
-	QWhatsThis::add(LabelServiceID, strStationLabelOther);
-	QWhatsThis::add(LabelLanguage, strStationLabelOther);
-	QWhatsThis::add(LabelCountryCode, strStationLabelOther);
-	QWhatsThis::add(FrameAudioDataParams, strStationLabelOther);
+	Q3WhatsThis::add(LabelBitrate, strStationLabelOther);
+	Q3WhatsThis::add(LabelCodec, strStationLabelOther);
+	Q3WhatsThis::add(LabelStereoMono, strStationLabelOther);
+	Q3WhatsThis::add(LabelServiceLabel, strStationLabelOther);
+	Q3WhatsThis::add(LabelProgrType, strStationLabelOther);
+	Q3WhatsThis::add(LabelServiceID, strStationLabelOther);
+	Q3WhatsThis::add(LabelLanguage, strStationLabelOther);
+	Q3WhatsThis::add(LabelCountryCode, strStationLabelOther);
+	Q3WhatsThis::add(FrameAudioDataParams, strStationLabelOther);
 
 }

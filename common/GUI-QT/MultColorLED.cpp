@@ -28,10 +28,16 @@
 \******************************************************************************/
 
 #include "MultColorLED.h"
+#if QT_VERSION < 0x040000
+# define Q3Frame QFrame
+#else
+# include <Q3Frame>
+# include <QLabel>
+#endif
 
 
 /* Implementation *************************************************************/
-CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) : 
+CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) : 
 	QLabel(parent, name, f)
 {
 	/* Define size of the bitmaps */
@@ -49,8 +55,8 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) :
 	BitmCubeYellow.fill(QColor(255, 255, 0));
 
 	/* Set modified style */
-	setFrameShape(QFrame::Panel);
-	setFrameShadow(QFrame::Sunken);
+	setFrameShape(Q3Frame::Panel);
+	setFrameShadow(Q3Frame::Sunken);
 	setIndent(0);
 
 	/* Init color flags */

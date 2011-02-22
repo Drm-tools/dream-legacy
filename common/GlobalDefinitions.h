@@ -82,6 +82,13 @@ using namespace std; /* Because of the library: "complex" */
 # endif
 
 #endif
+/* Standard definitions */
+#ifndef TRUE
+# define	TRUE							1
+#endif
+#ifndef FALSE
+# define FALSE							0
+#endif
 
 
 /* Choose algorithms -------------------------------------------------------- */
@@ -227,9 +234,6 @@ const _REAL crPi = ((_REAL) 3.14159265358979323846);
 #define RET_VAL_LOG_0					((_REAL) -200.0)
 
 
-/* Standard definitions */
-#define	TRUE							1
-#define FALSE							0
 
 
 /* Classes ********************************************************************/
@@ -255,12 +259,11 @@ public:
 
 /* Mutex object to access data safely from different threads */
 /* QT mutex */
+
 #ifdef USE_QT_GUI
-# if QT_VERSION < 0x030000
-#  include <qthread.h>
-# else
-#  include <qmutex.h>
-# endif
+//# include <QMutex>
+# include <qthread.h>
+# include <qmutex.h>
 class CMutex
 {
 public:

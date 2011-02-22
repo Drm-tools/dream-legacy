@@ -28,7 +28,7 @@
 #include "Version.h"
 
 char dream_manufacturer[] = "drea";
-char dream_implementation[] = "Q2";
+char dream_implementation[] = "Q4";
 int dream_version_major = 1;
-int dream_version_minor = 13;
+int dream_version_minor = 14;
 

@@ -33,7 +33,13 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 
-#include <qsocketdevice.h>
+#if QT_VERSION < 0x040000
+# include <qsocketdevice.h>
+# define Q3SocketDevice QSocketDevice
+#else
+# include <q3socketdevice.h>
+#define UINT32 quint32
+#endif
 #include <qsocketnotifier.h>
 #include <qdatetime.h>
 
@@ -50,7 +56,7 @@ class CPacketSocketQT : public QObject, public CPacketSocket
 	Q_OBJECT
 
 public:
-	CPacketSocketQT(QSocketDevice::Type type=QSocketDevice::Datagram);
+	CPacketSocketQT(Q3SocketDevice::Type type=Q3SocketDevice::Datagram);
 	virtual ~CPacketSocketQT();
 	// Set the sink which will receive the packets
 	virtual void SetPacketSink(CPacketSink *pSink);
@@ -71,7 +77,7 @@ private:
 	QHostAddress				HostAddrOut;
 	int							iHostPortOut;
 
-	QSocketDevice				SocketDevice;
+	Q3SocketDevice				SocketDevice;
 	QSocketNotifier*			pSocketNotivRead;
 	QSocketNotifier*			pSocketNotivWrite;
 	QMutex						writeLock;

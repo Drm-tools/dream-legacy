@@ -29,22 +29,30 @@
 #if !defined(DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_)
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
-#include<map>
-
-#include <qmenubar.h>
-#include <qpopupmenu.h>
-#include <qevent.h>
-#include <qtextview.h>
-#include <qlabel.h>
-#include <qwhatsthis.h>
-#include <qthread.h>
-
 #include "AboutDlgbase.h"
 #include "../Parameter.h"
 #include "../selectioninterface.h"
 #ifdef HAVE_LIBHAMLIB
 # include "../util/Utilities.h"
 #endif
+
+#include<map>
+
+#if QT_VERSION < 0x040000
+# include <qtextview.h>
+# include <qpopupmenu.h>
+# define Q3PopupMenu QPopupMenu
+#else
+# include <q3popupmenu.h>
+# include <q3textview.h>
+# include <q3whatsthis.h>
+# include <QCustomEvent>
+#endif
+#include <qmenubar.h>
+#include <qevent.h>
+#include <qlabel.h>
+#include <qthread.h>
+
 
 #ifndef HAVE_LIBHAMLIB
 typedef int rig_model_t;
@@ -78,12 +86,12 @@ class CAboutDlg : public CAboutDlgBase
 
 public:
 	CAboutDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+		Qt::WFlags f = 0);
 };
 
 
 /* Help menu ---------------------------------------------------------------- */
-class CDreamHelpMenu : public QPopupMenu
+class CDreamHelpMenu : public Q3PopupMenu
 {
 	Q_OBJECT
 
@@ -94,13 +102,13 @@ protected:
 	CAboutDlg AboutDlg;
 
 public slots:
-	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
+	void OnHelpWhatsThis();
 	void OnHelpAbout() {AboutDlg.exec();}
 };
 
 
 /* Sound card selection menu ------------------------------------------------ */
-class CSoundCardSelMenu : public QPopupMenu
+class CSoundCardSelMenu : public Q3PopupMenu
 {
 	Q_OBJECT
 
@@ -115,8 +123,8 @@ protected:
 	vector<string>			vecSoundOutNames;
 	int						iNumSoundInDev;
 	int						iNumSoundOutDev;
-	QPopupMenu*				pSoundInMenu;
-	QPopupMenu*				pSoundOutMenu;
+	Q3PopupMenu*				pSoundInMenu;
+	Q3PopupMenu*				pSoundOutMenu;
 
 public slots:
 	void OnSoundInDevice(int id);
@@ -167,7 +175,11 @@ inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 
 class QAction;
 
-class CRig : public QObject, public QThread
+class CRig :
+#if QT_VERSION < 0x040000
+	public QObject,
+#endif
+	public QThread
 {
 	Q_OBJECT
 public:
@@ -211,7 +223,7 @@ class RemoteMenu : public QObject
 
 public:
 	RemoteMenu(QWidget*, CRig&);
-	QPopupMenu* menu(){ return pRemoteMenu; }
+	Q3PopupMenu* menu(){ return pRemoteMenu; }
 
 public slots:
 	void OnModRigMenu(int iID);
@@ -223,13 +235,13 @@ signals:
 
 protected:
 #ifdef HAVE_LIBHAMLIB
-	struct Rigmenu {std::string mfr; QPopupMenu* pMenu;};
+	struct Rigmenu {std::string mfr; Q3PopupMenu* pMenu;};
 	std::map<int,Rigmenu> rigmenus;
 	std::vector<rig_model_t> specials;
 	CRig&	rig;
 #endif
-	QPopupMenu* pRemoteMenu;
-	QPopupMenu* pRemoteMenuOther;
+	Q3PopupMenu* pRemoteMenu;
+	Q3PopupMenu* pRemoteMenuOther;
 };
 
 #define OTHER_MENU_ID (666)

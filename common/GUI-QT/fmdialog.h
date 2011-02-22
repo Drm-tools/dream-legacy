@@ -26,25 +26,26 @@
  *
 \******************************************************************************/
 
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qtimer.h>
-#include <qstring.h>
-#include <qmenubar.h>
-#include <qpopupmenu.h>
-#include <qwt/qwt_thermo.h>
-#include <qevent.h>
-#include <qcstring.h>
-#include <qlayout.h>
-#include <qwhatsthis.h>
-#include <qpalette.h>
-#include <qcolordialog.h>
-
 #include "fmdialogbase.h"
 #include "DialogUtil.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
+
+#if QT_VERSION < 0x040000
+# include <qwt/qwt_thermo.h>
+#else
+# include <qwt_thermo.h>
+#endif
+#include <qlabel.h>
+#include <qpushbutton.h>
+#include <qtimer.h>
+#include <qstring.h>
+#include <qmenubar.h>
+#include <qevent.h>
+#include <qlayout.h>
+#include <qpalette.h>
+#include <qcolordialog.h>
 
 /* Classes ********************************************************************/
 class FMDialog : public FMDialogBase
@@ -53,7 +54,7 @@ class FMDialog : public FMDialogBase
 
 public:
 	FMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE,	WFlags f = 0);
+		bool modal = FALSE,	Qt::WFlags f = 0);
 
 	virtual ~FMDialog();
 
@@ -62,9 +63,9 @@ protected:
 	CSettings&			Settings;
 
 	QMenuBar*			pMenu;
-	QPopupMenu*			pReceiverModeMenu;
-	QPopupMenu*			pSettingsMenu;
-	QPopupMenu*			pPlotStyleMenu;
+	Q3PopupMenu*			pReceiverModeMenu;
+	Q3PopupMenu*			pSettingsMenu;
+	Q3PopupMenu*			pPlotStyleMenu;
 	QTimer				Timer;
 
 	_BOOLEAN		bSysEvalDlgWasVis;
