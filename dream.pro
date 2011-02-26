@@ -10,7 +10,7 @@ unix {
 
 win32 {
 	INCLUDEPATH	+= libs/qwt
-	LIBS 		+= libqwt.lib
+	LIBS 		+= qwt.lib
 }
 
 include("dream-common.pro")

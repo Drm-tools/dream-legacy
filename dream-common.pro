@@ -59,8 +59,10 @@ win32 {
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
 	LIBS 		+= zdll.lib fftw.lib setupapi.lib winmm.lib wsock32.lib
-	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt.lib
-	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
+	#QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt.lib
+	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmt.lib
+	#QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
+	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
 	DEFINES     += HAVE_SETUPAPI
 	DEFINES		-= UNICODE
 	HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h
