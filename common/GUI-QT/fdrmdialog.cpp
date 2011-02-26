@@ -312,7 +312,7 @@ void FDRMDialog::showTextMessage(const QString& textMessage)
 	TextTextMessage->setEnabled(TRUE);
 
 	QString formattedMessage = "";
-	for (size_t i = 0; i < textMessage.length(); i++)
+	for (size_t i = 0; int(i) < textMessage.length(); i++)
 	{
 		switch (textMessage.at(i).unicode())
 		{

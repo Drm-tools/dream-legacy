@@ -1,18 +1,10 @@
 TEMPLATE	= app
-QT		+= qt3support
 TARGET		= dream
 CONFIG		+= qt warn_on release thread
 VPATH		+= common/GUI-QT
+INCLUDEPATH	+= common/GUI-QT
 INCLUDEPATH	+= libs
 LIBS 		+= -Llibs
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui fmdialogbase.ui
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
 
 macx {
 	CONFIG		+= portaudio
@@ -29,10 +21,8 @@ macx {
 }
 
 unix {
-    CONFIG      += pcap faac faad sndfile 
-	INCLUDEPATH	+= /usr/include/qwt-qt4
-	INCLUDEPATH	+= common/GUI-QT
-	LIBS 		+= -lz -lqwt-qt4 -lrfftw -lfftw
+    CONFIG      += pcap faac faad sndfile hamlib
+	LIBS 		+= -lz -lrfftw -lfftw
 	SOURCES		+= linux/source/Pacer.cpp
 	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
@@ -54,7 +44,7 @@ win32 {
 	TEMPLATE	= vcapp
     CONFIG      += faac faad
     system("dir libs\hamlib\rig.h") {
-        CONFIG      += pcap
+        CONFIG      += hamlib
         message("with hamlib")
     }
     system("dir libs\pcap.h") {
@@ -68,7 +58,7 @@ win32 {
 	OBJECTS_DIR	= windows
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
-	LIBS 		+= zdll.lib libqwt.lib FFTW2dll.lib RFFTW2dll.lib setupapi.lib
+	LIBS 		+= zdll.lib fftw.lib setupapi.lib winmm.lib wsock32.lib
 	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt.lib
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
 	DEFINES     += HAVE_SETUPAPI
@@ -83,7 +73,7 @@ faad {
         LIBS 		+= -lfaad_drm
 	}
 	win32 {
-        LIBS 		+= libfaad.lib
+        LIBS 		+= faad_drm.lib
 	}
 }
 
@@ -93,7 +83,7 @@ faac {
         LIBS 		+= -lfaac_drm
 	}
 	win32 {
-        LIBS 		+= libfaac.lib
+        LIBS 		+= faac_drm.lib
 	}
 }
 
@@ -126,7 +116,7 @@ hamlib {
         LIBS 		+= -lhamlib
 	}
 	win32 {
-        LIBS 		+= libhamlib.lib
+        LIBS 		+= libhamlib-2.lib
 	}
 }
 
@@ -382,8 +372,3 @@ common/util/Reassemble.cpp   \
 common/util/Settings.cpp   \
 common/util/Utilities.cpp   \
 common/Version.cpp
-#The following line was inserted by qt3to4
-QT += network xml  
-#The following line was inserted by qt3to4
-CONFIG += uic3
-

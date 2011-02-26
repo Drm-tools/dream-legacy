@@ -39,12 +39,12 @@
 #include <qlabel.h>
 #include <qfileinfo.h>
 #include <qdatetime.h>
+#include <qwt_thermo.h>
+#include <qwt_counter.h>
 #if QT_VERSION < 0x040000
-#include <qwt/qwt_thermo.h>
-#include <qwt/qwt_counter.h>
 # include <qpopupmenu.h>
-#include <qurloperator.h>
-#include <qlistview.h>
+# include <qurloperator.h>
+# include <qlistview.h>
 # define Q3PopupMenu QPopupMenu
 # define Q3ListView QListView
 # define Q3ListViewItem QListViewItem
@@ -54,15 +54,13 @@
 # define Q3NetworkProtocolFactory QNetworkProtocolFactory
 # define Q3Ftp QFtp
 #else
-#include <qwt_thermo.h>
-#include <qwt_counter.h>
-#include <q3ftp.h>
-#include <q3popupmenu.h>
-#include <q3header.h>
-#include <q3listview.h>
-#include <q3buttongroup.h>
-#include <q3urloperator.h>
-#include <q3networkprotocol.h>
+# include <q3ftp.h>
+# include <q3popupmenu.h>
+# include <q3header.h>
+# include <q3listview.h>
+# include <q3buttongroup.h>
+# include <q3urloperator.h>
+# include <q3networkprotocol.h>
 #endif
 
 #include "StationsDlgbase.h"
@@ -278,13 +276,8 @@ public slots:
 	void OnSigStr(double);
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
-#if QT_VERSION < 0x040000
-	void OnListItemClicked(QListViewItem* item);
-	void OnUrlFinished(QNetworkOperation* pNetwOp);
-#else
 	void OnListItemClicked(Q3ListViewItem* item);
 	void OnUrlFinished(Q3NetworkOperation* pNetwOp);
-#endif
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);
 	void OnGetUpdate();

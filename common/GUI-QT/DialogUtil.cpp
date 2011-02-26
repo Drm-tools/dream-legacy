@@ -30,14 +30,14 @@
 # include <winsock2.h>
 #endif
 #include "DialogUtil.h"
-#include <qaction.h>
-//Added by qt3to4:
 #if QT_VERSION < 0x040000
-# define Q3WhatsThis QWhatsThis
 # include <qwhatsthis.h>
-#define Q3ActionGroup QActionGroup
+# include <qaction.h>
+# define Q3WhatsThis QWhatsThis
+# define Q3ActionGroup QActionGroup
+# define Q3Action QAction
 #else
-# include <q3whatsthis.h>
+# include <Q3WhatsThis>
 # include <Q3PopupMenu>
 # include <Q3ActionGroup>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
@@ -403,13 +403,13 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 	{
 		QString text = p->second.c_str();
 		QString menuText = p->first.c_str();
-		QAction* pacMenu = new QAction(text, menuText, 0, agCOMPortSel, 0, TRUE);
+		Q3Action* pacMenu = new Q3Action(text, menuText, 0, agCOMPortSel, 0, TRUE);
 		if(strPort == p->second)
 			pacMenu->setOn(TRUE);
 	}
 
 	/* Action group */
-	connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
+	connect(agCOMPortSel, SIGNAL(selected(Q3Action*)), this, SLOT(OnComPortMenu(Q3Action*)));
 	agCOMPortSel->addTo(pRemoteMenu);
 	/* Separator */
 	pRemoteMenu->insertSeparator();
