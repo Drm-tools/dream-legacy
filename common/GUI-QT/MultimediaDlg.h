@@ -29,6 +29,7 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
+#include <qstring.h>
 #include <qmime.h>
 #include <qimage.h>
 #include <qtimer.h>
