@@ -522,4 +522,4 @@ endif
 
 
 #drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -ansi -Wshadow -Werror -Weffc++ -Wsign-promo -Wcomment 
-drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -Wsign-promo -Wcomment
+drm_CXXFLAGS=$(QWTINCL) -I/usr/include/qwt -I../common/GUI-QT -Wall -fno-for-scope -Wsign-promo -Wcomment
