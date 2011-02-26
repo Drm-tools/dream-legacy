@@ -42,6 +42,7 @@
 # include <qpopupmenu.h>
 # include <qfiledialog.h>
 # include <qstylesheet.h>
+# include <qtextstream.h>
 # define Q3PopupMenu QPopupMenu
 # define Q3TextStream QTextStream
 # define Q3CString QCString
