@@ -57,31 +57,16 @@ using namespace std; /* Because of the library: "complex" */
 # define USE_QT_GUI
 //# undef USE_QT_GUI
 
-/* Define to get com port auto detection on Win2K and beyond */
-# define HAVE_SETUPAPI
-//# undef HAVE_SETUPAPI
-
 # define DLL_EXPORT 1
 //# undef DLL_EXPORT 1
+
+#endif /* _WIN32 */
 
 /* set sensible defaults for QT2 or QT3 */
 # ifdef USE_QT_GUI
 #  include <qglobal.h>
 # endif
 
-# if defined(QT_VERSION) && QT_VERSION < 0x030000
-#  define HAVE_LIBFREEIMAGE
-//#  undef HAVE_LIBFREEIMAGE
-//#  define HAVE_LIBZ 1
-#  undef HAVE_LIBZ
-# else
-//# define HAVE_LIBFREEIMAGE
-#  undef HAVE_LIBFREEIMAGE
-#  define HAVE_LIBZ 1
-//# undef HAVE_LIBZ
-# endif
-
-#endif
 /* Standard definitions */
 #ifndef TRUE
 # define	TRUE							1
@@ -261,9 +246,13 @@ public:
 /* QT mutex */
 
 #ifdef USE_QT_GUI
-//# include <QMutex>
-# include <qthread.h>
-# include <qmutex.h>
+
+# if QT_VERSION < 0x030000
+#  include <qthread.h>
+# else
+#  include <qmutex.h>
+# endif
+
 class CMutex
 {
 public:
