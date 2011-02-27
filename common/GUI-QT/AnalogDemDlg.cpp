@@ -45,6 +45,7 @@
 # define Q3FileDialog QFileDialog
 # define Q3CString QCString
 #else
+# include "DRMPlot-qwt5.h"
 # include <q3buttongroup.h>
 # include <q3filedialog.h>
 # include <q3progressbar.h>
@@ -75,8 +76,17 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	AddWhatsThisHelp();
 
 	MainPlot = new CDRMPlot( ButtonGroupChart, "MainPlot" );
+#if QT_VERSION < 0x030000
+	Mainplot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, MainPlot->sizePolicy().hasHeightForWidth() ) );
+
+#else
 	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, 0, 0, MainPlot->sizePolicy().hasHeightForWidth() ) );
+#endif
+#if QT_VERSION < 0x040000
 	ButtonGroupChartLayout->addWidget( MainPlot );
+#else
+	ButtonGroupChart->layout()->addWidget( MainPlot );
+#endif
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */

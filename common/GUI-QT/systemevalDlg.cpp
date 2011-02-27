@@ -39,6 +39,7 @@
 # define Q3WhatsThis QWhatsThis
 # define Q3FileDialog QFileDialog
 #else
+# include "DRMPlot-qwt5.h"
 # include <q3whatsthis.h>
 # include <q3filedialog.h>
 # include <QHideEvent>
@@ -86,8 +87,16 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	AddWhatsThisHelp();
 
 	MainPlot = new CDRMPlot( ButtonGroupPlotSNR, "MainPlot" );
+#if QT_VERSION < 0x030000
+	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, MainPlot->sizePolicy().hasHeightForWidth() ) );
+#else
 	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, 0, 0, MainPlot->sizePolicy().hasHeightForWidth() ) );
+#endif
+#if QT_VERSION < 0x040000
 	ButtonGroupPlotSNRLayout->addWidget( MainPlot );
+#else
+	ButtonGroupPlotSNR->layout()->addWidget( MainPlot );
+#endif
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
