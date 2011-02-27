@@ -409,7 +409,11 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 	}
 
 	/* Action group */
+#if QT_VERSION < 0x040000
+	connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
+#else
 	connect(agCOMPortSel, SIGNAL(selected(Q3Action*)), this, SLOT(OnComPortMenu(Q3Action*)));
+#endif
 	agCOMPortSel->addTo(pRemoteMenu);
 	/* Separator */
 	pRemoteMenu->insertSeparator();

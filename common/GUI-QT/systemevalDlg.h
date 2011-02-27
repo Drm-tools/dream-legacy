@@ -156,8 +156,13 @@ public slots:
 	void OnCheckModiMetric();
 	void OnListViContMenu();
 	void OnFrequencyEdited (const QString&);
+#if QT_VERSION < 0x040000
+	void OnListSelChanged(QListViewItem* NewSelIt);
+	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
+#else
 	void OnListSelChanged(Q3ListViewItem* NewSelIt);
 	void OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
+#endif
 	void EnableGPS();
 	void DisableGPS();
 };
