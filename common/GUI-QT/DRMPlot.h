@@ -29,9 +29,9 @@
 #if !defined(DRMPLOT_H__FD6B2345234523453_804E1606C2AC__INCLUDED_)
 #define DRMPLOT_H__FD6B2345234523453_804E1606C2AC__INCLUDED_
 
-#include <qwt/qwt_plot.h>
-#include <qwt/qwt_plot_canvas.h>
-#include <qwt/qwt_scldraw.h>
+#include <qwt_plot.h>
+#include <qwt_plot_canvas.h>
+#include <qwt_scldraw.h>
 #include <qpainter.h>
 #include <qtimer.h>
 #include <qwhatsthis.h>

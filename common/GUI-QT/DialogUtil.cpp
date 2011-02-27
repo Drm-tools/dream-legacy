@@ -494,7 +494,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
 #endif
 }
 
-void RemoteMenu::OnComPortMenu(QAction* action)
+void RemoteMenu::OnComPortMenu(Q3Action* action)
 {
 #ifdef HAVE_LIBHAMLIB
 	rig.SetComPort(action->text().latin1());

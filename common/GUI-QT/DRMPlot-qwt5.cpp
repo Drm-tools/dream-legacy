@@ -26,6 +26,8 @@
  *
 \******************************************************************************/
 
+#include "DRMPlot-qwt5.h"
+
 #if QT_VERSION < 0x040000
 # include <qwhatsthis.h>
 # define Q3Frame QFrame
@@ -39,18 +41,35 @@
 # include <QShowEvent>
 #endif
 
-static void insertLeftCurve(QwtPlotCurve* curve, const QString& text, QwtPlot* plot)
-{
-    curve = new QwtPlotCurve(text);
-    curve->attach(plot);
-}
+/* Define the plot color profiles */
 
-static void insertRightCurve(QwtPlotCurve* curve, const QString& text, QwtPlot* plot)
-{
-    curve = new QwtPlotCurve(text);
-    curve->setYAxis(QwtPlot::yRight);
-    curve->attach(plot);
-}
+/* BLUEWHITE */
+#define BLUEWHITE_MAIN_PEN_COLOR_PLOT			Qt::blue
+#define BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION		Qt::blue
+#define BLUEWHITE_BCKGRD_COLOR_PLOT			Qt::white
+#define BLUEWHITE_MAIN_GRID_COLOR_PLOT			Qt::gray
+#define BLUEWHITE_SPEC_LINE1_COLOR_PLOT			Qt::red
+#define BLUEWHITE_SPEC_LINE2_COLOR_PLOT			Qt::black
+#define BLUEWHITE_PASS_BAND_COLOR_PLOT			QColor(192, 192, 255)
+
+/* GREENBLACK */
+#define GREENBLACK_MAIN_PEN_COLOR_PLOT			Qt::green
+#define GREENBLACK_MAIN_PEN_COLOR_CONSTELLATION		Qt::red
+#define GREENBLACK_BCKGRD_COLOR_PLOT			Qt::black
+#define GREENBLACK_MAIN_GRID_COLOR_PLOT			QColor(128, 0, 0)
+#define GREENBLACK_SPEC_LINE1_COLOR_PLOT		Qt::yellow
+#define GREENBLACK_SPEC_LINE2_COLOR_PLOT		Qt::blue
+#define GREENBLACK_PASS_BAND_COLOR_PLOT			QColor(0, 96, 0)
+
+/* BLACKGREY */
+#define BLACKGREY_MAIN_PEN_COLOR_PLOT			Qt::black
+#define BLACKGREY_MAIN_PEN_COLOR_CONSTELLATION		Qt::green
+#define BLACKGREY_BCKGRD_COLOR_PLOT			Qt::gray
+#define BLACKGREY_MAIN_GRID_COLOR_PLOT			Qt::white
+#define BLACKGREY_SPEC_LINE1_COLOR_PLOT			Qt::blue
+#define BLACKGREY_SPEC_LINE2_COLOR_PLOT			Qt::yellow
+#define BLACKGREY_PASS_BAND_COLOR_PLOT			QColor(128, 128, 128)
+
 
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
@@ -105,10 +124,9 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
     SetPlotStyle(0);
 
     /* Connections */
-    connect(this, SIGNAL(plotMouseReleased(const QMouseEvent&)),
-            this, SLOT(OnClicked(const QMouseEvent&)));
-    connect(&TimerChart, SIGNAL(timeout()),
-            this, SLOT(OnTimerChart()));
+    connect(this, SIGNAL(MouseReleased(const QMouseEvent&)),
+		this, SLOT(OnClicked(const QMouseEvent&)));
+    connect(&TimerChart, SIGNAL(timeout()), this, SLOT(OnTimerChart()));
 
     TimerChart.stop();
 }
@@ -544,7 +562,7 @@ void CDRMPlot::SetupAvIR()
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
 #else
     /* Insert curves */
     curve1 = new QwtPlotCurve(tr("Guard-interval beginning"));
@@ -689,8 +707,11 @@ void CDRMPlot::SetupTranFct()
 
     /* Add main curves */
     clear();
-    insertLeftCurve(main1curve, tr("Transf. Fct."), this);
-    insertRightCurve(main2curve, tr("Group Del."), this);
+    main1curve = new QwtPlotCurve(tr("Transf. Fct."));
+    main1curve->attach(this);
+    main2curve = new QwtPlotCurve(tr("Group Del."));
+    main2curve->setYAxis(QwtPlot::yRight);
+    main2curve->attach(this);
     /* Curve colors */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
@@ -722,9 +743,7 @@ void CDRMPlot::SetupAudioSpec()
     setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
     enableAxis(QwtPlot::yLeft, TRUE);
     setAxisTitle(QwtPlot::yLeft, "AS [dB]");
-#if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
-#endif
+    // TODO canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
     /* Fixed scale */
     setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
@@ -736,11 +755,11 @@ void CDRMPlot::SetupAudioSpec()
 
     /* Add main curve */
     clear();
-    insertLeftCurve(main1curve, tr("Audio Spectrum"), this);
+    main1curve = new QwtPlotCurve(tr("Audio Spectrum"));
+    main1curve->attach(this);
 
     /* Curve color */
-    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
@@ -772,14 +791,17 @@ void CDRMPlot::SetupFreqSamOffsHist()
 
     /* Add main curves */
     clear();
-    insertLeftCurve(main1curve, tr("Freq."), this);
-    insertRightCurve(main2curve, tr("Samp."), this);
+    main1curve = new QwtPlotCurve(tr("Freq."));
+    main1curve->attach(this);
+    main2curve = new QwtPlotCurve(tr("Samp."));
+    main2curve->setYAxis(QwtPlot::yRight);
+    main2curve->attach(this);
 
     /* Curve colors */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
     main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
 
 }
 
@@ -858,14 +880,17 @@ void CDRMPlot::SetupDopplerDelayHist()
 
     /* Add main curves */
     clear();
-    insertLeftCurve(main1curve, tr("Delay"), this);
-    insertRightCurve(main2curve, tr("Doppler"), this);
+    main1curve = new QwtPlotCurve(tr("Delay"));
+    main1curve->attach(this);
+    main2curve = new QwtPlotCurve(tr("Doppler"));
+    main2curve->setYAxis(QwtPlot::yRight);
+    main2curve->attach(this);
 
     /* Curve colors */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
     main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
 
 }
 
@@ -904,14 +929,17 @@ void CDRMPlot::SetupSNRAudHist()
 
     /* Add main curves */
     clear();
-    insertLeftCurve(main1curve, tr("SNR"), this);
-    insertRightCurve(main2curve, tr("Audio"), this);
+    main1curve = new QwtPlotCurve(tr("SNR"));
+    main1curve->attach(this);
+    main2curve = new QwtPlotCurve(tr("Audio"));
+    main2curve->setYAxis(QwtPlot::yRight);
+    main2curve->attach(this);
 
     /* Curve colors */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
     main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
 }
 
 void CDRMPlot::SetSNRAudHist(CVector<_REAL>& vecrData,
@@ -988,7 +1016,8 @@ void CDRMPlot::SetupPSD()
 
     /* Insert line for DC carrier */
     clear();
-    insertLeftCurve(curve1, tr("DC Carrier"), this);
+    curve1 = new QwtPlotCurve(tr("DC Carrier"));
+    curve1->attach(this);
     curve1->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 
     double dX[2], dY[2];
@@ -1001,11 +1030,12 @@ void CDRMPlot::SetupPSD()
     curve1->setData(dX, dY, 2);
 
     /* Add main curve */
-    insertLeftCurve(main1curve, tr("Shifted PSD"), this);
+    main1curve = new QwtPlotCurve(tr("Shifted PSD"));
+    main1curve->attach(this);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
 }
 
 void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
@@ -1038,11 +1068,12 @@ void CDRMPlot::SetupSNRSpectrum()
 
     /* Add main curve */
     clear();
-    insertLeftCurve(main1curve, tr("SNR Spectrum"), this);
+    main1curve = new QwtPlotCurve(tr("SNR Spectrum"));
+    main1curve->attach(this);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
 }
 
 void CDRMPlot::SetSNRSpectrum(CVector<_REAL>& vecrData,
@@ -1109,15 +1140,17 @@ void CDRMPlot::SetupInpSpec()
 
     /* Insert line for DC carrier */
     clear();
-    insertLeftCurve(curve1, tr("DC carrier"), this);
+    curve1 = new QwtPlotCurve(tr("DC carrier"));
+    curve1->attach(this);
     curve1->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 
     /* Add main curve */
-    insertLeftCurve(main1curve, tr("Input spectrum"), this);
+    main1curve = new QwtPlotCurve(tr("Input spectrum"));
+    main1curve->attach(this);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
 }
 
 void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -1171,7 +1204,8 @@ void CDRMPlot::SetupInpPSD()
 
     /* Insert line for bandwidth marker */
     clear();
-    insertLeftCurve(curve1, tr("Filter bandwidth"), this);
+    curve1 = new QwtPlotCurve(tr("Filter bandwidth"));
+    curve1->attach(this);
 
     /* Make sure that line is bigger than the current plots height. Do this by
        setting the width to a very large value. TODO: better solution */
@@ -1221,15 +1255,17 @@ void CDRMPlot::SetupInpPSD()
     }
 
     /* Insert line for DC carrier */
-    curve2 = insertCurve(tr("DC carrier"));
+    curve2 = new QwtPlotCurve(tr("DC carrier"));
+    curve2->attach(this);
     curve2->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 #endif
     /* Add main curve */
-    insertLeftCurve(main1curve, tr("Input PSD"), this);
+    main1curve = new QwtPlotCurve(tr("Input PSD"));
+    main1curve->attach(this);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                                 Qt::RoundJoin));
+                            Qt::RoundJoin));
 }
 
 void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,

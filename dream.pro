@@ -15,5 +15,5 @@ win32 {
 
 include("dream-common.pro")
 
-HEADERS		+= common/GUI-QT/DRMPlot.h common/GUI-QT/DRMPlot-qwt4.h
-SOURCES		+= common/GUI-QT/DRMPlot.cpp common/GUI-QT/DRMPlot-qwt4.cpp
+HEADERS		+= common/GUI-QT/DRMPlot.h
+SOURCES		+= common/GUI-QT/DRMPlot.cpp
