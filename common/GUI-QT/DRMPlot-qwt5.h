@@ -101,40 +101,23 @@ public:
     void Update() {
         OnTimerChart();
     }
-
-    void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-                 _REAL rLowerB, _REAL rHigherB,
-                 const _REAL rStartGuard, const _REAL rEndGuard,
-                 const _REAL rBeginIR, const _REAL rEndIR);
-    void SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
-                    CVector<_REAL>& vecrScale);
-    void SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-    void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-    void SetSNRSpectrum(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-    void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-                    const _REAL rDCFreq);
-    void SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-                   const _REAL rDCFreq, const _REAL rBWCenter = (_REAL) 0.0,
-                   const _REAL rBWWidth = (_REAL) 0.0);
-    void SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-    void SetFreqSamOffsHist(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
-                            CVector<_REAL>& vecrScale,
-                            const _REAL rFreqOffAcquVal);
-    void SetDopplerDelayHist(CVector<_REAL>& vecrData,
-                             CVector<_REAL>& vecrData2,
-                             CVector<_REAL>& vecrScale);
-    void SetSNRAudHist(CVector<_REAL>& vecrData,
-                       CVector<_REAL>& vecrData2,
-                       CVector<_REAL>& vecrScale);
-    void SetFACConst(CVector<_COMPLEX>& veccData);
-    void SetSDCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc);
-    void SetMSCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc);
-    void SetAllConst(CVector<_COMPLEX>& veccMSC,
-                     CVector<_COMPLEX>& veccSDC,
-                     CVector<_COMPLEX>& veccFAC);
     void SetPlotStyle(const int iNewStyleID);
 
+
 protected:
+    void SetVerticalBounds(
+        const _REAL rStartGuard, const _REAL rEndGuard,
+        const _REAL rBeginIR, const _REAL rEndIR);
+    void SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLowerB, _REAL rHigherB);
+    void SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    void SetDCCarrier(const _REAL rDCFreq);
+    void SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth);
+    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
+                   CVector<_REAL>& vecrScale);
+    void AutoScale2(CVector<_REAL>& vecrData,
+                    CVector<_REAL>& vecrData2,
+                    CVector<_REAL>& vecrScale);
+    void AutoScale3(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
     void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
     void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
                  CVector<_REAL>& vecrScale);
@@ -180,7 +163,7 @@ protected:
     ECharType		CurCharType;
     ECharType		InitCharType;
     QwtPlotCurve	*main1curve, *main2curve;
-    QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5, *curve6;
+    QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5;
     QwtPlotGrid*    	grid;
     QwtSymbol		MarkerSym1, MarkerSym2, MarkerSym3;
     QwtText         	leftTitle, rightTitle, bottomTitle;
