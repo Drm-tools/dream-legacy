@@ -39,15 +39,15 @@
 #include<map>
 
 #if QT_VERSION < 0x040000
-# include <qtextview.h>
+# include <qaction.h>
 # include <qpopupmenu.h>
+# include <qtextview.h>
 # define Q3PopupMenu QPopupMenu
+# define Q3Action QAction
 #else
 # include <q3action.h>
 # include <q3popupmenu.h>
 # include <q3textview.h>
-# include <q3whatsthis.h>
-# include <QCustomEvent>
 #endif
 #include <qmenubar.h>
 #include <qevent.h>
@@ -229,11 +229,7 @@ public:
 public slots:
 	void OnModRigMenu(int iID);
 	void OnRemoteMenu(int iID);
-#if QT_VERSION < 0x040000
-	void OnComPortMenu(QAction* action);
-#else
 	void OnComPortMenu(Q3Action* action);
-#endif
 
 signals:
 	void SMeterAvailable();

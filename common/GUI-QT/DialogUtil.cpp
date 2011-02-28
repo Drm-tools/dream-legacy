@@ -32,11 +32,10 @@
 #include "DialogUtil.h"
 #if QT_VERSION < 0x040000
 # include <qwhatsthis.h>
-# include <qaction.h>
 # define Q3WhatsThis QWhatsThis
 # define Q3ActionGroup QActionGroup
-# define Q3Action QAction
 #else
+# include <QCustomEvent>
 # include <Q3WhatsThis>
 # include <Q3PopupMenu>
 # include <Q3ActionGroup>
