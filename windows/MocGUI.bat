@@ -47,55 +47,55 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\GeneralSettingsDlg.h -o moc\moc_GeneralSettingsDlg.cpp
 
 rem .ui -------------
-%qtdir%\bin\uic.exe ..\common\GUI-QT\fmdialogbase.ui -o moc\fmdialogbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\fmdialogbase.ui -i fmdialogbase.h -o moc\fmdialogbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\fmdialogbase.ui -o moc\fmdialogbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\fmdialogbase.ui -i fmdialogbase.h -o moc\fmdialogbase.cpp
 %qtdir%\bin\moc.exe moc\fmdialogbase.h -o moc\moc_fmdialogbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -i fdrmdialogbase.h -o moc\fdrmdialogbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\fdrmdialogbase.ui -o moc\fdrmdialogbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\fdrmdialogbase.ui -i fdrmdialogbase.h -o moc\fdrmdialogbase.cpp
 %qtdir%\bin\moc.exe moc\fdrmdialogbase.h -o moc\moc_fdrmdialogbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\TransmDlgbase.ui -o moc\TransmDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\TransmDlgbase.ui -i TransmDlgbase.h -o moc\TransmDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\TransmDlgbase.ui -o moc\TransmDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\TransmDlgbase.ui -i TransmDlgbase.h -o moc\TransmDlgbase.cpp
 %qtdir%\bin\moc.exe moc\TransmDlgbase.h -o moc\moc_TransmDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\systemevalDlgbase.ui -o moc\systemevalDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\systemevalDlgbase.ui -i systemevalDlgbase.h -o moc\systemevalDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\systemevalDlgbase.ui -o moc\systemevalDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\systemevalDlgbase.ui -i systemevalDlgbase.h -o moc\systemevalDlgbase.cpp
 %qtdir%\bin\moc.exe moc\systemevalDlgbase.h -o moc\moc_systemevalDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\AboutDlgbase.ui -o moc\AboutDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\AboutDlgbase.ui -i AboutDlgbase.h -o moc\AboutDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\AboutDlgbase.ui -o moc\AboutDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\AboutDlgbase.ui -i AboutDlgbase.h -o moc\AboutDlgbase.cpp
 %qtdir%\bin\moc.exe moc\AboutDlgbase.h -o moc\moc_AboutDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -o moc\MultimediaDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -i MultimediaDlgbase.h -o moc\MultimediaDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\MultimediaDlgbase.ui -o moc\MultimediaDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\MultimediaDlgbase.ui -i MultimediaDlgbase.h -o moc\MultimediaDlgbase.cpp
 %qtdir%\bin\moc.exe moc\MultimediaDlgbase.h -o moc\moc_MultimediaDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\StationsDlgbase.ui -o moc\StationsDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\StationsDlgbase.ui -i StationsDlgbase.h -o moc\StationsDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\StationsDlgbase.ui -o moc\StationsDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\StationsDlgbase.ui -i StationsDlgbase.h -o moc\StationsDlgbase.cpp
 %qtdir%\bin\moc.exe moc\StationsDlgbase.h -o moc\moc_StationsDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\LiveScheduleDlgbase.ui -o moc\LiveScheduleDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\LiveScheduleDlgbase.ui -i LiveScheduleDlgbase.h -o moc\LiveScheduleDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui -o moc\LiveScheduleDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui -i LiveScheduleDlgbase.h -o moc\LiveScheduleDlgbase.cpp
 %qtdir%\bin\moc.exe moc\LiveScheduleDlgbase.h -o moc\moc_LiveScheduleDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -o moc\AnalogDemDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -i AnalogDemDlgbase.h -o moc\AnalogDemDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\AnalogDemDlgbase.ui -o moc\AnalogDemDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\AnalogDemDlgbase.ui -i AnalogDemDlgbase.h -o moc\AnalogDemDlgbase.cpp
 %qtdir%\bin\moc.exe moc\AnalogDemDlgbase.h -o moc\moc_AnalogDemDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -o moc\AMSSDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -i AMSSDlgbase.h -o moc\AMSSDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\AMSSDlgbase.ui -o moc\AMSSDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\AMSSDlgbase.ui -i AMSSDlgbase.h -o moc\AMSSDlgbase.cpp
 %qtdir%\bin\moc.exe moc\AMSSDlgbase.h -o moc\moc_AMSSDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -o moc\EPGDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -i EPGDlgbase.h -o moc\EPGDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\EPGDlgbase.ui -o moc\EPGDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\EPGDlgbase.ui -i EPGDlgbase.h -o moc\EPGDlgbase.cpp
 %qtdir%\bin\moc.exe moc\EPGDlgbase.h -o moc\moc_EPGDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -o moc\MultSettingsDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\MultSettingsDlgbase.ui -o moc\MultSettingsDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp
 %qtdir%\bin\moc.exe moc\MultSettingsDlgbase.h -o moc\moc_MultSettingsDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -o moc\GeneralSettingsDlgbase.h
-%qtdir%\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui -o moc\GeneralSettingsDlgbase.h
+%qtdir%\bin\uic.exe ..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp
 %qtdir%\bin\moc.exe moc\GeneralSettingsDlgbase.h -o moc\moc_GeneralSettingsDlgbase.cpp
 
