@@ -35,7 +35,7 @@
 # include <qwhatsthis.h>
 # define Q3WhatsThis QWhatsThis
 #else
-# include <q3whatsthis.h>
+# include <Q3WhatsThis>
 # include <QShowEvent>
 # include <QHideEvent>
 #endif
@@ -45,10 +45,16 @@
 
 GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	CGeneralSettingsDlgBase(parent, name, modal, f), Parameters(NParam),Settings(NSettings),
-	host("localhost"),port(2947),bUseGPS(FALSE)
+#if QT_VERSION < 0x040000
+	CGeneralSettingsDlgBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_CGeneralSettingsDlgBase(),
+#endif
+	Parameters(NParam),Settings(NSettings), host("localhost"),port(2947),bUseGPS(FALSE)
 {
-
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	host = Settings.Get("GPS", "host", host);
 	port = Settings.Get("GPS", "port", port);
 	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);

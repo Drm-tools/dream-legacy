@@ -29,7 +29,6 @@
 #if !defined(DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_)
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
-#include "AboutDlgbase.h"
 #include "../Parameter.h"
 #include "../selectioninterface.h"
 #ifdef HAVE_LIBHAMLIB
@@ -39,15 +38,18 @@
 #include<map>
 
 #if QT_VERSION < 0x040000
+# include "AboutDlgbase.h"
 # include <qaction.h>
 # include <qpopupmenu.h>
 # include <qtextview.h>
 # define Q3PopupMenu QPopupMenu
 # define Q3Action QAction
 #else
-# include <q3action.h>
-# include <q3popupmenu.h>
-# include <q3textview.h>
+# include "ui_AboutDlgbase.h"
+# include <QDialog>
+# include <Q3Action>
+# include <Q3PopupMenu>
+# include <Q3TextView>
 #endif
 #include <qmenubar.h>
 #include <qevent.h>
@@ -81,7 +83,12 @@ public:
 
 
 /* About dialog ------------------------------------------------------------- */
-class CAboutDlg : public CAboutDlgBase
+class CAboutDlg :
+#if QT_VERSION < 0x040000
+	public CAboutDlgBase
+#else
+	public QDialog, public Ui_CAboutDlgBase
+#endif
 {
 	Q_OBJECT
 

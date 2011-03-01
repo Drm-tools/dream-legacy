@@ -399,11 +399,18 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 
 StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
+#if QT_VERSION < 0x040000
 	CStationsDlgBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_CStationsDlgBase(),
+#endif
 	DRMReceiver(NDRMR),rig(nrig),
 	Settings(NSettings),
 	bReInitOnFrequencyChange(FALSE), vecpListItems(0)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 

@@ -53,17 +53,19 @@
 # define Q3NetworkProtocol QNetworkProtocol
 # define Q3NetworkProtocolFactory QNetworkProtocolFactory
 # define Q3Ftp QFtp
+# include "StationsDlgbase.h"
 #else
-# include <q3ftp.h>
-# include <q3popupmenu.h>
-# include <q3header.h>
-# include <q3listview.h>
-# include <q3buttongroup.h>
-# include <q3urloperator.h>
-# include <q3networkprotocol.h>
+# include <Q3Ftp>
+# include <Q3PopupMenu>
+# include <Q3Header>
+# include <Q3ListView>
+# include <Q3ButtonGroup>
+# include <Q3UrlOperator>
+# include <Q3NetworkProtocol>
+# include <QDialog>
+# include "ui_StationsDlgbase.h"
 #endif
 
-#include "StationsDlgbase.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 #include "../util/Settings.h"
@@ -213,7 +215,12 @@ public:
 class RemoteMenu;
 class CRig;
 
-class StationsDlg : public CStationsDlgBase
+class StationsDlg :
+#if QT_VERSION < 0x040000
+	public CStationsDlgBase
+#else
+	public QDialog, public Ui_CStationsDlgBase
+#endif
 {
 	Q_OBJECT
 

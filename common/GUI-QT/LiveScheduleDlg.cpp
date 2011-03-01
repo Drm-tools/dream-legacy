@@ -343,13 +343,20 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
 								 QWidget * parent, const char *name,
 								 bool modal, Qt::WFlags f):
-CLiveScheduleDlgBase(parent, name, modal, f),
+#if QT_VERSION < 0x040000
+	CLiveScheduleDlgBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_CLiveScheduleDlgBase(),
+#endif
 DRMReceiver(NDRMR),
 vecpListItems(),
 strCurrentSavePath("."),
 iColStationID(0),
 iWidthColStationID(0)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 

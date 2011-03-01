@@ -40,15 +40,17 @@
 # define Q3PopupMenu QPopupMenu
 # define Q3ButtonGroup QButtonGroup
 # include <qpopupmenu.h>
+# include "fdrmdialogbase.h"
 #else
-# include <q3popupmenu.h>
+# include <QDialog>
+# include <Q3PopupMenu>
 # include <QShowEvent>
 # include <QHideEvent>
 # include <QCustomEvent>
 # include <QCloseEvent>
+# include "ui_fdrmdialogbase.h"
 #endif
 
-#include "fdrmdialogbase.h"
 #include "DialogUtil.h"
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"
@@ -67,7 +69,12 @@
 
 
 /* Classes ********************************************************************/
-class FDRMDialog : public FDRMDialogBase
+class FDRMDialog :
+#if QT_VERSION < 0x040000
+	public FDRMDialogBase
+#else
+	public QDialog, public Ui_FDRMDialogBase
+#endif
 {
 	Q_OBJECT
 

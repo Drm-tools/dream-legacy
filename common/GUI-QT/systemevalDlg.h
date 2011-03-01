@@ -45,13 +45,15 @@
 # define Q3ListView QListView
 # define Q3ListViewItem QListViewItem
 # define Q3PopupMenu QPopupMenu
+# include "systemevalDlgbase.h"
 #else
 # include <Q3ListView>
 # include <Q3ButtonGroup>
 # include <Q3PopupMenu>
+# include <QDialog>
+# include "ui_systemevalDlgbase.h"
 #endif
 
-#include "systemevalDlgbase.h"
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
@@ -69,7 +71,12 @@ class CDRMPlot;
 
 
 /* Classes ********************************************************************/
-class systemevalDlg : public systemevalDlgBase
+class systemevalDlg :
+#if QT_VERSION < 0x040000
+	public systemevalDlgBase
+#else
+	public QDialog, public Ui_systemevalDlgBase
+#endif
 {
 	Q_OBJECT
 

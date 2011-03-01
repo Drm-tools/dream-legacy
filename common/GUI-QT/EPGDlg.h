@@ -45,11 +45,13 @@
 # include <qlistview.h>
 # define Q3ListView QListView
 # define Q3ListViewItem QListViewItem
+# include "EPGDlgbase.h"
 #else
-# include <q3listview.h>
+# include <Q3ListView>
+# include <QDialog>
+# include "ui_EPGDlgbase.h"
 #endif
 
-#include "EPGDlgbase.h"
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/EPG.h"
 #include "../util/Settings.h"
@@ -68,7 +70,12 @@
 #define COL_DURATION	4
 
 /* Classes ********************************************************************/
-class EPGDlg : public CEPGDlgbase
+class EPGDlg :
+#if QT_VERSION < 0x040000
+	public CEPGDlgbase
+#else
+	public QDialog, public Ui_CEPGDlgbase
+#endif
 {
 	Q_OBJECT
 

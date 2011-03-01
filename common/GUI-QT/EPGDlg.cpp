@@ -44,11 +44,19 @@
 static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now);
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
-               const char* name, bool modal, Qt::WFlags f)
-        :CEPGDlgbase(parent, name, modal, f),BitmCubeGreen(),date(QDate::currentDate()),
-        do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
-        Settings(NSettings),Timer(),sids(),next(NULL)
+               const char* name, bool modal, Qt::WFlags f):
+#if QT_VERSION < 0x040000
+	CEPGDlgbase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_CEPGDlgbase(),
+#endif
+	BitmCubeGreen(),date(QDate::currentDate()),
+	do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
+	Settings(NSettings),Timer(),sids(),next(NULL)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
     /* recover window size and position */
     CWinGeom s;
     Settings.Get("EPG Dialog", s);

@@ -67,7 +67,11 @@
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
+#if QT_VERSION < 0x040000
 	systemevalDlgBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_systemevalDlgBase(),
+#endif
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
 	Timer(), TimerInterDigit(),
@@ -75,6 +79,9 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
 	iLogDelay(0), rig(nr), pGPSReceiver(NULL)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	/* Get window geometry data and apply it */
 	CWinGeom s;
 	Settings.Get("System Evaluation Dialog", s);

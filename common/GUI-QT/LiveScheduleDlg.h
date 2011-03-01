@@ -25,12 +25,12 @@
  *
 \******************************************************************************/
 
-#include "LiveScheduleDlgbase.h"
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
 #include "DialogUtil.h"
 #include <vector>
 #if QT_VERSION < 0x040000
+# include "LiveScheduleDlgbase.h"
 # include <qpopupmenu.h>
 # include <qurloperator.h>
 # include <qlistview.h>
@@ -38,9 +38,11 @@
 # define Q3ListView QListView
 # define Q3ListViewItem QListViewItem
 #else
-# include <q3popupmenu.h>
-# include <q3header.h>
-# include <q3listview.h>
+# include <QDialog>
+# include <Q3PopupMenu>
+# include <Q3Header>
+# include <Q3ListView>
+# include "ui_LiveScheduleDlgbase.h"
 #endif
 #include <qpixmap.h>
 #include <qradiobutton.h>
@@ -144,7 +146,12 @@ public:
 };
 
 
-class LiveScheduleDlg : public CLiveScheduleDlgBase
+class LiveScheduleDlg :
+#if QT_VERSION < 0x040000
+	public CLiveScheduleDlgBase
+#else
+	public QDialog, public Ui_CLiveScheduleDlgBase
+#endif
 {
 	Q_OBJECT
 

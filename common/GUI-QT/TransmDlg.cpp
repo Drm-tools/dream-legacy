@@ -51,14 +51,20 @@
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 
-
 TransmDialog::TransmDialog(CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 	:
-	TransmDlgBase(parent, name, modal, f), Settings(NSettings),
-	bIsStarted(FALSE),
+#if QT_VERSION < 0x040000
+	TransmDlgBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_TransmDlgBase(),
+#endif
+	Settings(NSettings), bIsStarted(FALSE),
 	vecstrTextMessage(1) /* 1 for new text */, iIDCurrentText(0)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	int i;
 
 	/* recover window size and position */

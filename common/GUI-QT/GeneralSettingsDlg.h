@@ -28,12 +28,23 @@
 #include "../Parameter.h"
 #include "../util/Settings.h"
 
-#include "GeneralSettingsDlgbase.h"
+#include <qglobal.h>
+#if QT_VERSION < 0x040000
+# include "GeneralSettingsDlgbase.h"
+#else
+# include <QDialog>
+# include "ui_GeneralSettingsDlgbase.h"
+#endif
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class GeneralSettingsDlg : public CGeneralSettingsDlgBase
+class GeneralSettingsDlg :
+#if QT_VERSION < 0x040000
+	public CGeneralSettingsDlgBase
+#else
+	public QDialog, public Ui_CGeneralSettingsDlgBase
+#endif
 {
 	Q_OBJECT
 

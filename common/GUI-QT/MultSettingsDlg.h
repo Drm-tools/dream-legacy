@@ -34,13 +34,22 @@
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/epgutil.h"
 #include "../util/Settings.h"
-#include "MultimediaDlg.h"
-#include "MultSettingsDlgbase.h"
+#if QT_VERSION < 0x040000
+# include "MultSettingsDlgbase.h"
+#else
+# include <QDialog>
+# include "ui_MultSettingsDlgbase.h"
+#endif
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class MultSettingsDlg : public CMultSettingsDlgBase
+class MultSettingsDlg :
+#if QT_VERSION < 0x040000
+	public CMultSettingsDlgBase
+#else
+	public QDialog, public Ui_CMultSettingsDlgBase
+#endif
 {
 	Q_OBJECT
 

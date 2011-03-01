@@ -39,8 +39,16 @@
 
 MultSettingsDlg::MultSettingsDlg(CParameter& NP, CSettings& NSettings, QWidget* parent,
 	const char* name, bool modal, Qt::WFlags f) :
-	CMultSettingsDlgBase(parent, name, modal, f), Parameters(NP), Settings(NSettings)
+#if QT_VERSION < 0x040000
+	CMultSettingsDlgBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_CMultSettingsDlgBase(),
+#endif
+	Parameters(NP), Settings(NSettings)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
@@ -88,7 +96,11 @@ void MultSettingsDlg::showEvent(QShowEvent*)
 
 	QString dir = Parameters.sDataFilesDirectory.c_str();
 	TextLabelDir->setText(dir);
-        QToolTip::add(TextLabelDir, dir);
+#if QT_VERSION < 0x040000
+    QToolTip::add(TextLabelDir, dir);
+#else
+    TextLabelDir->setToolTip(dir);
+#endif
 }
 
 void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN bDeleteDirs)
@@ -148,7 +160,11 @@ void MultSettingsDlg::OnbuttonChooseDir()
     if (!strFileName.isEmpty())
     {
         TextLabelDir->setText(strFileName);
-        QToolTip::add(TextLabelDir, strFileName);
+#if QT_VERSION < 0x040000
+	    QToolTip::add(TextLabelDir, strFileName);
+#else
+		TextLabelDir->setToolTip(strFileName);
+#endif
         Parameters.sDataFilesDirectory = (const char*)strFileName.utf8();
     }
 }

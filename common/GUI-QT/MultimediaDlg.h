@@ -48,11 +48,13 @@
 #if QT_VERSION < 0x040000
 # include <qpopupmenu.h>
 # define Q3PopupMenu QPopupMenu
+# include "MultimediaDlgbase.h"
 #else
-# include <q3popupmenu.h>
+# include <Q3PopupMenu>
+# include <QDialog>
+# include "ui_MultimediaDlgbase.h"
 #endif
 
-#include "MultimediaDlgbase.h"
 #include "MultColorLED.h"
 #include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
@@ -102,7 +104,12 @@ protected:
 	int				iNumHist;
 };
 
-class MultimediaDlg : public MultimediaDlgBase
+class MultimediaDlg :
+#if QT_VERSION < 0x040000
+	public MultimediaDlgBase
+#else
+	public QDialog, public Ui_MultimediaDlgBase
+#endif
 {
 	Q_OBJECT
 

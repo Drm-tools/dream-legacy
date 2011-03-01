@@ -43,8 +43,14 @@
 /* This include is for setting the progress bar style */
 #include <qmotifstyle.h>
 
-#include <AnalogDemDlgbase.h>
-#include "AMSSDlgbase.h"
+#if QT_VERSION < 0x040000
+# include <AnalogDemDlgbase.h>
+# include "AMSSDlgbase.h"
+#else
+# include <ui_AnalogDemDlgbase.h>
+# include "ui_AMSSDlgbase.h"
+# include <QDialog>
+#endif
 #include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
@@ -61,7 +67,12 @@
 class CDRMPlot;
 
 /* AMSS dialog -------------------------------------------------------------- */
-class CAMSSDlg : public CAMSSDlgBase
+class CAMSSDlg :
+#if QT_VERSION < 0x040000
+ public CAMSSDlgBase
+#else
+ public QDialog, public Ui_CAMSSDlgBase
+#endif
 {
 	Q_OBJECT
 
@@ -86,7 +97,12 @@ public slots:
 
 
 /* Analog demodulation dialog ----------------------------------------------- */
-class AnalogDemDlg : public AnalogDemDlgBase
+class AnalogDemDlg :
+#if QT_VERSION < 0x040000
+ public AnalogDemDlgBase
+#else
+ public QDialog, public Ui_AnalogDemDlgBase
+#endif
 {
 	Q_OBJECT
 

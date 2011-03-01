@@ -26,7 +26,13 @@
  *
 \******************************************************************************/
 
-#include "fmdialogbase.h"
+#include <qglobal.h>
+#if QT_VERSION < 0x040000
+# include "fmdialogbase.h"
+#else
+# include <QDialog>
+# include "ui_fmdialogbase.h"
+#endif
 #include "DialogUtil.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
@@ -43,7 +49,12 @@
 #include <qcolordialog.h>
 
 /* Classes ********************************************************************/
-class FMDialog : public FMDialogBase
+class FMDialog :
+#if QT_VERSION < 0x040000
+	public FMDialogBase
+#else
+	public QDialog, public Ui_FMDialogBase
+#endif
 {
 	Q_OBJECT
 

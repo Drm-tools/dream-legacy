@@ -63,9 +63,16 @@
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f):
+#if QT_VERSION < 0x040000
 	AnalogDemDlgBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_AnalogDemDlgBase(),
+#endif	
 	DRMReceiver(NDRMR), Settings(NSettings), AMSSDlg(NDRMR, Settings, parent, name, modal, f)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	CWinGeom s;
 	Settings.Get("AM Dialog", s);
 	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
@@ -713,10 +720,16 @@ void AnalogDemDlg::AddWhatsThisHelp()
 */
 CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
+#if QT_VERSION < 0x040000
 	CAMSSDlgBase(parent, name, modal, f),
-	DRMReceiver(NDRMR),
-	Settings(NSettings)
+#else
+	QDialog(parent, name, modal, f), Ui_CAMSSDlgBase(),
+#endif	
+	DRMReceiver(NDRMR), Settings(NSettings)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	CWinGeom s;
 	Settings.Get("AMSS Dialog", s);
 	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);

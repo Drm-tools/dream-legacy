@@ -52,9 +52,17 @@ inline QString str2qstr(const string& s) { return QString().fromUtf8(Q3CString(s
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
-	: FDRMDialogBase(parent, name, modal, f),
+	:
+#if QT_VERSION < 0x040000
+	FDRMDialogBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_FDRMDialogBase(),
+#endif
 	DRMReceiver(NDRMR),Settings(NSettings),Timer(),serviceLabels(4)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	/* recover window size and position */
 	CWinGeom s;
 	Settings.Get("DRM Dialog", s);

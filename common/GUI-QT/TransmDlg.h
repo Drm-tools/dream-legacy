@@ -46,14 +46,16 @@
 #if QT_VERSION < 0x040000
 # include <qpopupmenu.h>
 # define Q3PopupMenu QPopupMenu
+# include "TransmDlgbase.h"
 #else
-# include <q3popupmenu.h>
+# include <Q3PopupMenu>
+# include <QDialog>
+# include "ui_TransmDlgbase.h"
 #endif
 
 #ifdef _WIN32
 # include "windows.h"
 #endif
-#include "TransmDlgbase.h"
 #include "DialogUtil.h"
 #include "../DrmTransmitter.h"
 #include "../Parameter.h"
@@ -98,7 +100,12 @@ public:
 	CDRMTransmitter	DRMTransmitter;
 };
 
-class TransmDialog : public TransmDlgBase
+class TransmDialog :
+#if QT_VERSION < 0x040000
+	public TransmDlgBase
+#else
+	public QDialog, public Ui_TransmDlgBase
+#endif
 {
 	Q_OBJECT
 

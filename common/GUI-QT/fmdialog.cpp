@@ -47,12 +47,19 @@
 
 /* Implementation *************************************************************/
 FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
-	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
-	: FMDialogBase(parent, name, modal, f),
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f):
+#if QT_VERSION < 0x040000
+	FMDialogBase(parent, name, modal, f),
+#else
+	QDialog(parent, name, modal, f), Ui_FMDialogBase(),
+#endif
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
 	eReceiverMode(RM_NONE)
 {
+#if QT_VERSION >= 0x040000
+	setupUi(this);
+#endif
 	/* recover window size and position */
 	CWinGeom s;
 	Settings.Get("FM Dialog", s);

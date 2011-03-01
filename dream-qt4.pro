@@ -1,10 +1,10 @@
-CONFIG		+= uic3 debug
-QT		+= qt3support network xml
+CONFIG		+= debug
+QT			+= qt3support network xml
 VPATH		+= common/GUI-QT
-FORMS3		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui fmdialogbase.ui
-FORMS3		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
-FORMS3		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
-FORMS3		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
+FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui fmdialogbase.ui
+FORMS		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
+FORMS		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
+FORMS		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
 
 unix {
 	INCLUDEPATH	+= /usr/include/qwt-qt4
