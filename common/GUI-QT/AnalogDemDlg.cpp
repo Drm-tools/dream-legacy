@@ -36,6 +36,8 @@
 #include <qwt_dial_needle.h>
 #if QT_VERSION < 0x040000
 # include "DRMPlot.h"
+# include <qpopupmenu.h>
+# include <qmenubar.h>
 # include <qbuttongroup.h>
 # include <qfiledialog.h>
 # include <qprogressbar.h>
@@ -44,8 +46,10 @@
 # define Q3WhatsThis QWhatsThis
 # define Q3FileDialog QFileDialog
 # define Q3CString QCString
+# define Q3PopupMenu QPopupMenu
 #else
 # include "DRMPlot-qwt5.h"
+# include <Q3PopupMenu>
 # include <q3buttongroup.h>
 # include <q3filedialog.h>
 # include <q3progressbar.h>

@@ -26,18 +26,6 @@
  *
 \******************************************************************************/
 
-#include <qglobal.h>
-#if QT_VERSION < 0x040000
-# include "fmdialogbase.h"
-#else
-# include <QDialog>
-# include "ui_fmdialogbase.h"
-#endif
-#include "DialogUtil.h"
-#include "MultColorLED.h"
-#include "../DrmReceiver.h"
-#include "../util/Vector.h"
-
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>
@@ -46,6 +34,20 @@
 #include <qevent.h>
 #include <qlayout.h>
 #include <qpalette.h>
+#if QT_VERSION < 0x040000
+# include "fmdialogbase.h"
+# include <qpopupmenu.h>
+# define Q3PopupMenu QPopupMenu
+#else
+# include <Q3PopupMenu>
+# include <QDialog>
+# include "ui_fmdialogbase.h"
+#endif
+#include "DialogUtil.h"
+#include "MultColorLED.h"
+#include "../DrmReceiver.h"
+#include "../util/Vector.h"
+
 #include <qcolordialog.h>
 
 /* Classes ********************************************************************/
