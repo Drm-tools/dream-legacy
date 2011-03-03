@@ -112,7 +112,7 @@ protected:
 
 	CShortLog		shortLog;
 	CLongLog		longLog;
-	int				iLogDelay;
+	int			iLogDelay;
 	CRig&			rig;
 
 	virtual void		showEvent(QShowEvent* pEvent);

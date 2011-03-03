@@ -26,18 +26,21 @@
  *
 \******************************************************************************/
 
+#include <qmenubar.h>
+#include <qevent.h>
+#include <qlabel.h>
+#include <qaction.h>
 #ifdef _WIN32
 # include <winsock2.h>
 #endif
 #include "DialogUtil.h"
 #if QT_VERSION < 0x040000
 # include <qwhatsthis.h>
-# define Q3WhatsThis QWhatsThis
-# define Q3ActionGroup QActionGroup
+# include <qtextview.h>
 #else
 # include <QCustomEvent>
 # include <Q3WhatsThis>
-# include <Q3ActionGroup>
+# include <Q3TextView>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 #include "../Version.h"
@@ -223,7 +226,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 
 
 /* Help menu ---------------------------------------------------------------- */
-CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : Q3PopupMenu(parent)
+CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
 {
 	/* Standard help menu consists of about and what's this help */
 	insertItem(tr("What's &This"), this ,
@@ -234,17 +237,21 @@ CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : Q3PopupMenu(parent)
 
 void CDreamHelpMenu::OnHelpWhatsThis()
 {
+#if QT_VERSION < 0x040000
+	QWhatsThis::enterWhatsThisMode();
+#else
 	Q3WhatsThis::enterWhatsThisMode();
+#endif
 }
 
 /* Sound card selection menu ------------------------------------------------ */
 CSoundCardSelMenu::CSoundCardSelMenu(
 	CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
-	Q3PopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
+	QPopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
 {
-	pSoundInMenu = new Q3PopupMenu(parent);
+	pSoundInMenu = new QPopupMenu(parent);
 	CHECK_PTR(pSoundInMenu);
-	pSoundOutMenu = new Q3PopupMenu(parent);
+	pSoundOutMenu = new QPopupMenu(parent);
 	CHECK_PTR(pSoundOutMenu);
 	int i;
 
@@ -309,10 +316,10 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 	:rigmenus(),specials(),rig(nrig)
 #endif
 {
-	pRemoteMenu = new Q3PopupMenu(parent);
+	pRemoteMenu = new QPopupMenu(parent);
 	CHECK_PTR(pRemoteMenu);
 
-	pRemoteMenuOther = new Q3PopupMenu(parent);
+	pRemoteMenuOther = new QPopupMenu(parent);
 	CHECK_PTR(pRemoteMenuOther);
 
 #ifdef HAVE_LIBHAMLIB
@@ -342,7 +349,7 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 		if(k == rigmenus.end())
 		{
 			m.mfr = rig.strManufacturer;
-			m.pMenu = new Q3PopupMenu(pRemoteMenuOther);
+			m.pMenu = new QPopupMenu(pRemoteMenuOther);
 			CHECK_PTR(m.pMenu);
 		}
 		else
@@ -393,7 +400,7 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 
 	/* COM port selection --------------------------------------------------- */
 	/* Toggle action for com port selection menu entries */
-	Q3ActionGroup* agCOMPortSel = new Q3ActionGroup(parent, "Com port", TRUE);
+	QActionGroup* agCOMPortSel = new QActionGroup(parent, "Com port", TRUE);
 	map<string,string> ports;
 	rig.GetPortList(ports);
 	string strPort = rig.GetComPort();
@@ -401,7 +408,7 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 	{
 		QString text = p->second.c_str();
 		QString menuText = p->first.c_str();
-		Q3Action* pacMenu = new Q3Action(text, menuText, 0, agCOMPortSel, 0, TRUE);
+		QAction* pacMenu = new QAction(text, menuText, 0, agCOMPortSel, 0, TRUE);
 		if(strPort == p->second)
 			pacMenu->setOn(TRUE);
 	}
@@ -410,7 +417,7 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 #if QT_VERSION < 0x040000
 	connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
 #else
-	connect(agCOMPortSel, SIGNAL(selected(Q3Action*)), this, SLOT(OnComPortMenu(Q3Action*)));
+	connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
 #endif
 	agCOMPortSel->addTo(pRemoteMenu);
 	/* Separator */
@@ -448,7 +455,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
 	// if an "others" rig was selected add it to the specials list
 	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
 	{
-		Q3PopupMenu* pMenu = i->second.pMenu;
+		QPopupMenu* pMenu = i->second.pMenu;
 		for(size_t j=0; j<pMenu->count(); j++)
 		{
 			int mID = pMenu->idAt(j);
@@ -492,7 +499,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
 #endif
 }
 
-void RemoteMenu::OnComPortMenu(Q3Action* action)
+void RemoteMenu::OnComPortMenu(QAction* action)
 {
 #ifdef HAVE_LIBHAMLIB
 	rig.SetComPort(action->text().latin1());

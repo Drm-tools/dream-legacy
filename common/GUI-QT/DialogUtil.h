@@ -37,25 +37,16 @@
 
 #include<map>
 
+#include <qpopupmenu.h>
+#include <qthread.h>
 #if QT_VERSION < 0x040000
 # include "AboutDlgbase.h"
-# include <qaction.h>
-# include <qpopupmenu.h>
-# include <qtextview.h>
-# define Q3PopupMenu QPopupMenu
-# define Q3Action QAction
 #else
 # include "ui_AboutDlgbase.h"
 # include <QDialog>
-# include <Q3Action>
-# include <Q3PopupMenu>
-# include <Q3TextView>
 #endif
-#include <qmenubar.h>
-#include <qevent.h>
-#include <qlabel.h>
-#include <qthread.h>
 
+class QAction;
 
 #ifndef HAVE_LIBHAMLIB
 typedef int rig_model_t;
@@ -104,7 +95,7 @@ public:
 
 
 /* Help menu ---------------------------------------------------------------- */
-class CDreamHelpMenu : public Q3PopupMenu
+class CDreamHelpMenu : public QPopupMenu
 {
 	Q_OBJECT
 
@@ -121,29 +112,28 @@ public slots:
 
 
 /* Sound card selection menu ------------------------------------------------ */
-class CSoundCardSelMenu : public Q3PopupMenu
+class CSoundCardSelMenu : public QPopupMenu
 {
 	Q_OBJECT
 
 public:
 	CSoundCardSelMenu(CSelectionInterface* pNSIn,
-						CSelectionInterface* pNSOut, QWidget* parent = 0);
+		CSelectionInterface* pNSOut, QWidget* parent = 0);
 
 protected:
 	CSelectionInterface*	pSoundInIF;
 	CSelectionInterface*	pSoundOutIF;
-	vector<string>			vecSoundInNames;
-	vector<string>			vecSoundOutNames;
-	int						iNumSoundInDev;
-	int						iNumSoundOutDev;
-	Q3PopupMenu*				pSoundInMenu;
-	Q3PopupMenu*				pSoundOutMenu;
+	vector<string>		vecSoundInNames;
+	vector<string>		vecSoundOutNames;
+	int			iNumSoundInDev;
+	int			iNumSoundOutDev;
+	QPopupMenu*		pSoundInMenu;
+	QPopupMenu*		pSoundOutMenu;
 
 public slots:
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
 };
-
 
 /* GUI help functions ------------------------------------------------------- */
 /* Converts from RGB to integer and back */
@@ -185,12 +175,9 @@ inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 	pDlg->setCaption(sCap + sTitle);
 }
 
-
-class QAction;
-
 class CRig :
 #if QT_VERSION < 0x040000
-	public QObject,
+	public QObject,      // looks harmless as Qt2 & Qt3 see the whole thing and Qt4 is smart
 #endif
 	public QThread
 {
@@ -236,29 +223,25 @@ class RemoteMenu : public QObject
 
 public:
 	RemoteMenu(QWidget*, CRig&);
-	Q3PopupMenu* menu(){ return pRemoteMenu; }
+	QPopupMenu* menu(){ return pRemoteMenu; }
 
 public slots:
 	void OnModRigMenu(int iID);
 	void OnRemoteMenu(int iID);
-#if QT_VERSION < 0x040000
 	void OnComPortMenu(QAction* action);
-#else
-	void OnComPortMenu(Q3Action* action);
-#endif
 
 signals:
 	void SMeterAvailable();
 
 protected:
 #ifdef HAVE_LIBHAMLIB
-	struct Rigmenu {std::string mfr; Q3PopupMenu* pMenu;};
+	struct Rigmenu {std::string mfr; QPopupMenu* pMenu;};
 	std::map<int,Rigmenu> rigmenus;
 	std::vector<rig_model_t> specials;
 	CRig&	rig;
 #endif
-	Q3PopupMenu* pRemoteMenu;
-	Q3PopupMenu* pRemoteMenuOther;
+	QPopupMenu* pRemoteMenu;
+	QPopupMenu* pRemoteMenuOther;
 };
 
 #define OTHER_MENU_ID (666)
