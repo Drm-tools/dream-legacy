@@ -874,7 +874,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QwtPlot" name="MainPlot"/>
+       <widget class="QwtPlot" name="plot"/>
       </item>
      </layout>
     </widget>

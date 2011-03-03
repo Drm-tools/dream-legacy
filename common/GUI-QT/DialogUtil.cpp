@@ -400,7 +400,8 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 
 	/* COM port selection --------------------------------------------------- */
 	/* Toggle action for com port selection menu entries */
-	QActionGroup* agCOMPortSel = new QActionGroup(parent, "Com port", TRUE);
+	QActionGroup* agCOMPortSel = new QActionGroup(parent);
+	agCOMPortSel->setExclusive(true);
 	map<string,string> ports;
 	rig.GetPortList(ports);
 	string strPort = rig.GetComPort();
@@ -408,17 +409,16 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 	{
 		QString text = p->second.c_str();
 		QString menuText = p->first.c_str();
-		QAction* pacMenu = new QAction(text, menuText, 0, agCOMPortSel, 0, TRUE);
+		QAction* pacMenu = new QAction(agCOMPortSel);
+		pacMenu->setText(text);
+		pacMenu->setMenuText(menuText);
+		pacMenu->setToggleAction(true);
 		if(strPort == p->second)
 			pacMenu->setOn(TRUE);
 	}
 
 	/* Action group */
-#if QT_VERSION < 0x040000
 	connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
-#else
-	connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
-#endif
 	agCOMPortSel->addTo(pRemoteMenu);
 	/* Separator */
 	pRemoteMenu->insertSeparator();

@@ -86,16 +86,18 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+#if QT_VERSION < 0x040000
 	MainPlot = new CDRMPlot( ButtonGroupPlotSNR, "MainPlot" );
+#else
+	MainPlot = new CDRMPlot(plot);
+#endif
 #if QT_VERSION < 0x030000
 	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, MainPlot->sizePolicy().hasHeightForWidth() ) );
-#else
+#elif QT_VERSION < 0x040000
 	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, 0, 0, MainPlot->sizePolicy().hasHeightForWidth() ) );
 #endif
 #if QT_VERSION < 0x040000
 	ButtonGroupPlotSNRLayout->addWidget( MainPlot );
-#else
-	ButtonGroupPlotSNR->layout()->addWidget( MainPlot );
 #endif
 
 	/* Init controls -------------------------------------------------------- */
@@ -104,7 +106,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
 	MainPlot->SetRecObj(&DRMReceiver);
 	MainPlot->SetPlotStyle(iPlotStyle);
-	MainPlot->setMargin(1);
 
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
@@ -634,11 +635,12 @@ void systemevalDlg::showEvent(QShowEvent*)
 		const QRect WinGeom(c.iXPos, c.iYPos, c.iWSize, c.iHSize);
 
 		/* Open the new chart window */
+		QwtPlot* p = new QwtPlot(NULL);
 		CDRMPlot* pNewChartWin = OpenChartWin(eNewType);
 
 		/* and restore its geometry */
 		if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-			pNewChartWin->setGeometry(WinGeom);
+			pNewChartWin->plot->setGeometry(WinGeom);
 
 		/* Add window pointer in vector (needed for closing the windows) */
 		vecpDRMPlots.push_back(pNewChartWin);
@@ -662,11 +664,11 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	for (size_t i = 0; i < vecpDRMPlots.size(); i++)
 	{
 		/* Check, if window wasn't closed by the user */
-		if (vecpDRMPlots[i]->isVisible())
+		if (vecpDRMPlots[i]->plot->isVisible())
 		{
 			stringstream s;
 			CWinGeom c;
-			const QRect CWGeom = vecpDRMPlots[i]->geometry();
+			const QRect CWGeom = vecpDRMPlots[i]->plot->geometry();
 
 			/* Set parameters */
 			c.iXPos = CWGeom.x();
@@ -680,7 +682,7 @@ void systemevalDlg::hideEvent(QHideEvent*)
 			Settings.Put(s.str(), "type", (int) vecpDRMPlots[i]->GetChartType());
 
 			/* Close window afterwards */
-			vecpDRMPlots[i]->close();
+			vecpDRMPlots[i]->plot->close();
 
 			iNumOpenCharts++;
 		}
@@ -729,24 +731,25 @@ void systemevalDlg::UpdatePlotsStyle()
 
 CDRMPlot* systemevalDlg::OpenChartWin(int iNewType)
 {
+	QwtPlot* plot = new QwtPlot(NULL);
 	const CDRMPlot::ECharType eNewType = CDRMPlot::ECharType(iNewType);
 
 	/* Create new chart window */
-	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
-	pNewChartWin->setCaption(tr("Chart Window"));
+	CDRMPlot* pNewChartWin = new CDRMPlot(plot);
+	plot->setCaption(tr("Chart Window"));
 
     /* Set plot style*/
 	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
-	pNewChartWin->setIcon(*this->icon());
+	plot->setIcon(*this->icon());
 
 	/* Set receiver object and correct chart type */
 	pNewChartWin->SetRecObj(&DRMReceiver);
 	pNewChartWin->SetupChart(eNewType);
 
 	/* Show new window */
-	pNewChartWin->show();
+	plot->show();
 
 	return pNewChartWin;
 }

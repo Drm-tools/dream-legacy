@@ -72,8 +72,8 @@
 
 
 /* Implementation *************************************************************/
-CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
-    QwtPlot (p), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
+CDRMPlot::CDRMPlot(QwtPlot* p) :
+    plot(p), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
     bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL)
     , leftTitle(), rightTitle(), bottomTitle(),
     MarkerSym1(), MarkerSym2(), MarkerSym3()
@@ -91,7 +91,7 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
     /* Grid defaults */
     grid->enableXMin(false);
     grid->enableYMin(false);
-    grid->attach(this);
+    grid->attach(plot);
     /* Legend should be on the right side */
     //setLegendPos(QwtPlot::Right);
 
@@ -102,37 +102,37 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
     QFont titlefont(axisfont);
     titlefont.setWeight(QFont::Bold);
 
-    setAxisFont(QwtPlot::xBottom, axisfont);
-    setAxisFont(QwtPlot::yLeft, axisfont);
-    setAxisFont(QwtPlot::yRight, axisfont);
+    plot->setAxisFont(QwtPlot::xBottom, axisfont);
+    plot->setAxisFont(QwtPlot::yLeft, axisfont);
+    plot->setAxisFont(QwtPlot::yRight, axisfont);
     QwtText title;
     title.setFont(titlefont);
-    setTitle(title);
+    plot->setTitle(title);
 
     /* axis titles */
     bottomTitle.setFont(axisfont);
-    setAxisTitle(QwtPlot::xBottom, bottomTitle);
+    plot->setAxisTitle(QwtPlot::xBottom, bottomTitle);
 
     leftTitle.setFont(axisfont);
-    setAxisTitle(QwtPlot::yLeft, leftTitle);
+    plot->setAxisTitle(QwtPlot::yLeft, leftTitle);
 
     rightTitle.setFont(axisfont);
-    setAxisTitle(QwtPlot::yRight, rightTitle);
+    plot->setAxisTitle(QwtPlot::yRight, rightTitle);
 
     /* Global frame */
-    setFrameStyle(QFrame::Panel|QFrame::Sunken);
-    setLineWidth(2);
-    setMargin(10);
+    plot->setFrameStyle(QFrame::Panel|QFrame::Sunken);
+    plot->setLineWidth(2);
+    plot->setMargin(10);
 
     /* Canvas */
-    setCanvasLineWidth(0);
-    this->canvas()->setBackgroundRole(QPalette::Window);
+    plot->setCanvasLineWidth(0);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 
     /* Set default style */
     SetPlotStyle(0);
 
     /* Connections */
-    connect(this, SIGNAL(MouseReleased(const QMouseEvent&)),
+    connect(plot, SIGNAL(MouseReleased(const QMouseEvent&)),
             this, SLOT(OnClicked(const QMouseEvent&)));
     connect(&TimerChart, SIGNAL(timeout()), this, SLOT(OnTimerChart()));
 
@@ -204,7 +204,7 @@ void CDRMPlot::OnTimerChart()
         PlotManager.GetTransferFunction(vecrData, vecrData2, vecrScale);
 
         if(change) SetupTranFct();
-        setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) vecrScale.Size());
+        plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) vecrScale.Size());
         SetData(vecrData, vecrData2, vecrScale);
         break;
 
@@ -267,11 +267,11 @@ void CDRMPlot::OnTimerChart()
         pDRMRec->GetWriteData()->GetAudioSpec(vecrData, vecrScale);
         if(audiodecoder=="")
         {
-            setTitle(tr("No audio decoding possible"));
+            plot->setTitle(tr("No audio decoding possible"));
         }
         else
         {
-            setTitle(tr("Audio Spectrum"));
+            plot->setTitle(tr("Audio Spectrum"));
         }
         if(change) SetupAudioSpec();
         /* Prepare graph and set data */
@@ -283,8 +283,8 @@ void CDRMPlot::OnTimerChart()
         PlotManager.GetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
 
         /* Prepare graph and set data */
-        enableAxis(QwtPlot::yLeft, TRUE);
-        setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ") + QString().setNum(rFreqAcquVal) + " Hz");
+        plot->enableAxis(QwtPlot::yLeft, TRUE);
+        plot->setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ") + QString().setNum(rFreqAcquVal) + " Hz");
         AutoScale(vecrData, vecrData2, vecrScale);
         SetData(vecrData, vecrData2, vecrScale);
         break;
@@ -295,7 +295,7 @@ void CDRMPlot::OnTimerChart()
 
         if(change) SetupDopplerDelayHist();
         /* Prepare graph and set data */
-        setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
+        plot->setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
         SetData(vecrData, vecrData2, vecrScale);
         break;
 
@@ -362,7 +362,7 @@ void CDRMPlot::OnTimerChart()
         break;
     }
 
-    replot();
+    plot->replot();
 
     /* "Unlock" mutex flag */
     bOnTimerCharMutexFlag = FALSE;
@@ -474,13 +474,13 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
     /* Apply colors */
     grid->setMajPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
     grid->setMinPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
-    setCanvasBackground(QColor(BckgrdColorPlot));
+    plot->setCanvasBackground(QColor(BckgrdColorPlot));
 
     /* Make sure that plot are being initialized again */
     InitCharType = NONE_OLD;
 
     /* was in every use of this */
-    setMargin(1);
+    plot->setMargin(1);
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
@@ -580,15 +580,15 @@ void CDRMPlot::SetData(CVector<_COMPLEX>& veccMSCConst,
 void CDRMPlot::SetupAvIR()
 {
     /* Init chart for averaged impulse response */
-    setTitle(tr("Channel Impulse Response"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("Channel Impulse Response"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Time [ms]"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("IR [dB]"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Time [ms]"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("IR [dB]"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
     /* Insert curves */
     curve1->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
@@ -601,14 +601,14 @@ void CDRMPlot::SetupAvIR()
     curve3->setItemAttribute(QwtPlotItem::Legend, false);
     curve4->setItemAttribute(QwtPlotItem::Legend, false);
 
-    curve1->attach(this);
-    curve2->attach(this);
-    curve3->attach(this);
-    curve4->attach(this);
+    curve1->attach(plot);
+    curve2->attach(plot);
+    curve3->attach(plot);
+    curve4->attach(plot);
 
     curve5->setItemAttribute(QwtPlotItem::Legend, false);
     curve5->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
-    curve5->attach(this);
+    curve5->attach(plot);
 
     main1curve->setTitle(tr("Channel Impulse Response"));
 
@@ -625,7 +625,7 @@ void CDRMPlot::SetVerticalBounds(
     /* Fixed scale */
     const double cdAxMinLeft = (double) -20.0;
     const double cdAxMaxLeft = (double) 40.0;
-    setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
+    plot->setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
 
     /* Vertical bounds -------------------------------------------------- */
     double dX[2], dY[2];
@@ -663,36 +663,36 @@ void CDRMPlot::SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLow
     curve5->setData(dX, dY, 2);
 
     /* Adjust scale for x-axis */
-    setAxisScale(QwtPlot::xBottom, (double) rScaleMin, (double) rScaleMax);
+    plot->setAxisScale(QwtPlot::xBottom, (double) rScaleMin, (double) rScaleMax);
 }
 
 void CDRMPlot::SetupTranFct()
 {
     /* Init chart for transfer function */
-    setTitle(tr("Channel Transfer Function / Group Delay"));
-    enableAxis(QwtPlot::yRight);
+    plot->setTitle(tr("Channel Transfer Function / Group Delay"));
+    plot->enableAxis(QwtPlot::yRight);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("TF [dB]"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("TF [dB]"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
-    setAxisTitle(QwtPlot::yRight, tr("Group Delay [ms]"));
-    setAxisScale(QwtPlot::yRight, (double) -50.0, (double) 50.0);
+    plot->setAxisTitle(QwtPlot::yRight, tr("Group Delay [ms]"));
+    plot->setAxisScale(QwtPlot::yRight, (double) -50.0, (double) 50.0);
 
     /* Fixed scale */
-    setAxisScale(QwtPlot::yLeft, (double) -85.0, (double) -35.0);
+    plot->setAxisScale(QwtPlot::yLeft, (double) -85.0, (double) -35.0);
 
     /* Add main curves */
-    clear();
+    plot->clear();
     main1curve->setTitle(tr("Transf. Fct."));
-    main1curve->attach(this);
+    main1curve->attach(plot);
     main2curve->setTitle(tr("Group Del."));
     main2curve->setYAxis(QwtPlot::yRight);
-    main2curve->attach(this);
+    main2curve->attach(plot);
     /* Curve colors */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
@@ -701,26 +701,26 @@ void CDRMPlot::SetupTranFct()
 void CDRMPlot::SetupAudioSpec()
 {
     /* Init chart for audio spectrum */
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, "AS [dB]");
-    // TODO canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, "AS [dB]");
+    // TODO plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
     /* Fixed scale */
-    setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
+    plot->setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
     double dBandwidth = (double) SOUNDCRD_SAMPLE_RATE / 2400; /* 20.0 for 48 kHz */
     if (dBandwidth < 20.0)
         dBandwidth = (double) 20.0;
 
-    setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
+    plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
 
     /* Add main curve */
-    clear();
+    plot->clear();
     main1curve->setTitle(tr("Audio Spectrum"));
-    main1curve->attach(this);
+    main1curve->attach(plot);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
@@ -730,24 +730,24 @@ void CDRMPlot::SetupAudioSpec()
 void CDRMPlot::SetupFreqSamOffsHist()
 {
     /* Init chart for transfer function. Enable right axis, too */
-    setTitle(tr("Rel. Frequency Offset / Sample Rate Offset History"));
-    enableAxis(QwtPlot::yRight);
+    plot->setTitle(tr("Rel. Frequency Offset / Sample Rate Offset History"));
+    plot->enableAxis(QwtPlot::yRight);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Add main curves */
-    clear();
+    plot->clear();
     main1curve->setTitle(tr("Freq."));
-    main1curve->attach(this);
+    main1curve->attach(plot);
     main2curve->setTitle(tr("Samp."));
     main2curve->setYAxis(QwtPlot::yRight);
-    main2curve->attach(this);
+    main2curve->attach(plot);
 
     /* Curve colors */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
@@ -789,40 +789,40 @@ void CDRMPlot::AutoScale(CVector<_REAL>& vecrData,
     }
 
     /* Apply scale to plot */
-    setAxisScale(QwtPlot::yLeft, (double) Floor(MinFreq / rMinScaleRange),
+    plot->setAxisScale(QwtPlot::yLeft, (double) Floor(MinFreq / rMinScaleRange),
                  (double) Ceil(MaxFreq / rMinScaleRange));
-    setAxisScale(QwtPlot::yRight, (double) Floor(MinSam / rMinScaleRange),
+    plot->setAxisScale(QwtPlot::yRight, (double) Floor(MinSam / rMinScaleRange),
                  (double) Ceil(MaxSam / rMinScaleRange));
-    setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
+    plot->setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
 }
 
 void CDRMPlot::SetupDopplerDelayHist()
 {
     /* Init chart for transfer function. Enable right axis, too */
-    setTitle(tr("Delay / Doppler History"));
-    enableAxis(QwtPlot::yRight);
+    plot->setTitle(tr("Delay / Doppler History"));
+    plot->enableAxis(QwtPlot::yRight);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
-    setAxisTitle(QwtPlot::yRight, tr("Doppler [Hz]"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
+    plot->setAxisTitle(QwtPlot::yRight, tr("Doppler [Hz]"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Fixed scale */
-    setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 10.0);
-    setAxisScale(QwtPlot::yRight, (double) 0.0, (double) 4.0);
+    plot->setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 10.0);
+    plot->setAxisScale(QwtPlot::yRight, (double) 0.0, (double) 4.0);
 
     /* Add main curves */
-    clear();
+    plot->clear();
     main1curve->setTitle(tr("Delay"));
-    main1curve->attach(this);
+    main1curve->attach(plot);
     main2curve->setTitle(tr("Doppler"));
     main2curve->setYAxis(QwtPlot::yRight);
-    main2curve->attach(this);
+    main2curve->attach(plot);
 
     /* Curve colors */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
@@ -835,25 +835,25 @@ void CDRMPlot::SetupDopplerDelayHist()
 void CDRMPlot::SetupSNRAudHist()
 {
     /* Init chart for transfer function. Enable right axis, too */
-    setTitle(tr("SNR / Correctly Decoded Audio History"));
-    enableAxis(QwtPlot::yRight);
+    plot->setTitle(tr("SNR / Correctly Decoded Audio History"));
+    plot->enableAxis(QwtPlot::yRight);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
-    setAxisTitle(QwtPlot::yRight, tr("Corr. Dec. Audio / DRM-Frame"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
+    plot->setAxisTitle(QwtPlot::yRight, tr("Corr. Dec. Audio / DRM-Frame"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Add main curves */
-    clear();
+    plot->clear();
     main1curve->setTitle(tr("SNR"));
-    main1curve->attach(this);
+    main1curve->attach(plot);
     main2curve->setTitle(tr("Audio"));
     main2curve->setYAxis(QwtPlot::yRight);
-    main2curve->attach(this);
+    main2curve->attach(plot);
 
     /* Curve colors */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
@@ -898,9 +898,9 @@ void CDRMPlot::AutoScale2(CVector<_REAL>& vecrData,
     const double dMaxYScaleAudio = dMaxYScaleSNR * (double) rRatioAudSNR;
 
     /* Apply scale to plot */
-    setAxisScale(QwtPlot::yLeft, (double) 0.0, dMaxYScaleSNR);
-    setAxisScale(QwtPlot::yRight, (double) 0.0, dMaxYScaleAudio);
-    setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
+    plot->setAxisScale(QwtPlot::yLeft, (double) 0.0, dMaxYScaleSNR);
+    plot->setAxisScale(QwtPlot::yRight, (double) 0.0, dMaxYScaleAudio);
+    plot->setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
 }
 
@@ -909,7 +909,7 @@ void CDRMPlot::AutoScale3(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
     const int iSize = vecrScale.Size();
 
     /* Fixed scale for x-axis */
-    setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) iSize);
+    plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) iSize);
 
     /* Fixed / variable scale (if SNR is in range, use fixed scale otherwise enlarge scale) */
     /* Get maximum value */
@@ -929,34 +929,34 @@ void CDRMPlot::AutoScale3(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
     }
 
     /* Set scale */
-    setAxisScale(QwtPlot::yLeft, MIN_VAL_SNR_SPEC_Y_AXIS_DB, dMaxScaleYAxis);
+    plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_SNR_SPEC_Y_AXIS_DB, dMaxScaleYAxis);
 
 }
 
 void CDRMPlot::SetupPSD()
 {
     /* Init chart for power spectram density estimation */
-    setTitle(tr("Shifted Power Spectral Density of Input Signal"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("Shifted Power Spectral Density of Input Signal"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("PSD [dB]"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("PSD [dB]"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Fixed scale */
-    setAxisScale(QwtPlot::xBottom,
+    plot->setAxisScale(QwtPlot::xBottom,
                  (double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
-    setAxisScale(QwtPlot::yLeft, MIN_VAL_SHIF_PSD_Y_AXIS_DB,
+    plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_SHIF_PSD_Y_AXIS_DB,
                  MAX_VAL_SHIF_PSD_Y_AXIS_DB);
 
     /* Insert line for DC carrier */
-    clear();
-    curve1->attach(this);
+    plot->clear();
+    curve1->attach(plot);
     curve1->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 
     double dX[2], dY[2];
@@ -970,7 +970,7 @@ void CDRMPlot::SetupPSD()
 
     /* Add main curve */
     main1curve->setTitle(tr("Shifted PSD"));
-    main1curve->attach(this);
+    main1curve->attach(plot);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
@@ -980,21 +980,21 @@ void CDRMPlot::SetupPSD()
 void CDRMPlot::SetupSNRSpectrum()
 {
     /* Init chart for power spectram density estimation */
-    setTitle(tr("SNR Spectrum (Weighted MER on MSC Cells)"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("SNR Spectrum (Weighted MER on MSC Cells)"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Add main curve */
-    clear();
+    plot->clear();
     main1curve->setTitle(tr("SNR Spectrum"));
-    main1curve->attach(this);
+    main1curve->attach(plot);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
@@ -1004,32 +1004,32 @@ void CDRMPlot::SetupSNRSpectrum()
 void CDRMPlot::SetupInpSpec()
 {
     /* Init chart for power spectram density estimation */
-    setTitle(tr("Input Spectrum"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("Input Spectrum"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("Input Spectrum [dB]"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("Input Spectrum [dB]"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Fixed scale */
-    setAxisScale(QwtPlot::xBottom,
+    plot->setAxisScale(QwtPlot::xBottom,
                  (double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
-    setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
+    plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
                  MAX_VAL_INP_SPEC_Y_AXIS_DB);
 
     /* Insert line for DC carrier */
-    clear();
-    curve1->attach(this);
+    plot->clear();
+    curve1->attach(plot);
     curve1->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 
     /* Add main curve */
     main1curve->setTitle(tr("Input spectrum"));
-    main1curve->attach(this);
+    main1curve->attach(plot);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
@@ -1055,27 +1055,27 @@ void CDRMPlot::SetupInpPSD()
     double	dX[2], dY[2];
 
     /* Init chart for power spectram density estimation */
-    setTitle(tr("Input PSD"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("Input PSD"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(FALSE);
     grid->enableYMin(FALSE);
-    setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Fixed scale */
     const double dXScaleMax = (double) SOUNDCRD_SAMPLE_RATE / 2000;
-    setAxisScale(QwtPlot::xBottom, (double) 0.0, dXScaleMax);
+    plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, dXScaleMax);
 
-    setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
+    plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
                  MAX_VAL_INP_SPEC_Y_AXIS_DB);
 
     /* Insert line for bandwidth marker */
-    clear();
-    curve1->attach(this);
+    plot->clear();
+    curve1->attach(plot);
 
     /* Make sure that line is bigger than the current plots height. Do this by
        setting the width to a very large value. TODO: better solution */
@@ -1125,12 +1125,12 @@ void CDRMPlot::SetupInpPSD()
     }
 
     /* Insert line for DC carrier */
-    curve2->attach(this);
+    curve2->attach(plot);
     curve2->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 #endif
     /* Add main curve */
     main1curve->setTitle(tr("Input PSD"));
-    main1curve->attach(this);
+    main1curve->attach(plot);
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
@@ -1159,25 +1159,25 @@ void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 
 void CDRMPlot::SetupInpSpecWaterf()
 {
-    setTitle(tr("Waterfall Input Spectrum"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("Waterfall Input Spectrum"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(FALSE);
     grid->enableYMin(FALSE);
-    setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-    enableAxis(QwtPlot::yLeft, FALSE);
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+    plot->enableAxis(QwtPlot::yLeft, FALSE);
 
     /* Fixed scale */
-    setAxisScale(QwtPlot::xBottom,
+    plot->setAxisScale(QwtPlot::xBottom,
                  (double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
     /* Clear old plot data */
-    clear();
+    plot->clear();
 
     /* Clear background */
-    LastCanvasSize = canvas()->size(); /* Initial canvas size */
+    LastCanvasSize = plot->canvas()->size(); /* Initial canvas size */
     QPixmap Canvas(LastCanvasSize);
-    Canvas.fill(backgroundColor());
-    canvas()->setBackgroundPixmap(Canvas);
+    Canvas.fill(plot->backgroundColor());
+    plot->canvas()->setBackgroundPixmap(Canvas);
 }
 
 void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
@@ -1193,7 +1193,7 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 
 #if QWT_VERSION < 0x050000
     /* Calculate sizes */
-    const QSize CanvSize = canvas()->size();
+    const QSize CanvSize = plot->canvas()->size();
     int iLenScale = axisScaleDraw(QwtPlot::xBottom)->length();
 
     if ((iLenScale > 0) && (iLenScale < CanvSize.width()))
@@ -1212,7 +1212,7 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
         iLenScale = CanvSize.width();
     }
 
-    const QPixmap* pBPixmap = canvas()->backgroundPixmap();
+    const QPixmap* pBPixmap = plot->canvas()->backgroundPixmap();
 
     QPixmap Canvas(CanvSize);
     /* In case the canvas width has changed or there is no bitmap, reset
@@ -1296,27 +1296,27 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
     Painter.end();
 
     /* Show the bitmap */
-    canvas()->setBackgroundPixmap(Canvas);
+    plot->canvas()->setBackgroundPixmap(Canvas);
 #endif
 }
 
 void CDRMPlot::SetupFACConst()
 {
     /* Init chart for FAC constellation */
-    setTitle(tr("FAC Constellation"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("FAC Constellation"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(FALSE);
     grid->enableYMin(FALSE);
-    setAxisTitle(QwtPlot::xBottom, tr("Real"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Fixed scale (2 / sqrt(2)) */
-    setAxisScale(QwtPlot::xBottom, (double) -1.4142, (double) 1.4142);
-    setAxisScale(QwtPlot::yLeft, (double) -1.4142, (double) 1.4142);
+    plot->setAxisScale(QwtPlot::xBottom, (double) -1.4142, (double) 1.4142);
+    plot->setAxisScale(QwtPlot::yLeft, (double) -1.4142, (double) 1.4142);
 
     /* Set marker symbol */
     MarkerSym1.setStyle(QwtSymbol::Ellipse);
@@ -1325,30 +1325,30 @@ void CDRMPlot::SetupFACConst()
     MarkerSym1.setBrush(QBrush(MainPenColorConst));
 
     /* Insert grid */
-    clear();
+    plot->clear();
     SetQAM4Grid();
 }
 
 void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
 {
     /* Init chart for SDC constellation */
-    setTitle(tr("SDC Constellation"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("SDC Constellation"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(FALSE);
     grid->enableYMin(FALSE);
-    setAxisTitle(QwtPlot::xBottom, tr("Real"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Fixed scale (4 / sqrt(10)) */
-    setAxisScale(QwtPlot::xBottom, (double) -1.2649, (double) 1.2649);
-    setAxisScale(QwtPlot::yLeft, (double) -1.2649, (double) 1.2649);
+    plot->setAxisScale(QwtPlot::xBottom, (double) -1.2649, (double) 1.2649);
+    plot->setAxisScale(QwtPlot::yLeft, (double) -1.2649, (double) 1.2649);
 
     /* Insert grid */
-    clear();
+    plot->clear();
     if (eNewCoSc == CS_1_SM)
         SetQAM4Grid();
     else
@@ -1364,23 +1364,23 @@ void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
 void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
 {
     /* Init chart for MSC constellation */
-    setTitle(tr("MSC Constellation"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("MSC Constellation"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(FALSE);
     grid->enableYMin(FALSE);
-    setAxisTitle(QwtPlot::xBottom, tr("Real"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Fixed scale (8 / sqrt(42)) */
-    setAxisScale(QwtPlot::xBottom, (double) -1.2344, (double) 1.2344);
-    setAxisScale(QwtPlot::yLeft, (double) -1.2344, (double) 1.2344);
+    plot->setAxisScale(QwtPlot::xBottom, (double) -1.2344, (double) 1.2344);
+    plot->setAxisScale(QwtPlot::yLeft, (double) -1.2344, (double) 1.2344);
 
     /* Insert grid */
-    clear();
+    plot->clear();
     if (eNewCoSc == CS_2_SM)
         SetQAM16Grid();
     else
@@ -1396,20 +1396,20 @@ void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
 void CDRMPlot::SetupAllConst()
 {
     /* Init chart for constellation */
-    setTitle(tr("MSC / SDC / FAC Constellation"));
-    enableAxis(QwtPlot::yRight, FALSE);
+    plot->setTitle(tr("MSC / SDC / FAC Constellation"));
+    plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(TRUE);
     grid->enableYMin(TRUE);
-    setAxisTitle(QwtPlot::xBottom, tr("Real"));
-    enableAxis(QwtPlot::yLeft, TRUE);
-    setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
+    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 #if QWT_VERSION < 0x050000
-    canvas()->setBackgroundMode(QWidget::PaletteBackground);
+    plot->canvas()->setBackgroundMode(QWidget::PaletteBackground);
 #endif
 
     /* Fixed scale */
-    setAxisScale(QwtPlot::xBottom, (double) -1.5, (double) 1.5);
-    setAxisScale(QwtPlot::yLeft, (double) -1.5, (double) 1.5);
+    plot->setAxisScale(QwtPlot::xBottom, (double) -1.5, (double) 1.5);
+    plot->setAxisScale(QwtPlot::yLeft, (double) -1.5, (double) 1.5);
 
     /* Set marker symbols */
     /* MSC */
@@ -1431,22 +1431,22 @@ void CDRMPlot::SetupAllConst()
     MarkerSym3.setBrush(QBrush(SpecLine2ColorPlot));
 
     /* Insert "dummy" curves for legend */
-    clear();
+    plot->clear();
 #if QWT_VERSION < 0x050000
     curve1 = insertCurve("MSC");
     setCurveSymbol(curve1, MarkerSym1);
     curve1->setPen(QPen(Qt::NoPen));
-    enableLegend(TRUE, curve1);
+    plot->enableLegend(TRUE, curve1);
 
     curve2 = insertCurve("SDC");
     setCurveSymbol(curve2, MarkerSym2);
     curve2->setPen(QPen(Qt::NoPen));
-    enableLegend(TRUE, curve2);
+    plot->enableLegend(TRUE, curve2);
 
     curve3 = insertCurve("FAC");
     setCurveSymbol(curve3, MarkerSym3);
     curve3->setPen(QPen(Qt::NoPen));
-    enableLegend(TRUE, curve3);
+    plot->enableLegend(TRUE, curve3);
 #endif
 }
 
@@ -1617,15 +1617,13 @@ void CDRMPlot::SetQAM64Grid()
 void CDRMPlot::OnClicked(const QMouseEvent& e)
 {
     /* Get frequency from current cursor position */
-    const double dFreq = invTransform(QwtPlot::xBottom, e.x());
+    const double dFreq = plot->invTransform(QwtPlot::xBottom, e.x());
 
     /* Send normalized frequency to receiver */
-#if QWT_VERSION < 0x050000
-    const double dMaxxBottom = axisScale(QwtPlot::xBottom)->hBound();
-#elif QWT_VERSION < 0x050200
-    const double dMaxxBottom = axisScaleDiv(QwtPlot::xBottom)->hBound();
+#if QWT_VERSION < 0x050200
+    const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->hBound();
 #else
-    const double dMaxxBottom = axisScaleDiv(QwtPlot::xBottom)->upperBound();
+    const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
 #endif
 
     /* Check if value is valid */
@@ -1787,5 +1785,5 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
     }
 
     /* Main plot */
-    Q3WhatsThis::add(this, strCurPlotHelp);
+    Q3WhatsThis::add(plot, strCurPlotHelp);
 }

@@ -37,13 +37,15 @@
 
 #include<map>
 
-#include <qpopupmenu.h>
 #include <qthread.h>
 #if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
 # include "AboutDlgbase.h"
 #else
 # include "ui_AboutDlgbase.h"
 # include <QDialog>
+# include <Q3PopupMenu>
+# define QPopupMenu Q3PopupMenu
 #endif
 
 class QAction;

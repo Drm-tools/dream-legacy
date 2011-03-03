@@ -60,7 +60,7 @@
 
 
 /* Classes ********************************************************************/
-class CDRMPlot : public QwtPlot
+class CDRMPlot : public QObject
 {
     Q_OBJECT
 
@@ -86,7 +86,7 @@ public:
         NONE_OLD = 16 /* None must always be the last element! (see settings) */
     };
 
-    CDRMPlot(QWidget *p = 0, const char *name = 0);
+    CDRMPlot(QwtPlot*);
     virtual ~CDRMPlot() {}
 
     /* This function has to be called before chart can be used! */
@@ -103,6 +103,7 @@ public:
     }
     void SetPlotStyle(const int iNewStyleID);
 
+    QwtPlot*			plot;
 
 protected:
     void SetVerticalBounds(

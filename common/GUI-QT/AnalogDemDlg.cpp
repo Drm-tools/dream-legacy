@@ -47,20 +47,20 @@
 # define Q3FileDialog QFileDialog
 # define Q3CString QCString
 # define Q3PopupMenu QPopupMenu
+# define Q_CHECK_PTR(x) CHECK_PTR(x)
 #else
 # include "DRMPlot-qwt5.h"
 # include <Q3PopupMenu>
-# include <q3buttongroup.h>
-# include <q3filedialog.h>
-# include <q3progressbar.h>
-# include <q3listbox.h>
-# include <q3whatsthis.h>
+# include <Q3ButtonGroup>
+# include <Q3FileDialog>
+# include <Q3ProgressBar>
+# include <Q3ListBox>
+# include <Q3WhatsThis>
 # include <Q3CString>
+# include <QMenuBar>
 # include <QHideEvent>
-# include <Q3PopupMenu>
 # include <QShowEvent>
 # include <QCloseEvent>
-# define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 
 
@@ -79,23 +79,28 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+#if QT_VERSION < 0x040000
 	MainPlot = new CDRMPlot( ButtonGroupChart, "MainPlot" );
+#else
+	QwtPlot* plot = new QwtPlot(ButtonGroupChart);
+	MainPlot = new CDRMPlot(plot);
+#endif
 #if QT_VERSION < 0x030000
 	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, MainPlot->sizePolicy().hasHeightForWidth() ) );
 
-#else
+#elif QT_VERSION < 0x040000
 	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, 0, 0, MainPlot->sizePolicy().hasHeightForWidth() ) );
 #endif
 #if QT_VERSION < 0x040000
 	ButtonGroupChartLayout->addWidget( MainPlot );
 #else
-	ButtonGroupChart->layout()->addWidget( MainPlot );
+	// TODO ButtonGroupPlotSNR->layout()->addWidget( plot );
 #endif
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
 	Q3PopupMenu* EvalWinMenu = new Q3PopupMenu(this);
-	CHECK_PTR(EvalWinMenu);
+	Q_CHECK_PTR(EvalWinMenu);
 	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
 		SIGNAL(ViewStationsDlg()), Qt::CTRL+Qt::Key_T);
 	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
@@ -105,7 +110,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Settings menu  ------------------------------------------------------- */
 	Q3PopupMenu* pSettingsMenu = new Q3PopupMenu(this);
-	CHECK_PTR(pSettingsMenu);
+	Q_CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
@@ -118,7 +123,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar* pMenu = new QMenuBar(this);
-	CHECK_PTR(pMenu);
+	Q_CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&View"), EvalWinMenu);
 	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
 	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
@@ -135,12 +140,15 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Init main plot */
 	MainPlot->SetRecObj(&DRMReceiver);
 	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
-	MainPlot->setMargin(1);
 	MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
 
+#if QT_VERSION < 0x040000
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
 	QToolTip::add(MainPlot,
 		tr("Click on the plot to set the demodulation frequency"));
+#else
+// TODO
+#endif
 
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
 	SliderBandwidth->setTickmarks(QSlider::Both);
