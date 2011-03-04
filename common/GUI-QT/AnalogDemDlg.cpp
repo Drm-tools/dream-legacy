@@ -47,7 +47,6 @@
 # define Q3FileDialog QFileDialog
 # define Q3CString QCString
 # define Q3PopupMenu QPopupMenu
-# define Q_CHECK_PTR(x) CHECK_PTR(x)
 #else
 # include "DRMPlot-qwt5.h"
 # include <Q3PopupMenu>
@@ -61,6 +60,7 @@
 # include <QHideEvent>
 # include <QShowEvent>
 # include <QCloseEvent>
+# define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 
 
@@ -100,7 +100,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
 	Q3PopupMenu* EvalWinMenu = new Q3PopupMenu(this);
-	Q_CHECK_PTR(EvalWinMenu);
+	CHECK_PTR(EvalWinMenu);
 	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
 		SIGNAL(ViewStationsDlg()), Qt::CTRL+Qt::Key_T);
 	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
@@ -110,7 +110,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Settings menu  ------------------------------------------------------- */
 	Q3PopupMenu* pSettingsMenu = new Q3PopupMenu(this);
-	Q_CHECK_PTR(pSettingsMenu);
+	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
@@ -123,7 +123,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar* pMenu = new QMenuBar(this);
-	Q_CHECK_PTR(pMenu);
+	CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&View"), EvalWinMenu);
 	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
 	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));

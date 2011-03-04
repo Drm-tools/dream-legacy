@@ -640,7 +640,7 @@ void systemevalDlg::showEvent(QShowEvent*)
 
 		/* and restore its geometry */
 		if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-			pNewChartWin->plot->setGeometry(WinGeom);
+			pNewChartWin->setGeometry(WinGeom);
 
 		/* Add window pointer in vector (needed for closing the windows) */
 		vecpDRMPlots.push_back(pNewChartWin);
@@ -664,11 +664,11 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	for (size_t i = 0; i < vecpDRMPlots.size(); i++)
 	{
 		/* Check, if window wasn't closed by the user */
-		if (vecpDRMPlots[i]->plot->isVisible())
+		if (vecpDRMPlots[i]->isVisible())
 		{
 			stringstream s;
 			CWinGeom c;
-			const QRect CWGeom = vecpDRMPlots[i]->plot->geometry();
+			const QRect CWGeom = vecpDRMPlots[i]->geometry();
 
 			/* Set parameters */
 			c.iXPos = CWGeom.x();
@@ -682,7 +682,7 @@ void systemevalDlg::hideEvent(QHideEvent*)
 			Settings.Put(s.str(), "type", (int) vecpDRMPlots[i]->GetChartType());
 
 			/* Close window afterwards */
-			vecpDRMPlots[i]->plot->close();
+			vecpDRMPlots[i]->close();
 
 			iNumOpenCharts++;
 		}
@@ -736,20 +736,20 @@ CDRMPlot* systemevalDlg::OpenChartWin(int iNewType)
 
 	/* Create new chart window */
 	CDRMPlot* pNewChartWin = new CDRMPlot(plot);
-	plot->setCaption(tr("Chart Window"));
+	setCaption(tr("Chart Window"));
 
     /* Set plot style*/
 	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
-	plot->setIcon(*this->icon());
+	setIcon(*this->icon());
 
 	/* Set receiver object and correct chart type */
 	pNewChartWin->SetRecObj(&DRMReceiver);
 	pNewChartWin->SetupChart(eNewType);
 
 	/* Show new window */
-	plot->show();
+	show();
 
 	return pNewChartWin;
 }

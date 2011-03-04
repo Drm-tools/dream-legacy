@@ -89,6 +89,8 @@ public:
     CDRMPlot(QwtPlot*);
     virtual ~CDRMPlot() {}
 
+    QwtPlot*			plot;
+
     /* This function has to be called before chart can be used! */
     void SetRecObj(CDRMReceiver* pNDRMRec) {
         pDRMRec = pNDRMRec;
@@ -102,8 +104,16 @@ public:
         OnTimerChart();
     }
     void SetPlotStyle(const int iNewStyleID);
+    void setGeometry(const QRect& g) { plot->setGeometry(g); }
+    void setCaption(const QString& s) { plot->setCaption(s); }
+    void setIcon(const QPixmap& s) { plot->setIcon(s); }
 
-    QwtPlot*			plot;
+    bool isVisible() { return plot->isVisible(); }
+    QRect geometry() {return plot->geometry();}
+    void close() { plot->close(); }
+    void show() { plot->show(); }
+
+
 
 protected:
     void SetVerticalBounds(
