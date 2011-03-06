@@ -86,8 +86,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 	/* Evaluation window */
 	pSysEvalDlg = new systemevalDlg(DRMReceiver, rig, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+#if QT_VERSION < 0x040000
 	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
-
+#else
+	pSysEvalDlg->setWindowTitle(tr("System Evaluation"));
+#endif
 	/* Analog demodulation window */
 	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
 

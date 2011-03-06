@@ -50,7 +50,7 @@
 # include <Q3ListView>
 # include <Q3ButtonGroup>
 # include <Q3PopupMenu>
-# include <QDialog>
+# include <QMainWindow>
 # include "ui_systemevalDlgbase.h"
 #endif
 
@@ -72,12 +72,12 @@ class CDRMPlot;
 
 /* Classes ********************************************************************/
 #if QT_VERSION >= 0x040000
-class systemevalDlgBase : public QDialog, public Ui_systemevalDlgBase
+class systemevalDlgBase : public QMainWindow, public Ui::SystemEvaluationWindow
 {
 public:
 	systemevalDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		QMainWindow(parent,f){setupUi(this);}
 	virtual ~systemevalDlgBase() {}
 };
 #endif
@@ -110,7 +110,7 @@ protected:
 
 	CShortLog		shortLog;
 	CLongLog		longLog;
-	int			iLogDelay;
+	int				iLogDelay;
 	CRig&			rig;
 #if QT_VERSION >= 0x040000
 	CDRMPlot*		MainPlot;

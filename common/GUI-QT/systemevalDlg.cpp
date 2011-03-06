@@ -120,6 +120,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 
 
 	/* Init chart selector list view ---------------------------------------- */
+#if QT_VERSION < 0x040000
 	/* Get pixmaps from dummy list view entries which where inserted in the
 	   qdesigner environment (storage container for the pixmaps) */
 #if QT_VERSION < 0x040000
@@ -189,7 +190,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	pSpectrumLiViIt->setPixmap(0, pixSpectrum);
 
 
-	/* Inser actual items. The list is not sorted -> items which are inserted
+	/* Insert actual items. The list is not sorted -> items which are inserted
 	   first show up at the end of the list */
 	/* Spectrum */
 	CCharSelItem* pListItSNRSpec = new CCharSelItem(pSpectrumLiViIt,
@@ -250,7 +251,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	   storing the pixmaps in the QDesigner */
 	ListViewCharSel->setColumnWidth(0, 0);
 	ListViewCharSel->setColumnWidthMode(0, Q3ListView::Maximum);
-
+#else
+#endif
 
 	/* If MDI in is enabled, disable some of the controls and use different
 	   initialization for the chart and chart selector */

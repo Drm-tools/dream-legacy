@@ -53,10 +53,6 @@ using namespace std; /* Because of the library: "complex" */
 # undef NOMINMAX
 # define NOMINMAX 1
 
-/* Define whether using GUI or non-GUI receiver */
-# define USE_QT_GUI
-//# undef USE_QT_GUI
-
 # define DLL_EXPORT 1
 //# undef DLL_EXPORT 1
 

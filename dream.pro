@@ -87,21 +87,22 @@ unix {
 		LIBS 		+= -lrt
 		OBJECTS_DIR	= linux
 		UI_DIR		= linux/moc
+		UI_DIR		= linux/moc
 		MOC_DIR		= linux/moc
 	}
 }
 
 win32 {
 	TEMPLATE	= vcapp
-	exists(libs\hamlib\rig.h) {
+	exists(libs/hamlib/rig.h) {
 		CONFIG      += hamlib
 		message("with hamlib")
 	}
-	exists(libs\pcap.h) {
+	exists(libs/pcap.h) {
 		CONFIG      += pcap
 		message("with pcap")
 	}
-	exists(libs\sndfile.h) {
+	exists(libs/sndfile.h) {
 		CONFIG      += sndfile
 		message("with libsndfile")
 	}
@@ -109,11 +110,10 @@ win32 {
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
 	LIBS 		+= zdll.lib fftw.lib setupapi.lib winmm.lib wsock32.lib
-	#QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt.lib
+	QMAKE_CXXFLAGS += /wd"4996" /wd"4521"
 	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmt.lib
-	#QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
-	DEFINES     += HAVE_SETUPAPI
+	DEFINES     += HAVE_SETUPAPI USE_QT_GUI HAVE_LIBZ
 	DEFINES		-= UNICODE
 	HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h
 	SOURCES		+= windows/Source/Pacer.cpp windows/Source/Sound.cpp
