@@ -37,11 +37,16 @@
 # include <qsocketdevice.h>
 # define Q3SocketDevice QSocketDevice
 #else
-# include <q3socketdevice.h>
-#define UINT32 quint32
+# include <Q3SocketDevice>
+# define UINT32 quint32
 #endif
 #include <qsocketnotifier.h>
 #include <qdatetime.h>
+# if QT_VERSION < 0x030000
+#  include <qthread.h>
+# else
+#  include <qmutex.h>
+# endif
 
 /* Maximum number of bytes received from the network interface. Maximum data
    rate of DRM is approx. 80 kbps. One MDI packet must be sent each DRM frame

@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /MD /GX /O2 /I "$(QTDIR)\include" /I "../libs" /I "../libs/qwt" /I "../common/GUI-QT" /I "./moc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "FREEIMAGE_LIB" /D "HAVE_LIBFREEIMAGE" /D "HAVE_LIBHAMLIB" /D "HAVE_SETUPAPI" /YX /FD /c
+# ADD CPP /nologo /MD /GX /O2 /I "$(QTDIR)\include" /I "../libs" /I "../libs/qwt" /I "../common/GUI-QT" /I "./moc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "USE_QT_GUI" /D "FREEIMAGE_LIB" /D "HAVE_LIBFREEIMAGE" /D "HAVE_LIBHAMLIB" /D "HAVE_SETUPAPI" /YX /FD /c
 # SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /Gm /GX /ZI /Od /I "$(QTDIR)\include" /I "../libs" /I "../libs/qwt" /I "../common/GUI-QT" /I "./moc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "FREEIMAGE_LIB" /D "HAVE_LIBFREEIMAGE" /D "HAVE_LIBHAMLIB" /D "HAVE_SETUPAPI" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /Gm /GX /ZI /Od /I "$(QTDIR)\include" /I "../libs" /I "../libs/qwt" /I "../common/GUI-QT" /I "./moc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "USE_QT_GUI" /D "FREEIMAGE_LIB" /D "HAVE_LIBFREEIMAGE" /D "HAVE_LIBHAMLIB" /D "HAVE_SETUPAPI" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "_DEBUG"
