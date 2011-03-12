@@ -32,14 +32,14 @@
 // dummy AAC Decoder implementation if dll not found
 
 NeAACDecHandle NEAACDECAPI NeAACDecOpenDummy(void) { return NULL; }
-void NEAACDECAPI NeAACDecCloseDummy(NeAACDecHandle h) { }
+void NEAACDECAPI NeAACDecCloseDummy(NeAACDecHandle) { }
 
-char NEAACDECAPI NeAACDecInitDRMDummy(NeAACDecHandle* h, unsigned long samplerate, unsigned char channels)
+char NEAACDECAPI NeAACDecInitDRMDummy(NeAACDecHandle*, unsigned long, unsigned char)
 {
 	return 1; /* error */
 }
 
-void* NEAACDECAPI NeAACDecDecodeDummy(NeAACDecHandle h,NeAACDecFrameInfo* hInfo,unsigned char * buffer,unsigned long buffer_size)
+void* NEAACDECAPI NeAACDecDecodeDummy(NeAACDecHandle,NeAACDecFrameInfo* hInfo, unsigned char*, unsigned long)
 {
 	hInfo->error = 1;
 	return NULL;
@@ -555,6 +555,13 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 void
 CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 {
+	/* Open AACEncoder instance */
+	HandleAACDecoder = NeAACDecOpen();
+
+	/* Decoder MUST be initialized at least once, therefore do it here in the
+	   constructor with arbitrary values to be sure that this is satisfied */
+	NeAACDecInitDRM(&HandleAACDecoder, 24000, DRMCH_MONO);
+
 /*
 	Since we use the exception mechanism in this init routine, the sequence of
 	the individual initializations is very important!
@@ -937,16 +944,23 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 :	bUseReverbEffect(TRUE), AudioRev((CReal) 1.0 /* seconds delay */ ),
 	canDecodeAAC(false),canDecodeCELP(false),canDecodeHVXC(false)
 {
+	cerr << "looking for FAAD2" << endl;
 #ifdef USE_FAAD2_LIBRARY
 	canDecodeAAC = true;
 #else
-    NeAACDecOpen = NeAACDecOpenDummy;
-    NeAACDecInitDRM = NeAACDecInitDRMDummy;
-    NeAACDecClose = NeAACDecCloseDummy;
-    NeAACDecDecode = NeAACDecDecodeDummy;
 # ifdef _WIN32
-    hFaaDlib = LoadLibrary(TEXT("faad_drm"));
-    if(hFaaDlib==NULL)hFaaDlib = LoadLibrary(TEXT("faad_drmd"));
+    if(hFaaDlib==NULL)hFaaDlib = LoadLibrary(TEXT("faad2_drmd"));
+    if(hFaaDlib==NULL)hFaaDlib = LoadLibrary(TEXT("faad2_drm"));
+# else
+# define GetProcAddress(a, b) dysym(a, b)
+# define TEXT(a) (a)
+#  if defined(__APPLE__)
+#   define SO_NAME "libfaad2_drm.dylib"
+#  else
+#   define SO_NAME "libfaad2_drm.so"
+#  endif
+    hFaaDlib = dlopen(SO_NAME, RTLD_LOCAL | RTLD_NOW);
+# endif
     if(hFaaDlib)
     {
 		NeAACDecOpen = (NeAACDecOpen_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecOpen"));
@@ -954,35 +968,36 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 		NeAACDecClose = (NeAACDecClose_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecClose"));
 		NeAACDecDecode = (NeAACDecDecode_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecDecode"));
     }
-# else
-#  if defined(__APPLE__)
-    hFaaDlib = dlopen("libfaad_drm.dylib", RTLD_LOCAL | RTLD_NOW);
-#  else
-    hFaaDlib = dlopen("libfaad2_drm.so", RTLD_LOCAL | RTLD_NOW);
-#  endif
-    if(hFaaDlib)
+    canDecodeAAC = true;
+    if(NeAACDecOpen == NULL)
     {
-		NeAACDecOpen = (NeAACDecOpen_t*)dlsym(hFaaDlib, "NeAACDecOpen");
-		NeAACDecInitDRM = (NeAACDecInitDRM_t*)dlsym(hFaaDlib, "NeAACDecInitDRM");
-		NeAACDecClose = (NeAACDecClose_t*)dlsym(hFaaDlib, "NeAACDecClose");
-		NeAACDecDecode = (NeAACDecDecode_t*)dlsym(hFaaDlib,"NeAACDecDecode");
+    	canDecodeAAC = false;
+		NeAACDecOpen = NeAACDecOpenDummy;
+		cerr << "no NeAACDecOpen" << endl;
     }
-# endif
-    if(NeAACDecInitDRM != NULL) // Might be non-DRM version of FAAD2
+    if(NeAACDecInitDRM == NULL)
     {
-    	canDecodeAAC = true;
-    }
-    else
-    {
+    	canDecodeAAC = false;
 		NeAACDecInitDRM = NeAACDecInitDRMDummy;
+		cerr << "no NeAACDecInitDRM" << endl;
+    }
+    if(NeAACDecClose == NULL)
+    {
+    	canDecodeAAC = false;
+		NeAACDecClose = NeAACDecCloseDummy;
+		cerr << "no NeAACDecClose" << endl;
+    }
+    if(NeAACDecDecode == NULL)
+    {
+    	canDecodeAAC = false;
+		NeAACDecDecode = NeAACDecDecodeDummy;
+		cerr << "no NeAACDecDecode" << endl;
     }
 #endif
-	/* Open AACEncoder instance */
-	HandleAACDecoder = NeAACDecOpen();
-
-	/* Decoder MUST be initialized at least once, therefore do it here in the
-	   constructor with arbitrary values to be sure that this is satisfied */
-	NeAACDecInitDRM(&HandleAACDecoder, 24000, DRMCH_MONO);
+	if(    canDecodeAAC)
+		cerr << "AAC lib found" << endl;
+	else
+		cerr << "no usable AAC lib found" << endl;
 }
 
 CAudioSourceDecoder::~CAudioSourceDecoder()
