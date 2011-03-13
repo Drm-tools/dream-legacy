@@ -952,7 +952,7 @@ CAudioSourceDecoder::CAudioSourceDecoder()
     if(hFaaDlib==NULL)hFaaDlib = LoadLibrary(TEXT("faad2_drmd"));
     if(hFaaDlib==NULL)hFaaDlib = LoadLibrary(TEXT("faad2_drm"));
 # else
-# define GetProcAddress(a, b) dysym(a, b)
+# define GetProcAddress(a, b) dlsym(a, b)
 # define TEXT(a) (a)
 #  if defined(__APPLE__)
 #   define SO_NAME "libfaad2_drm.dylib"
