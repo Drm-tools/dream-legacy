@@ -40,15 +40,16 @@
 # include <QHideEvent>
 # include <QPixmap>
 #endif
+#include <set>
 
 static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now);
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f):
-	CEPGDlgbase(parent, name, modal, f),
-	BitmCubeGreen(),date(QDate::currentDate()),
-	do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
-	Settings(NSettings),Timer(),sids(),next(NULL)
+    CEPGDlgbase(parent, name, modal, f),
+    BitmCubeGreen(),date(QDate::currentDate()),
+    do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
+    Settings(NSettings),Timer(),sids(),next(NULL)
 {
     /* recover window size and position */
     CWinGeom s;
@@ -89,7 +90,7 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     year->setMinValue(0000);
     year->setMaxValue(3000);
 
-	TextEPGDisabled->hide();
+    TextEPGDisabled->hide();
 }
 
 EPGDlg::~EPGDlg()
@@ -99,35 +100,36 @@ EPGDlg::~EPGDlg()
 void EPGDlg::setActive(Q3ListViewItem* myItem)
 {
 #if defined(_MSC_VER) && (_MSC_VER < 1400)
-	MyListViewItem* item = (MyListViewItem*)(myItem);
+    MyListViewItem* item = (MyListViewItem*)(myItem);
 #else
-	MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
+    MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
 #endif
-	if(item->IsActive())
-	{
-		item->setPixmap(COL_START, BitmCubeGreen);
-		Data->ensureItemVisible(myItem);
-		emit NowNext(item->text(COL_NAME));
-		next = item->itemBelow();
-	}
-	else
-	{
-		item->setPixmap(COL_START,QPixmap()); /* no pixmap */
-	}
+    if(item->IsActive())
+    {
+        item->setPixmap(COL_START, BitmCubeGreen);
+        Data->ensureItemVisible(myItem);
+        emit NowNext(item->text(COL_NAME));
+        next = item->itemBelow();
+    }
+    else
+    {
+        item->setPixmap(COL_START,QPixmap()); /* no pixmap */
+    }
 }
 
 void EPGDlg::sendNowNext(QString s)
 {
-	int port = -1; // disable the facility - edit Dream.ini to enable
-	string addr = Settings.Get("NowNext", "address", string("127.0.0.1"));
-	port = Settings.Get("NowNext", "port", port);
-	if(port==-1)
-		return;
-	Settings.Put("NowNext", "address", addr);
-	Settings.Put("NowNext", "port", port);
-	Q3SocketDevice sock(Q3SocketDevice::Datagram);
-	QHostAddress a; a.setAddress(addr.c_str());
-	sock.writeBlock(s.utf8(), s.length(), a, port);
+    int port = -1; // disable the facility - edit Dream.ini to enable
+    string addr = Settings.Get("NowNext", "address", string("127.0.0.1"));
+    port = Settings.Get("NowNext", "port", port);
+    if(port==-1)
+        return;
+    Settings.Put("NowNext", "address", addr);
+    Settings.Put("NowNext", "port", port);
+    Q3SocketDevice sock(Q3SocketDevice::Datagram);
+    QHostAddress a;
+    a.setAddress(addr.c_str());
+    sock.writeBlock(s.utf8(), s.length(), a, port);
 }
 
 void EPGDlg::OnTimer()
@@ -136,14 +138,14 @@ void EPGDlg::OnTimer()
     time_t ltime;
     time(&ltime);
     tm gmtCur = *gmtime(&ltime);
-	static Q3ListViewItem* next = NULL;
+    static Q3ListViewItem* next = NULL;
 
     if(gmtCur.tm_sec==30) // 1/2 minute boundary
     {
-		if(next)
-		{
-			emit NowNext(QString("next: ")+next->text(COL_NAME));
-		}
+        if(next)
+        {
+            emit NowNext(QString("next: ")+next->text(COL_NAME));
+        }
     }
     if(gmtCur.tm_sec==0) // minute boundary
     {
@@ -156,9 +158,9 @@ void EPGDlg::OnTimer()
             /* not all information is loaded */
             select();
         }
-	next = NULL;
+        next = NULL;
 
-		next = NULL;
+        next = NULL;
 
         if (date == todayUTC) /* if today */
         {
@@ -169,7 +171,7 @@ void EPGDlg::OnTimer()
             {
                 /* Check, if the programme is now on line. */
                 if (myItem)
-					setActive(myItem);
+                    setActive(myItem);
                 myItem = myItem->nextSibling();
             }
         }
@@ -288,35 +290,35 @@ void EPGDlg::select()
     QDate o = date.addDays(-1);
     doc = epg.getFile (o, sids[chan], false);
     if(doc)
-		epg.parseDoc(*doc);
+        epg.parseDoc(*doc);
     doc = epg.getFile (o, sids[chan], true);
     if(doc)
-		epg.parseDoc(*doc);
+        epg.parseDoc(*doc);
     o = date.addDays(1);
     doc = epg.getFile (o, sids[chan], false);
     if(doc)
-		epg.parseDoc(*doc);
+        epg.parseDoc(*doc);
     doc = epg.getFile (o, sids[chan], true);
     if(doc)
-		epg.parseDoc(*doc);
+        epg.parseDoc(*doc);
 
     QString xml;
     doc = epg.getFile (date, sids[chan], false);
     if(doc)
     {
-		epg.parseDoc(*doc);
-		xml = doc->toString();
-		if (xml.length() > 0)
-			basic->setText(xml);
+        epg.parseDoc(*doc);
+        xml = doc->toString();
+        if (xml.length() > 0)
+            basic->setText(xml);
     }
 
     doc = epg.getFile (date, sids[chan], true);
     if(doc)
     {
-		epg.parseDoc(*doc);
-		xml = doc->toString();
-		if (xml.length() > 0)
-			advanced->setText(xml);
+        epg.parseDoc(*doc);
+        xml = doc->toString();
+        if (xml.length() > 0)
+            advanced->setText(xml);
     }
 
     if (epg.progs.count()==0) {
@@ -345,18 +347,18 @@ void EPGDlg::select()
         QString s_start, s_duration;
         tm bdt = *gmtime(&start);
 
-	// skip entries not on the wanted day
+        // skip entries not on the wanted day
         if((bdt.tm_year+1900) != date.year())
         {
-        	continue;
+            continue;
         }
         if((bdt.tm_mon+1) != date.month())
         {
-        	continue;
+            continue;
         }
         if(bdt.tm_mday != date.day())
         {
-        	continue;
+            continue;
         }
 
         char s[40];
@@ -377,22 +379,28 @@ void EPGDlg::select()
             genre = "";
         else
         {
-            QString sep="";
+            // remove duplicate genres
+            set<QString> genres;
             for (size_t i=0; i<p.mainGenre.size(); i++) {
                 if (p.mainGenre[i] != "Audio only") {
-                    genre = genre+sep+p.mainGenre[i];
-                    sep = ", ";
+                    genres.insert(p.mainGenre[i]);
                 }
+            }
+            QString sep="";
+            for(set<QString>::const_iterator g = genres.begin(); g!=genres.end(); g++)
+            {
+                genre = genre+sep+(*g);
+                sep = ", ";
             }
         }
         MyListViewItem* CurrItem = new MyListViewItem(Data, s_start, name, genre, description, s_duration,
-        start, duration);
-    /* Check, if the programme is now on line. If yes, set
-    special pixmap */
-		if (CurrItem->IsActive())
-		{
-			CurrActiveItem = CurrItem;
-		}
+                start, duration);
+        /* Check, if the programme is now on line. If yes, set
+        special pixmap */
+        if (CurrItem->IsActive())
+        {
+            CurrActiveItem = CurrItem;
+        }
     }
     if (CurrActiveItem) /* programme is now on line */
         setActive(CurrActiveItem);
@@ -400,12 +408,12 @@ void EPGDlg::select()
 
 _BOOLEAN EPGDlg::MyListViewItem::IsActive()
 {
-	time_t now = time(NULL);
-	if(now<start)
-		return false;
-	if(now>=(start+duration))
-		return false;
-	return true;
+    time_t now = time(NULL);
+    if(now<start)
+        return false;
+    if(now>=(start+duration))
+        return false;
+    return true;
 }
 
 static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now)
