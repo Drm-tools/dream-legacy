@@ -26,7 +26,7 @@
  *
 \******************************************************************************/
 
-#include "DRMPlot-qwt5.h"
+#include "DRMPlot-qwt6.h"
 
 #if QT_VERSION < 0x040000
 # include <qwhatsthis.h>
@@ -496,7 +496,7 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
         pdScale[i] = vecrScale[i];
     }
 
-    main1curve->setData(pdScale, pdData, vecrData.Size());
+    main1curve->setSamples(pdScale, pdData, vecrData.Size());
 
     delete[] pdData;
     delete[] pdScale;
@@ -518,8 +518,8 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
         pdScale[i] = vecrScale[i];
     }
 
-    main1curve->setData(pdScale, pdData1, vecrData1.Size());
-    main2curve->setData(pdScale, pdData2, vecrData2.Size());
+    main1curve->setSamples(pdScale, pdData1, vecrData1.Size());
+    main2curve->setSamples(pdScale, pdData2, vecrData2.Size());
 
     delete[] pdData1;
     delete[] pdData2;
@@ -636,19 +636,19 @@ void CDRMPlot::SetVerticalBounds(
 
     /* Left bound */
     dX[0] = dX[1] = rStartGuard;
-    curve1->setData(dX, dY, 2);
+    curve1->setSamples(dX, dY, 2);
 
     /* Right bound */
     dX[0] = dX[1] = rEndGuard;
-    curve2->setData(dX, dY, 2);
+    curve2->setSamples(dX, dY, 2);
 
     /* Estimated begin of impulse response */
     dX[0] = dX[1] = rBeginIR;
-    curve3->setData(dX, dY, 2);
+    curve3->setSamples(dX, dY, 2);
 
     /* Estimated end of impulse response */
     dX[0] = dX[1] = rEndIR;
-    curve4->setData(dX, dY, 2);
+    curve4->setSamples(dX, dY, 2);
 }
 
 void CDRMPlot::SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLowerB, _REAL rHigherB)
@@ -660,7 +660,7 @@ void CDRMPlot::SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLow
 
     /* Only include highest bound */
     dY[0] = dY[1] = Max(rHigherB, rLowerB);
-    curve5->setData(dX, dY, 2);
+    curve5->setSamples(dX, dY, 2);
 
     /* Adjust scale for x-axis */
     plot->setAxisScale(QwtPlot::xBottom, (double) rScaleMin, (double) rScaleMax);
@@ -687,7 +687,7 @@ void CDRMPlot::SetupTranFct()
     plot->setAxisScale(QwtPlot::yLeft, (double) -85.0, (double) -35.0);
 
     /* Add main curves */
-    plot->clear();
+    clear();
     main1curve->setTitle(tr("Transf. Fct."));
     main1curve->attach(plot);
     main2curve->setTitle(tr("Group Del."));
@@ -718,7 +718,7 @@ void CDRMPlot::SetupAudioSpec()
     plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
 
     /* Add main curve */
-    plot->clear();
+    clear();
     main1curve->setTitle(tr("Audio Spectrum"));
     main1curve->attach(plot);
 
@@ -742,7 +742,7 @@ void CDRMPlot::SetupFreqSamOffsHist()
 #endif
 
     /* Add main curves */
-    plot->clear();
+    clear();
     main1curve->setTitle(tr("Freq."));
     main1curve->attach(plot);
     main2curve->setTitle(tr("Samp."));
@@ -817,7 +817,7 @@ void CDRMPlot::SetupDopplerDelayHist()
     plot->setAxisScale(QwtPlot::yRight, (double) 0.0, (double) 4.0);
 
     /* Add main curves */
-    plot->clear();
+    clear();
     main1curve->setTitle(tr("Delay"));
     main1curve->attach(plot);
     main2curve->setTitle(tr("Doppler"));
@@ -848,7 +848,7 @@ void CDRMPlot::SetupSNRAudHist()
 #endif
 
     /* Add main curves */
-    plot->clear();
+    clear();
     main1curve->setTitle(tr("SNR"));
     main1curve->attach(plot);
     main2curve->setTitle(tr("Audio"));
@@ -955,7 +955,7 @@ void CDRMPlot::SetupPSD()
                  MAX_VAL_SHIF_PSD_Y_AXIS_DB);
 
     /* Insert line for DC carrier */
-    plot->clear();
+    clear();
     curve1->attach(plot);
     curve1->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 
@@ -966,7 +966,7 @@ void CDRMPlot::SetupPSD()
     dY[0] = MIN_VAL_SHIF_PSD_Y_AXIS_DB;
     dY[1] = MAX_VAL_SHIF_PSD_Y_AXIS_DB;
 
-    curve1->setData(dX, dY, 2);
+    curve1->setSamples(dX, dY, 2);
 
     /* Add main curve */
     main1curve->setTitle(tr("Shifted PSD"));
@@ -992,7 +992,7 @@ void CDRMPlot::SetupSNRSpectrum()
 #endif
 
     /* Add main curve */
-    plot->clear();
+    clear();
     main1curve->setTitle(tr("SNR Spectrum"));
     main1curve->attach(plot);
 
@@ -1023,7 +1023,7 @@ void CDRMPlot::SetupInpSpec()
                  MAX_VAL_INP_SPEC_Y_AXIS_DB);
 
     /* Insert line for DC carrier */
-    plot->clear();
+    clear();
     curve1->attach(plot);
     curve1->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 
@@ -1046,7 +1046,7 @@ void CDRMPlot::SetDCCarrier(const _REAL rDCFreq)
     dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
     dY[1] = MAX_VAL_INP_SPEC_Y_AXIS_DB;
 
-    curve1->setData(dX, dY, 2);
+    curve1->setSamples(dX, dY, 2);
 }
 
 void CDRMPlot::SetupInpPSD()
@@ -1074,7 +1074,7 @@ void CDRMPlot::SetupInpPSD()
                  MAX_VAL_INP_SPEC_Y_AXIS_DB);
 
     /* Insert line for bandwidth marker */
-    plot->clear();
+    clear();
     curve1->attach(plot);
 
     /* Make sure that line is bigger than the current plots height. Do this by
@@ -1100,7 +1100,7 @@ void CDRMPlot::SetupInpPSD()
         curvegrid->setPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
 
         dY[0] = dY[1] = axisScale(QwtPlot::yLeft)->majMark(i);
-        curvegrid->setData(dX, dY, 2);
+        curvegrid->setSamples(dX, dY, 2);
     }
 
     /* x-axis: get major ticks */
@@ -1121,7 +1121,7 @@ void CDRMPlot::SetupInpPSD()
         curvegrid->setPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
 
         dX[0] = dX[1] = axisScale(QwtPlot::xBottom)->majMark(i);
-        curvegrid->setData(dX, dY, 2);
+        curvegrid->setSamples(dX, dY, 2);
     }
 
     /* Insert line for DC carrier */
@@ -1150,10 +1150,10 @@ void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
         dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
         dY[1] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
 
-        curve2->setData(dX, dY, 2);
+        curve2->setSamples(dX, dY, 2);
     }
     else
-        curve2->setData(NULL, NULL, 0);
+        curve2->setSamples(NULL, NULL, 0);
 
 }
 
@@ -1171,7 +1171,7 @@ void CDRMPlot::SetupInpSpecWaterf()
                  (double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
     /* Clear old plot data */
-    plot->clear();
+    clear();
 
     /* Clear background */
     LastCanvasSize = plot->canvas()->size(); /* Initial canvas size */
@@ -1325,7 +1325,7 @@ void CDRMPlot::SetupFACConst()
     MarkerSym1.setBrush(QBrush(MainPenColorConst));
 
     /* Insert grid */
-    plot->clear();
+    clear();
     SetQAM4Grid();
 }
 
@@ -1348,7 +1348,7 @@ void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
     plot->setAxisScale(QwtPlot::yLeft, (double) -1.2649, (double) 1.2649);
 
     /* Insert grid */
-    plot->clear();
+    clear();
     if (eNewCoSc == CS_1_SM)
         SetQAM4Grid();
     else
@@ -1380,7 +1380,7 @@ void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
     plot->setAxisScale(QwtPlot::yLeft, (double) -1.2344, (double) 1.2344);
 
     /* Insert grid */
-    plot->clear();
+    clear();
     if (eNewCoSc == CS_2_SM)
         SetQAM16Grid();
     else
@@ -1431,7 +1431,7 @@ void CDRMPlot::SetupAllConst()
     MarkerSym3.setBrush(QBrush(SpecLine2ColorPlot));
 
     /* Insert "dummy" curves for legend */
-    plot->clear();
+    clear();
 #if QWT_VERSION < 0x050000
     curve1 = insertCurve("MSC");
     setCurveSymbol(curve1, MarkerSym1);
@@ -1486,11 +1486,11 @@ void CDRMPlot::SetQAM4Grid()
     dX[0] = dX[1] = (double) 0.0;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 #endif
 }
 
@@ -1510,29 +1510,29 @@ void CDRMPlot::SetQAM16Grid()
     dX[0] = dX[1] = (double) 0.0;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 
     dX[0] = dX[1] = (double) 0.6333;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 
     dX[0] = dX[1] = (double) -0.6333;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 #endif
 }
 
@@ -1552,65 +1552,65 @@ void CDRMPlot::SetQAM64Grid()
     dX[0] = dX[1] = (double) 0.0;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 
     dX[0] = dX[1] = (double) 0.3086;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 
     dX[0] = dX[1] = (double) -0.3086;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 
     dX[0] = dX[1] = (double) 0.6172;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 
     dX[0] = dX[1] = (double) -0.6172;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 
     dX[0] = dX[1] = (double) 0.9258;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 
     dX[0] = dX[1] = (double) -0.9258;
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dX, dYMax, 2);
+    curve->setSamples(dX, dYMax, 2);
 
     curve = insertCurve("line");
     curve->setPen(ScalePen);
-    curve->setData(dXMax, dX, 2);
+    curve->setSamples(dXMax, dX, 2);
 #endif
 }
 
@@ -1632,6 +1632,11 @@ void CDRMPlot::OnClicked(const QMouseEvent& e)
         /* Emit signal containing normalized selected frequency */
         emit xAxisValSet(dFreq / dMaxxBottom);
     }
+}
+
+void CDRMPlot::clear()
+{
+// TODO
 }
 
 void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)

@@ -48,7 +48,7 @@
 # define Q3CString QCString
 # define Q3PopupMenu QPopupMenu
 #else
-# include "DRMPlot-qwt5.h"
+# include "DRMPlot-qwt6.h"
 # include <Q3PopupMenu>
 # include <Q3ButtonGroup>
 # include <Q3FileDialog>
@@ -198,11 +198,9 @@ void AnalogDemDlg::showEvent(QShowEvent*)
     if(MainPlot==NULL)
     {
         /* Init main plot */
-        connect(MainPlot, SIGNAL(xAxisValSet(double)),
-                this, SLOT(OnChartxAxisValSet(double)));
         QString ptt = tr("Click on the plot to set the demodulation frequency");
 #if QT_VERSION >= 0x040000
-        MainPlot = new CDRMPlot(new QwtPlot(NULL));
+        MainPlot = new CDRMPlot(new QwtPlot(this));
         /* Add tool tip to show the user the possibility of choosing the AM IF */
         MainPlot->plot->setToolTip(ptt);
 #else
@@ -211,6 +209,8 @@ void AnalogDemDlg::showEvent(QShowEvent*)
         MainPlot->SetRecObj(&DRMReceiver);
         MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
         MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
+        connect(MainPlot, SIGNAL(xAxisValSet(double)),
+                this, SLOT(OnChartxAxisValSet(double)));
     }
     OnTimer();
     OnTimerPLLPhaseDial();

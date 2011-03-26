@@ -39,7 +39,7 @@
 # define Q3WhatsThis QWhatsThis
 # define Q3FileDialog QFileDialog
 #else
-# include "DRMPlot-qwt5.h"
+# include "DRMPlot-qwt6.h"
 # include <q3whatsthis.h>
 # include <q3filedialog.h>
 # include <QHideEvent>
