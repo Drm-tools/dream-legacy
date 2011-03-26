@@ -175,7 +175,7 @@ void CDRMPlot::OnTimerChart()
     bool change = false;
     if (InitCharType != CurCharType)
     {
-        InitCharType = CurCharType;
+        CurCharType = InitCharType;
         change = true;;
     }
     switch (CurCharType)
@@ -373,7 +373,7 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
     if (eNewType != NONE_OLD)
     {
         /* Set internal variable */
-        CurCharType = eNewType;
+        InitCharType = eNewType;
 
         /* Update help text connected with the plot widget */
         AddWhatsThisHelpChar(eNewType);

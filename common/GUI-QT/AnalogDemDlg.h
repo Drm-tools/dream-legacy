@@ -103,12 +103,12 @@ public slots:
 
 /* Analog demodulation dialog ----------------------------------------------- */
 #if QT_VERSION >= 0x040000
-class AnalogDemDlgBase : public QDialog, public Ui_AnalogDemDlgBase
+class AnalogDemDlgBase : public QMainWindow, public Ui::AnalogDemDlgBase
 {
 public:
 	AnalogDemDlgBase(QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		const char* name = 0, Qt::WFlags f = 0):
+		QMainWindow(parent,name,f){setupUi(this);}
 	virtual ~AnalogDemDlgBase() {}
 };
 #endif
@@ -118,13 +118,14 @@ class AnalogDemDlg : public AnalogDemDlgBase
 
 public:
 	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
+		const char* name = 0, Qt::WFlags f = 0);
 
 	void 			UpdatePlotsStyle();
 
 protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
+	CAMSSDlg		AMSSDlg;
 
 #if QT_VERSION >= 0x040000
 	CDRMPlot*		MainPlot;
@@ -132,7 +133,6 @@ protected:
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
-	CAMSSDlg		AMSSDlg;
 
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
