@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#ifndef __DRMPLOT_QWT5_H
-#define __DRMPLOT_QWT5_H
+#ifndef __DRMPLOT_QWT6_H
+#define __DRMPLOT_QWT6_H
 
 #include <qwt_plot.h>
 #include <qwt_plot_canvas.h>
@@ -86,10 +86,10 @@ public:
         NONE_OLD = 16 /* None must always be the last element! (see settings) */
     };
 
-    CDRMPlot(QwtPlot*);
+    CDRMPlot(QWidget*);
     virtual ~CDRMPlot() {}
 
-    QwtPlot*			plot;
+    QwtPlot*	plot;
 
     /* This function has to be called before chart can be used! */
     void SetRecObj(CDRMReceiver* pNDRMRec) {

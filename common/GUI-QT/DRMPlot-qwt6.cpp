@@ -72,12 +72,14 @@
 
 
 /* Implementation *************************************************************/
-CDRMPlot::CDRMPlot(QwtPlot* p) :
+CDRMPlot::CDRMPlot(QWidget* parent) :
     plot(p), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
     bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL)
     , leftTitle(), rightTitle(), bottomTitle(),
     MarkerSym1(), MarkerSym2(), MarkerSym3()
 {
+    plot = new QwtPlot(parent);
+
     grid = new QwtPlotGrid();
 
     curve1 = new QwtPlotCurve("");
