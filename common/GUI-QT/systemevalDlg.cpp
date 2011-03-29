@@ -87,7 +87,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	AddWhatsThisHelp();
 
 #if QT_VERSION >= 0x040000
-	MainPlot = new CDRMPlot(plot);
+	MainPlot = new CDRMPlot(this);
 #endif
 
 	/* Init controls -------------------------------------------------------- */
@@ -633,7 +633,6 @@ void systemevalDlg::showEvent(QShowEvent*)
 		const QRect WinGeom(c.iXPos, c.iYPos, c.iWSize, c.iHSize);
 
 		/* Open the new chart window */
-		QwtPlot* p = new QwtPlot(NULL);
 		CDRMPlot* pNewChartWin = OpenChartWin(eNewType);
 
 		/* and restore its geometry */
@@ -714,7 +713,7 @@ void systemevalDlg::OnTimerInterDigit()
 	DRMReceiver.SetFrequency(EdtFrequency->text().toInt());
 }
 
-void systemevalDlg::OnFrequencyEdited ( const QString & text )
+void systemevalDlg::OnFrequencyEdited ( const QString & )
 {
 	TimerInterDigit.changeInterval(100);
 }
@@ -732,14 +731,12 @@ void systemevalDlg::UpdatePlotsStyle()
 
 CDRMPlot* systemevalDlg::OpenChartWin(int iNewType)
 {
-	QwtPlot* plot = new QwtPlot(NULL);
 	const CDRMPlot::ECharType eNewType = CDRMPlot::ECharType(iNewType);
-
 	/* Create new chart window */
-	CDRMPlot* pNewChartWin = new CDRMPlot(plot);
+	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
 	setCaption(tr("Chart Window"));
 
-    /* Set plot style*/
+	/* Set plot style*/
 	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
@@ -750,7 +747,7 @@ CDRMPlot* systemevalDlg::OpenChartWin(int iNewType)
 	pNewChartWin->SetupChart(eNewType);
 
 	/* Show new window */
-	show();
+	pNewChartWin->show();
 
 	return pNewChartWin;
 }
