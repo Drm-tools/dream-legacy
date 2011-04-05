@@ -63,11 +63,6 @@ public:
 protected:
 	enum ELightColor {RL_GREY, RL_RED, RL_GREEN, RL_YELLOW};
 
-	QPixmap			BitmCubeGreen;
-	QPixmap			BitmCubeYellow;
-	QPixmap			BitmCubeRed;
-	QPixmap			BitmCubeGrey;
-
 	ELightColor		eColorFlag;
 
 	QTimer			TimerRedLight;
@@ -78,7 +73,12 @@ protected:
 	bool			bFlagGreenLi;
 	bool			bFlagYellowLi;
 
-	int				iUpdateTime;
+	int			iUpdateTime;
+
+	QPixmap			BitmCubeGreen;
+	QPixmap			BitmCubeYellow;
+	QPixmap			BitmCubeRed;
+	QPixmap			BitmCubeGrey;
 
 	void			UpdateColor();
 

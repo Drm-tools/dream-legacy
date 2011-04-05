@@ -38,7 +38,10 @@
 
 /* Implementation *************************************************************/
 CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) : 
-	QLabel(parent, name, f)
+	QLabel(parent, name, f), eColorFlag(RL_GREY),
+	TimerRedLight(), TimerGreenLight(), TimerYellowLight(),
+	bFlagRedLi(false), bFlagGreenLi(false), bFlagYellowLi(false),
+	iUpdateTime(DEFAULT_UPDATE_TIME)
 {
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
@@ -59,15 +62,11 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) 
 	setFrameShadow(Q3Frame::Sunken);
 	setIndent(0);
 
-	/* Init color flags */
 	Reset();
 
 	/* Set init-bitmap */
 	setPixmap(BitmCubeGrey);
-	eColorFlag = RL_GREY;
 
-	/* Init update time */
-	iUpdateTime = DEFAULT_UPDATE_TIME;
 
 	/* Connect timer events to the desired slots */
 	connect(&TimerRedLight, SIGNAL(timeout()), 
