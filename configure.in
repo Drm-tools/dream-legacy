@@ -186,6 +186,8 @@ if test "x$enable_faad2" = xyes; then
 		AC_MSG_ERROR( "*** libfaad_drm build without DRM support ***" )
 	fi
 	AC_DEFINE(USE_FAAD2_LIBRARY, 1, [Define if you want to use the faad2 library])
+else
+	AC_CHECK_LIB(dl,dlopen, , , )
 fi
 
 dnl faac (optional) -------------------------------------------------------------
