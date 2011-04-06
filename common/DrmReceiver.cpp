@@ -75,6 +75,7 @@ CDRMReceiver::~CDRMReceiver()
 {
     delete pSoundInInterface;
     delete pSoundOutInterface;
+    delete pReceiverParam;
 }
 
 void
