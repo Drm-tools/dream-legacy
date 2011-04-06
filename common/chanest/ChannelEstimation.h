@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -79,162 +79,192 @@
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
 {
 public:
-	CChannelEstimation() : eDFTWindowingMethod(DFT_WIN_HAMM),
-	    TypeIntFreq(FWIENER), TypeIntTime(TWIENER),
-		TypeSNREst(SNR_FAC), iLenHistBuff(0), 
-		bInterfConsid(FALSE) {}
-	virtual ~CChannelEstimation() {}
+    CChannelEstimation() : eDFTWindowingMethod(DFT_WIN_HAMM),
+        TypeIntFreq(FWIENER), TypeIntTime(TWIENER),
+        TypeSNREst(SNR_FAC), iLenHistBuff(0),
+        rNoiseEst(0.0), rSignalEst(0.0),
+        rNoiseEstWMMAcc(0.0), rSignalEstWMMAcc(0.0), rNoiseEstWMFAcc(0.0),
+        rSignalEstWMFAcc(0.0), rNoiseEstMERAcc(0.0),iCountMERAcc(0),
+        bInterfConsid(FALSE) {}
 
-	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
-	enum ETypeIntTime {TLINEAR, TWIENER};
-	enum ETypeSNREst {SNR_FAC, SNR_PIL};
+    virtual ~CChannelEstimation() {}
 
-	void GetTransferFunction(CVector<_REAL>& vecrData,
-		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
-					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
-					 _REAL& rPDSEnd);
-	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
+    enum ETypeIntTime {TLINEAR, TWIENER};
+    enum ETypeSNREst {SNR_FAC, SNR_PIL};
 
-	CTimeLinear* GetTimeLinear() {return &TimeLinear;}
-	CTimeWiener* GetTimeWiener() {return &TimeWiener;}
-	CTimeSyncTrack* GetTimeSyncTrack() {return &TimeSyncTrack;}
+    void GetTransferFunction(CVector<_REAL>& vecrData,
+                             CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
+    void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+                     _REAL& rLowerBound, _REAL& rHigherBound,
+                     _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
+                     _REAL& rPDSEnd);
+    void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	/* Set (get) frequency and time interpolation algorithm */
-	void SetFreqInt(ETypeIntFreq eNewTy) {TypeIntFreq = eNewTy;}
-	ETypeIntFreq GetFreqInt() {return TypeIntFreq;}
-	void SetTimeInt(ETypeIntTime eNewTy) {TypeIntTime = eNewTy;
-		SetInitFlag();}
-	ETypeIntTime GetTimeInt() const {return TypeIntTime;}
+    CTimeLinear* GetTimeLinear() {
+        return &TimeLinear;
+    }
+    CTimeWiener* GetTimeWiener() {
+        return &TimeWiener;
+    }
+    CTimeSyncTrack* GetTimeSyncTrack() {
+        return &TimeSyncTrack;
+    }
 
-	void SetIntCons(const _BOOLEAN bNewIntCons) {bInterfConsid = bNewIntCons;}
-	_BOOLEAN GetIntCons() {return bInterfConsid;}
+    /* Set (get) frequency and time interpolation algorithm */
+    void SetFreqInt(ETypeIntFreq eNewTy) {
+        TypeIntFreq = eNewTy;
+    }
+    ETypeIntFreq GetFreqInt() {
+        return TypeIntFreq;
+    }
+    void SetTimeInt(ETypeIntTime eNewTy) {
+        TypeIntTime = eNewTy;
+        SetInitFlag();
+    }
+    ETypeIntTime GetTimeInt() const {
+        return TypeIntTime;
+    }
+
+    void SetIntCons(const _BOOLEAN bNewIntCons) {
+        bInterfConsid = bNewIntCons;
+    }
+    _BOOLEAN GetIntCons() {
+        return bInterfConsid;
+    }
 
 
-	/* Which SNR estimation algorithm */
-	void SetSNREst(ETypeSNREst eNewTy) {TypeSNREst = eNewTy; SetInitFlag();}
-	ETypeSNREst GetSNREst() {return TypeSNREst;}
+    /* Which SNR estimation algorithm */
+    void SetSNREst(ETypeSNREst eNewTy) {
+        TypeSNREst = eNewTy;
+        SetInitFlag();
+    }
+    ETypeSNREst GetSNREst() {
+        return TypeSNREst;
+    }
 
-	void StartSaRaOffAcq() {TimeSyncTrack.StartSaRaOffAcq(); SetInitFlag();}
+    void StartSaRaOffAcq() {
+        TimeSyncTrack.StartSaRaOffAcq();
+        SetInitFlag();
+    }
 
 protected:
-	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM, DFT_WIN_HANN};
-	EDFTWinType				eDFTWindowingMethod;
+    enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM, DFT_WIN_HANN};
+    EDFTWinType				eDFTWindowingMethod;
 
-	int						iNumSymPerFrame;
+    int						iNumSymPerFrame;
 
-	CChanEstTime*			pTimeInt;
+    CChanEstTime*			pTimeInt;
 
-	CTimeLinear				TimeLinear;
-	CTimeWiener				TimeWiener;
+    CTimeLinear				TimeLinear;
+    CTimeWiener				TimeWiener;
 
-	CTimeSyncTrack			TimeSyncTrack;
+    CTimeSyncTrack			TimeSyncTrack;
 
-	ETypeIntFreq			TypeIntFreq;
-	ETypeIntTime			TypeIntTime;
-	ETypeSNREst				TypeSNREst;
+    ETypeIntFreq			TypeIntFreq;
+    ETypeIntTime			TypeIntTime;
+    ETypeSNREst				TypeSNREst;
 
-	int						iNumCarrier;
+    int						iNumCarrier;
 
-	CMatrix<_COMPLEX>		matcHistory;
+    CMatrix<_COMPLEX>		matcHistory;
 
-	int						iLenHistBuff;
+    int						iLenHistBuff;
 
-	int						iScatPilFreqInt; /* Frequency interpolation */
-	int						iScatPilTimeInt; /* Time interpolation */
+    int						iScatPilFreqInt; /* Frequency interpolation */
+    int						iScatPilTimeInt; /* Time interpolation */
 
-	CComplexVector			veccChanEst;
-	CRealVector				vecrSqMagChanEst;
+    CComplexVector			veccChanEst;
+    CRealVector				vecrSqMagChanEst;
 
-	int						iFFTSizeN;
+    int						iFFTSizeN;
 
-	CReal					rGuardSizeFFT;
+    CReal					rGuardSizeFFT;
 
-	CRealVector				vecrDFTWindow;
-	CRealVector				vecrDFTwindowInv;
+    CRealVector				vecrDFTWindow;
+    CRealVector				vecrDFTwindowInv;
 
-	int						iLongLenFreq;
-	CComplexVector			veccPilots;
-	CComplexVector			veccIntPil;
-	CFftPlans				FftPlanShort;
-	CFftPlans				FftPlanLong;
+    int						iLongLenFreq;
+    CComplexVector			veccPilots;
+    CComplexVector			veccIntPil;
+    CFftPlans				FftPlanShort;
+    CFftPlans				FftPlanLong;
 
-	int						iNumIntpFreqPil;
+    int						iNumIntpFreqPil;
 
-	CReal					rLamSNREstFast;
-	CReal					rLamSNREstSlow;
-	CReal					rLamMSCSNREst;
+    CReal					rLamSNREstFast;
+    CReal					rLamSNREstSlow;
+    CReal					rLamMSCSNREst;
 
-	_REAL					rNoiseEst;
-	_REAL					rNoiseEstMSCMER;
-	_REAL					rSignalEst;
-	CVector<_REAL>			vecrNoiseEstMSC;
-	CVector<_REAL>			vecrSigEstMSC;
-	_REAL					rSNREstimate;
-	_REAL					rNoiseEstSum;
-	_REAL					rSignalEstSum;
-	CRealVector				vecrNoiseEstFACSym;
-	CRealVector				vecrSignalEstFACSym;
-	_REAL					rSNRChanEstCorrFact;
-	_REAL					rSNRFACSigCorrFact;
-	_REAL					rSNRTotToPilCorrFact;
-	_REAL					rSNRSysToNomBWCorrFact;
- 
-	/* OPH: Accumulators for calculating the RSCI MER, WMF, and WMM (these are averages, not filtered values) */
-	_REAL					rNoiseEstWMMAcc;
-	_REAL					rSignalEstWMMAcc;
-	_REAL					rNoiseEstWMFAcc;
-	_REAL					rSignalEstWMFAcc;
-	_REAL					rNoiseEstMERAcc;
-	int						iCountMERAcc;
+    _REAL					rNoiseEst;
+    _REAL					rNoiseEstMSCMER;
+    _REAL					rSignalEst;
+    CVector<_REAL>			vecrNoiseEstMSC;
+    CVector<_REAL>			vecrSigEstMSC;
+    _REAL					rSNREstimate;
+    _REAL					rNoiseEstSum;
+    _REAL					rSignalEstSum;
+    CRealVector				vecrNoiseEstFACSym;
+    CRealVector				vecrSignalEstFACSym;
+    _REAL					rSNRChanEstCorrFact;
+    _REAL					rSNRFACSigCorrFact;
+    _REAL					rSNRTotToPilCorrFact;
+    _REAL					rSNRSysToNomBWCorrFact;
 
-	_BOOLEAN				bInterfConsid;
+    /* OPH: Accumulators for calculating the RSCI MER, WMF, and WMM (these are averages, not filtered values) */
+    _REAL					rNoiseEstWMMAcc;
+    _REAL					rSignalEstWMMAcc;
+    _REAL					rNoiseEstWMFAcc;
+    _REAL					rSignalEstWMFAcc;
+    _REAL					rNoiseEstMERAcc;
+    int						iCountMERAcc;
 
-	/* Needed for GetDelay() */
-	_REAL					rLenPDSEst;
-	CShiftRegister<CReal>	vecrDelayHist;
-	int						iLenDelayHist;
+    _BOOLEAN				bInterfConsid;
 
-	int						iStartZeroPadding;
+    /* Needed for GetDelay() */
+    _REAL					rLenPDSEst;
+    CShiftRegister<CReal>	vecrDelayHist;
+    int						iLenDelayHist;
 
-	int						iInitCnt;
-	int						iSNREstIniSigAvCnt;
-	int						iSNREstIniNoiseAvCnt;
-	int						iSNREstInitCnt;
-	_BOOLEAN				bSNRInitPhase;
-	_REAL CalAndBoundSNR(const _REAL rSignalEst, const _REAL rNoiseEst);
+    int						iStartZeroPadding;
 
-	/* OPH: RSCI interference tag calculation */
-	void CalculateRint(CParameter& ReceiverParam);
-	void UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorEx<_COMPLEX>* pvecInputData,
-		CVector<int>& veciMapTab, CVector<_COMPLEX>& veccPilotCells, const int iSymbolCounter);
+    int						iInitCnt;
+    int						iSNREstIniSigAvCnt;
+    int						iSNREstIniNoiseAvCnt;
+    int						iSNREstInitCnt;
+    _BOOLEAN				bSNRInitPhase;
+    _REAL CalAndBoundSNR(const _REAL rSignalEst, const _REAL rNoiseEst);
 
-	CMatrix<_COMPLEX>	matcRSIPilotStore;
-	int iTimeDiffAccuRSI; /* Accumulator for time differences for RSI pilot output */
+    /* OPH: RSCI interference tag calculation */
+    void CalculateRint(CParameter& ReceiverParam);
+    void UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorEx<_COMPLEX>* pvecInputData,
+                             CVector<int>& veciMapTab, CVector<_COMPLEX>& veccPilotCells, const int iSymbolCounter);
 
-	/* Wiener interpolation in frequency direction */
-	void UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
-							  CReal rRatPDSOffs);
+    CMatrix<_COMPLEX>	matcRSIPilotStore;
+    int iTimeDiffAccuRSI; /* Accumulator for time differences for RSI pilot output */
 
-	CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, CReal rSNR, 
-									 CReal rRatPDSLen, CReal rRatPDSOffs,
-									 int iLength);
-	CMatrix<_COMPLEX>		matcFiltFreq;
-	int						iLengthWiener;
-	CVector<int>			veciPilOffTab;
+    /* Wiener interpolation in frequency direction */
+    void UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
+                              CReal rRatPDSOffs);
 
-	int						iDCPos;
-	int						iPilOffset;
-	int						iNumWienerFilt;
-	CComplexMatrix			matcWienerFilter;
+    CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, CReal rSNR,
+                                     CReal rRatPDSLen, CReal rRatPDSOffs,
+                                     int iLength);
+    CMatrix<_COMPLEX>		matcFiltFreq;
+    int						iLengthWiener;
+    CVector<int>			veciPilOffTab;
+
+    int						iDCPos;
+    int						iPilOffset;
+    int						iNumWienerFilt;
+    CComplexMatrix			matcWienerFilter;
 
 #ifdef USE_DD_WIENER_FILT_TIME
-	int						iCurrentFrameID;
+    int						iCurrentFrameID;
 #endif
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 
