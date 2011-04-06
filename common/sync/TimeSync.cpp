@@ -725,6 +725,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 		/* Allocate memory for correlation input buffers */
 		vecrRMCorrBuffer[i].Init(iRMCorrBufSize);
+		vecrRMCorrBuffer[i] = Zeros(iRMCorrBufSize);
 
 		/* Tables for sin and cos function for the desired frequency band */
 		/* First, allocate memory for vector */
@@ -791,8 +792,8 @@ void CTimeSync::StartAcquisition()
 
 	/* Reset the buffers which are storing data for correlation (for robustness
 	   mode detection) */
-	for (int i = 0; i < NUM_ROBUSTNESS_MODES; i++)
-		vecrRMCorrBuffer[i] = Zeros(iRMCorrBufSize);
+	//for (int i = 0; i < NUM_ROBUSTNESS_MODES; i++)
+	//	vecrRMCorrBuffer[i] = Zeros(iRMCorrBufSize);
 
 	/* Reset lambda for averaging the guard-interval correlation results */
 	rLambdaCoAv = (CReal) 1.0;
