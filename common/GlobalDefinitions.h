@@ -58,10 +58,8 @@ using namespace std; /* Because of the library: "complex" */
 
 #endif /* _WIN32 */
 
-/* set sensible defaults for QT2 or QT3 */
-# ifdef USE_QT_GUI
-#  include <qglobal.h>
-# endif
+/* set sensible defaults for QT */
+#include <qglobal.h>
 
 /* Standard definitions */
 #ifndef TRUE

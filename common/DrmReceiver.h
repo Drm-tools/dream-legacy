@@ -439,6 +439,7 @@ protected:
     CHamlib*				pRig;
 
     CPlotManager PlotManager;
+    string			rsiOrigin;
 };
 
 

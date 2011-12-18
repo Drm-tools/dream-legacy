@@ -44,19 +44,17 @@
 
 #include <iostream>
 
-/* Implementation *************************************************************/
+#include <qthread.h>
 #ifdef USE_QT_GUI
 # include <qapplication.h>
-# include <qthread.h>
 # include <qmessagebox.h>
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
+#endif
 #if QT_VERSION >= 0x040000
+# include <QCoreApplication>
 # include <QTranslator>
 #endif
-/******************************************************************************\
-* Using GUI with QT                                                            *
-\******************************************************************************/
 
 class CRx: public QThread
 {
@@ -74,6 +72,7 @@ CRx::run()
     /* it doesn't matter what the GUI does, we want to be normal! */
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 #endif
+    qDebug("Working thread started");
     try
     {
         /* Call receiver main routine */
@@ -86,6 +85,10 @@ CRx::run()
     qDebug("Working thread complete");
 }
 
+#ifdef USE_QT_GUI
+/******************************************************************************\
+* Using GUI with QT                                                            *
+\******************************************************************************/
 int
 main(int argc, char **argv)
 {
@@ -261,7 +264,8 @@ main(int argc, char **argv)
 	{
 		CSettings Settings;
 		Settings.Load(argc, argv);
-		if (Settings.Get("command", "isreceiver", TRUE))
+		string mode = Settings.Get("command", "mode", string("receive"));
+		if (mode == "receive")
 		{
 			CDRMSimulation DRMSimulation;
 			CDRMReceiver DRMReceiver;
@@ -269,12 +273,27 @@ main(int argc, char **argv)
 			DRMSimulation.SimScript();
 			DRMReceiver.LoadSettings(Settings);
 			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
+
+#if QT_VERSION >= 0x040000
+			QCoreApplication a(argc, argv);
+			/* Start working thread */
+			CRx rx(DRMReceiver);
+			rx.start();
+			return a.exec();
+#else
 			DRMReceiver.Start();
+#endif
+
 		}
-		else
+		else if(mode == "transmit")
 		{
 			CDRMTransmitter DRMTransmitter;
 			DRMTransmitter.Start();
+		}
+		else
+		{
+			cerr << Settings.UsageArguments(argv) << endl;
+			exit(0);
 		}
 	}
 	catch(CGenErr GenErr)

@@ -32,11 +32,7 @@
 #include <qfileinfo.h>
 #include <qfile.h>
 #include <qdir.h>
-# if QT_VERSION < 0x040000
-# include <qtextstream.h>
-#else
-# include <q3textstream.h>
-#endif
+#include <qtextstream.h>
 #include <qregexp.h>
 #include <iostream>
 #include <cstdlib>
@@ -1280,10 +1276,11 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
 #endif
     {
 		fileName = epgFilename_etsi(d, sid, 1, bAdvanced).c_str(); // try the other filename convention
-		file.setName(dir + "/" +fileName);
 # if QT_VERSION < 0x040000
+		file.setName(dir + "/" +fileName);
 		if (!file.open (IO_ReadOnly))
 #else
+		file.setFileName(dir + "/" +fileName);
 		if (!file.open (QIODevice::ReadOnly))
 #endif
 		{
@@ -1293,7 +1290,11 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
     vector<_BYTE> vecData;
     vecData.resize (file.size ());
     vecData.resize (file.size ());
+# if QT_VERSION < 0x040000
     file.readBlock ((char *) &vecData.front (), file.size ());
+#else
+    file.read((char *) &vecData.front (), file.size ());
+#endif
     file.close ();
     CEPGDecoder *epg = new CEPGDecoder();
     epg->decode (vecData);
@@ -1366,7 +1367,11 @@ EPG::parseDoc (const QDomDocument & doc)
                     if (e.tagName () == "genre")
                     {
                         QString genre = e.attribute ("href", "");
+#if QT_VERSION < 0x040000
                         int i = genre.findRev (':');
+#else
+                        int i = genre.lastIndexOf(':');
+#endif
                         if (i != -1)
                             genre = genre.mid (i + 1);
                         QString type = e.attribute ("type", "main");
@@ -1388,7 +1393,11 @@ EPG::parseDoc (const QDomDocument & doc)
             QMap<time_t,CProg>::ConstIterator existing = progs.find(start);
             if (existing != progs.end())
             {
+#if QT_VERSION < 0x040000
                 p.augment(existing.data());
+#else
+                p.augment(existing.value());
+#endif
             }
             progs[start] = p;
         }
@@ -1466,11 +1475,7 @@ EPG::saveChannels (const QString & fileName)
         }
         ensemble.appendChild (service);
     }
-# if QT_VERSION < 0x040000
     QTextStream stream (&f);
-#else
-    Q3TextStream stream (&f);
-#endif
     stream << doc.toString ();
     f.close ();
 
@@ -1511,7 +1516,11 @@ EPG::loadChannels (const QString & fileName)
                 {
                     QDomElement s = e.toElement ();
                     if (s.tagName () == "shortName")
+#if QT_VERSION >= 0x040000
+                        name = s.text().toUtf8().constData();
+#else
                         name = s.text().utf8().data();
+#endif
                     if (s.tagName () == "serviceID")
                         sid = s.attribute ("id", "0");
                 }
@@ -1531,7 +1540,11 @@ time_t EPG::parseTime(const QString & time)
     if (time=="")
         return 0; // invalid
     QRegExp q("[-T:+Z]");
+#if QT_VERSION >= 0x040000
+    QStringList sl = time.split(q);
+#else
     QStringList sl = QStringList::split(q, time);
+#endif
 #ifdef _WIN32
     SYSTEMTIME st;
     st.wYear = 1970;

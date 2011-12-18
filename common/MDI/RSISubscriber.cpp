@@ -33,11 +33,7 @@
 #include "RSISubscriber.h"
 #include "../DrmReceiver.h"
 #include "TagPacketGenerator.h"
-#ifdef USE_QT_GUI
-# include "PacketSocketQT.h"
-#else
-# include "PacketSocketNull.h"
-#endif
+#include "PacketSocketQT.h"
 
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
@@ -107,11 +103,7 @@ void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16
 CRSISubscriberSocket::CRSISubscriberSocket(CPacketSink *pSink):CRSISubscriber(pSink),pSocket(NULL)
 ,uIf(0),uAddr(0),uPort(0)
 {
-#ifdef USE_QT_GUI
 	pSocket = new CPacketSocketQT;
-#else
-	pSocket = new CPacketSocketNull;
-#endif
 	pPacketSink = pSocket;
 }
 
@@ -122,9 +114,8 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 
 _BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 {
-#ifdef USE_QT_GUI
 	string d = dest;
-	Q3SocketDevice::Type type = Q3SocketDevice::Datagram;
+	bool udp = true;
 	switch(d[0])
 	{
 		case 'P': case 'p':
@@ -133,19 +124,16 @@ _BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 			break;
 		case 'T': case 't':
 			d.erase(0, 1);
-			type = Q3SocketDevice::Stream;
+			udp = false;
 			break;
 	}
 	delete pSocket;
-	pSocket = new CPacketSocketQT(type);
+	pSocket = new CPacketSocketQT(udp);
 	pPacketSink = pSocket;
-    _BOOLEAN bOk = pSocket->SetDestination(d);
-    if(bOk && type == Q3SocketDevice::Stream)
+	_BOOLEAN bOk = pSocket->SetDestination(d);
+	if(bOk && udp == false)
 		pSocket->SetPacketSink(this);
 	return bOk;
-#else
-	return FALSE;
-#endif
 }
 
 _BOOLEAN CRSISubscriberSocket::GetDestination(string& str)

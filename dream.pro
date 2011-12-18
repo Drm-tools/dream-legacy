@@ -1,20 +1,29 @@
+console {
+    message("console mode")
+    QT -= gui
+    DEFINES -= USE_QT_GUI
+}
+else {
+    DEFINES += USE_QT_GUI
+}
+
 contains(QT_VERSION, ^4\\..*) { 
     message("Qt 4")
-    QT += qt3support \
-        network \
-        xml
+    QT += network xml
     VPATH += common/GUI-QT
-    HEADERS += common/GUI-QT/DRMPlot-qwt6.h
-    SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp
-    unix { 
+    !console {
+      QT += qt3support
+      HEADERS += common/GUI-QT/DRMPlot-qwt6.h
+      SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp
+      unix { 
         exists(/usr/local/qwt-6.0.2-svn)
          { 
             INCLUDEPATH += /usr/local/qwt-6.0.2-svn/include
             LIBS += -L/usr/local/qwt-6.0.2-svn/lib \
                 -lqwt
         }
-    }
-    win32 { 
+      }
+      win32 { 
         exists(libs/qwt6) { 
 	        INCLUDEPATH += libs/qwt6
 	        LIBS += -lqwt6
@@ -23,19 +32,22 @@ contains(QT_VERSION, ^4\\..*) {
 	        INCLUDEPATH += libs/qwt5
 	        LIBS += -lqwt5
 	    }
+      }
     }
 }
 count(QT_VERSION, 0) { 
     message("Qt 3")
     VPATH += common/GUI-QT/qt2
-    HEADERS += common/GUI-QT/DRMPlot.h
-    SOURCES += common/GUI-QT/DRMPlot.cpp
-    LIBS += -lqwt
-    unix { 
+    !console {
+      HEADERS += common/GUI-QT/DRMPlot.h
+      SOURCES += common/GUI-QT/DRMPlot.cpp
+      LIBS += -lqwt
+      unix { 
         INCLUDEPATH += /usr/include/qwt
-    }
-    win32 { 
+      }
+      win32 { 
         INCLUDEPATH += libs/qwt
+      }
     }
 }
 TEMPLATE = app
@@ -47,19 +59,21 @@ CONFIG += qt \
 INCLUDEPATH += common/GUI-QT
 INCLUDEPATH += libs
 LIBS += -Llibs
-FORMS += TransmDlgbase.ui \
+!console {
+  FORMS += TransmDlgbase.ui \
     fdrmdialogbase.ui \
     AnalogDemDlgbase.ui \
     fmdialogbase.ui
-FORMS += AMSSDlgbase.ui \
+  FORMS += AMSSDlgbase.ui \
     systemevalDlgbase.ui \
     MultimediaDlgbase.ui
-FORMS += LiveScheduleDlgbase.ui \
+  FORMS += LiveScheduleDlgbase.ui \
     StationsDlgbase.ui \
     EPGDlgbase.ui
-FORMS += GeneralSettingsDlgbase.ui \
+  FORMS += GeneralSettingsDlgbase.ui \
     MultSettingsDlgbase.ui \
     AboutDlgbase.ui
+}
 macx { 
     OBJECTS_DIR = darwin
     INCLUDEPATH += darwin
@@ -152,7 +166,6 @@ unix {
         HAVE_UNISTD_H
     DEFINES += HAVE_FFTW_H \
         HAVE_RFFTW_H \
-        USE_QT_GUI \
         HAVE_LIBZ
     !macx { 
         MAKEFILE = Makefile
@@ -200,7 +213,6 @@ win32 {
         -lwinmm \
         -lwsock32
     DEFINES += HAVE_SETUPAPI \
-        USE_QT_GUI \
         HAVE_LIBZ
     DEFINES += HAVE_FFTW_H
     DEFINES -= UNICODE
@@ -252,7 +264,7 @@ portaudio {
         common/sound/pa_ringbuffer.c
     LIBS += -lportaudio
 }
-HEADERS += common/GUI-QT/DRMPlot-qwt6.h \
+HEADERS += common/GPSData.h \
     common/AMDemodulation.h \
     common/AMSSDemodulation.h \
     common/audiofilein.h \
@@ -291,21 +303,6 @@ HEADERS += common/GUI-QT/DRMPlot-qwt6.h \
     common/DrmTransmitter.h \
     common/FAC/FAC.h \
     common/GlobalDefinitions.h \
-    common/GPSData.h \
-    common/GPSReceiver.h \
-    common/GUI-QT/AnalogDemDlg.h \
-    common/GUI-QT/DialogUtil.h \
-    common/GUI-QT/EPGDlg.h \
-    common/GUI-QT/fdrmdialog.h \
-    common/GUI-QT/fmdialog.h \
-    common/GUI-QT/GeneralSettingsDlg.h \
-    common/GUI-QT/LiveScheduleDlg.h \
-    common/GUI-QT/MultColorLED.h \
-    common/GUI-QT/MultimediaDlg.h \
-    common/GUI-QT/MultSettingsDlg.h \
-    common/GUI-QT/StationsDlg.h \
-    common/GUI-QT/systemevalDlg.h \
-    common/GUI-QT/TransmDlg.h \
     common/InputResample.h \
     common/interleaver/BlockInterleaver.h \
     common/interleaver/SymbolInterleaver.h \
@@ -379,7 +376,8 @@ HEADERS += common/GUI-QT/DRMPlot-qwt6.h \
     common/util/Utilities.h \
     common/util/Vector.h \
     common/Version.h
-SOURCES += common/AMDemodulation.cpp \
+SOURCES += common/GPSData.cpp \
+    common/AMDemodulation.cpp \
     common/AMSSDemodulation.cpp \
     common/audiofilein.cpp \
     common/chanest/ChanEstTime.cpp \
@@ -413,22 +411,6 @@ SOURCES += common/AMDemodulation.cpp \
     common/DrmSimulation.cpp \
     common/DrmTransmitter.cpp \
     common/FAC/FAC.cpp \
-    common/GPSData.cpp \
-    common/GPSReceiver.cpp \
-    common/GUI-QT/AnalogDemDlg.cpp \
-    common/GUI-QT/DialogUtil.cpp \
-    common/GUI-QT/EPGDlg.cpp \
-    common/GUI-QT/fmdialog.cpp \
-    common/GUI-QT/fdrmdialog.cpp \
-    common/GUI-QT/GeneralSettingsDlg.cpp \
-    common/GUI-QT/LiveScheduleDlg.cpp \
-    common/GUI-QT/main.cpp \
-    common/GUI-QT/MultColorLED.cpp \
-    common/GUI-QT/MultimediaDlg.cpp \
-    common/GUI-QT/MultSettingsDlg.cpp \
-    common/GUI-QT/StationsDlg.cpp \
-    common/GUI-QT/systemevalDlg.cpp \
-    common/GUI-QT/TransmDlg.cpp \
     common/InputResample.cpp \
     common/interleaver/BlockInterleaver.cpp \
     common/interleaver/SymbolInterleaver.cpp \
@@ -488,4 +470,35 @@ SOURCES += common/AMDemodulation.cpp \
     common/util/Reassemble.cpp \
     common/util/Settings.cpp \
     common/util/Utilities.cpp \
-    common/Version.cpp
+    common/Version.cpp \
+    common/GUI-QT/main.cpp
+!console {
+  HEADERS += common/GPSReceiver.h \
+    common/GUI-QT/AnalogDemDlg.h \
+    common/GUI-QT/DialogUtil.h \
+    common/GUI-QT/EPGDlg.h \
+    common/GUI-QT/fdrmdialog.h \
+    common/GUI-QT/fmdialog.h \
+    common/GUI-QT/GeneralSettingsDlg.h \
+    common/GUI-QT/LiveScheduleDlg.h \
+    common/GUI-QT/MultColorLED.h \
+    common/GUI-QT/MultimediaDlg.h \
+    common/GUI-QT/MultSettingsDlg.h \
+    common/GUI-QT/StationsDlg.h \
+    common/GUI-QT/systemevalDlg.h \
+    common/GUI-QT/TransmDlg.h
+  SOURCES += common/GPSReceiver.cpp \
+    common/GUI-QT/AnalogDemDlg.cpp \
+    common/GUI-QT/DialogUtil.cpp \
+    common/GUI-QT/EPGDlg.cpp \
+    common/GUI-QT/fmdialog.cpp \
+    common/GUI-QT/fdrmdialog.cpp \
+    common/GUI-QT/GeneralSettingsDlg.cpp \
+    common/GUI-QT/LiveScheduleDlg.cpp \
+    common/GUI-QT/MultColorLED.cpp \
+    common/GUI-QT/MultimediaDlg.cpp \
+    common/GUI-QT/MultSettingsDlg.cpp \
+    common/GUI-QT/StationsDlg.cpp \
+    common/GUI-QT/systemevalDlg.cpp \
+    common/GUI-QT/TransmDlg.cpp
+}

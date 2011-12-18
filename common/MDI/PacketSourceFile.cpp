@@ -67,13 +67,13 @@ timeKeeper(), last_packet_time(0),
 _BOOLEAN
 CPacketSourceFile::SetOrigin(const string& origin)
 {
+cerr << "Set " << origin << endl;
 	string str = origin;
 	size_t p = str.find_last_of('#');
 	if(p!=string::npos)
 	{
 		wanted_dest_port = atoi(str.substr(p+1).c_str());
 		str = str.substr(0, p);
-		cerr << str << " with port " << wanted_dest_port << endl;
 	}
 	if(str.rfind(".pcap") == str.length()-5)
 	{
@@ -90,7 +90,7 @@ CPacketSourceFile::SetOrigin(const string& origin)
 	if ( pf != NULL)
 	{
 		timeKeeper = QTime::currentTime();
-		QTimer::singleShot(0, this, SLOT(OnDataReceived()));
+		QTimer::singleShot(100, this, SLOT(OnDataReceived()));
 	}
 	return pf != NULL;
 }
@@ -124,6 +124,7 @@ CPacketSourceFile::ResetPacketSink()
 void
 CPacketSourceFile::OnDataReceived ()
 {
+qDebug("CPacketSourceFile::OnDataReceived ()");
 	vector<_BYTE> vecbydata (iMaxPacketSize);
 	vecbydata.resize(0); // in case we don't find anything
 	int interval;
@@ -141,7 +142,6 @@ CPacketSourceFile::OnDataReceived ()
 		 iDelay = 0;
 	QTimer::singleShot(iDelay, this, SLOT(OnDataReceived()));
 	timeKeeper = timeKeeper.addMSecs(interval);
-	cerr << "new data" << endl;
 }
 
 void

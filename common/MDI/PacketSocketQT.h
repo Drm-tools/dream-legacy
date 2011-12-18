@@ -35,12 +35,11 @@
 
 #if QT_VERSION < 0x040000
 # include <qsocketdevice.h>
-# define Q3SocketDevice QSocketDevice
+# include <qsocketnotifier.h>
 #else
-# include <Q3SocketDevice>
-# define UINT32 quint32
+# include <QAbstractSocket>
+# include <QHostAddress>
 #endif
-#include <qsocketnotifier.h>
 #include <qdatetime.h>
 # if QT_VERSION < 0x030000
 #  include <qthread.h>
@@ -61,7 +60,7 @@ class CPacketSocketQT : public QObject, public CPacketSocket
 	Q_OBJECT
 
 public:
-	CPacketSocketQT(Q3SocketDevice::Type type=Q3SocketDevice::Datagram);
+	CPacketSocketQT(bool udp=true);
 	virtual ~CPacketSocketQT();
 	// Set the sink which will receive the packets
 	virtual void SetPacketSink(CPacketSink *pSink);
@@ -77,20 +76,28 @@ public:
 	virtual _BOOLEAN GetDestination(string& str);
 
 private:
+	QStringList parseDest(const string & strNewAddr);
+
 	CPacketSink *pPacketSink;
 
-	QHostAddress				HostAddrOut;
-	int							iHostPortOut;
+	QHostAddress	HostAddrOut;
+	int		iHostPortOut;
 
-	Q3SocketDevice				SocketDevice;
-	QSocketNotifier*			pSocketNotivRead;
-	QSocketNotifier*			pSocketNotivWrite;
-	QMutex						writeLock;
-	vector<_BYTE>				writeBuf;
+#if QT_VERSION < 0x040000
+	QSocketDevice	SocketDevice;
+	QSocketNotifier* pSocketNotivRead;
+	QSocketNotifier* pSocketNotivWrite;
+#else
+	QAbstractSocket* pSocket;
+#endif
+	QMutex		writeLock;
+	vector<_BYTE>	writeBuf;
 
 public slots:
 	void OnDataReceived();
+#if QT_VERSION < 0x040000
 	void OnWritePossible();
+#endif
 
 };
 

@@ -64,7 +64,7 @@ CDRMReceiver::CDRMReceiver():
         iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
         rInitResampleOffset((_REAL) 0.0),
         iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-        bReadFromFile(FALSE), time_keeper(0),pRig(NULL),PlotManager()
+        bReadFromFile(FALSE), time_keeper(0),pRig(NULL),PlotManager(),rsiOrigin("")
 {
     pReceiverParam = new CParameter(this);
     downstreamRSCI.SetReceiver(this);
@@ -168,6 +168,7 @@ CDRMReceiver::Run()
     {
         if (bDoInitRun == FALSE)	/* don't wait for a packet in Init mode */
         {
+cerr << "wait RSCI Frame" << endl;
             RSIPacketBuf.Clear();
             upstreamRSCI.ReadData(ReceiverParam, RSIPacketBuf);
             if (RSIPacketBuf.GetFillLevel() > 0)
@@ -176,6 +177,7 @@ CDRMReceiver::Run()
                 DecodeRSIMDI.ProcessData(ReceiverParam, RSIPacketBuf, FACDecBuf, SDCDecBuf, MSCDecBuf);
                 PlotManager.UpdateParamHistoriesRSIIn();
                 bFrameToSend = TRUE;
+cerr << "Got RSCI Frame" << endl;
             }
             else
             {
@@ -775,6 +777,10 @@ CDRMReceiver::InitReceiverMode()
 void
 CDRMReceiver::Start()
 {
+    // set this here to make sure we are in a QThread
+    if(rsiOrigin != "") 
+        upstreamRSCI.SetOrigin(rsiOrigin);
+
     /* Set run flag so that the thread can work */
     pReceiverParam->eRunState = CParameter::RUNNING;
 
@@ -1334,7 +1340,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
     str = s.Get("command", "rsiin");
     if (str != "")
     {
-        upstreamRSCI.SetOrigin(str);
+	rsiOrigin = str;
     }
     else
     {

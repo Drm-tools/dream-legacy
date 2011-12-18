@@ -44,13 +44,9 @@
 
 #include "MDIRSCI.h"
 #include "../DrmReceiver.h"
-#ifdef USE_QT_GUI
-#  include "PacketSocketQT.h"
-#  include "PacketSourceFile.h"
-#  include <qhostaddress.h>
-#else
-# include "PacketSocketNull.h"
-#endif
+#include "PacketSocketQT.h"
+#include "PacketSourceFile.h"
+#include <qhostaddress.h>
 #include <sstream>
 #include <iomanip>
 
@@ -538,11 +534,7 @@ _BOOLEAN CUpstreamDI::SetOrigin(const string& str)
 	strOrigin = str;
 
 	// try a socket
-#ifdef USE_QT_GUI
 	source = new CPacketSocketQT;
-#else
-	source = new CPacketSocketNull;
-#endif
 
 	// Delegate to socket
 	_BOOLEAN bOK = source->SetOrigin(str);
@@ -552,10 +544,8 @@ _BOOLEAN CUpstreamDI::SetOrigin(const string& str)
 		// try a file
 		delete source;
 		source = NULL;
-#ifdef USE_QT_GUI
 		source = new CPacketSourceFile;
 		bOK = source->SetOrigin(str);
-#endif
 	}
 	if (bOK)
 	{
