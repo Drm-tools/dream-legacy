@@ -28,6 +28,40 @@
 
 #include "AudioSourceDecoder.h"
 #include <iostream>
+#include <string>
+#include <algorithm>
+
+/**
+ * C++ version 0.4 std::string style "itoa":
+ * Contributions from Stuart Lowe, Ray-Yuan Sheu,
+ * Rodrigo de Salvo Braz, Luc Gallant, John Maloney
+ * and Brian Hunt
+ */
+std::string itoa(int value, int base) {
+
+    std::string buf;
+
+    // check that the base if valid
+    if (base < 2 || base > 16) return buf;
+
+    enum { kMaxDigits = 35 };
+    buf.reserve( kMaxDigits ); // Pre-allocate enough space.
+
+    int quotient = value;
+
+    // Translating number to string with base:
+    do {
+        buf += "0123456789abcdef"[ std::abs( quotient % base ) ];
+        quotient /= base;
+    } while ( quotient );
+
+    // Append the negative sign
+    if ( value < 0) buf += '-';
+
+    std::reverse( buf.begin(), buf.end() );
+    return buf;
+}
+
 
 // dummy AAC Decoder implementation if dll not found
 
@@ -48,6 +82,137 @@ void* NEAACDECAPI NeAACDecDecodeDummy(NeAACDecHandle,NeAACDecFrameInfo* hInfo, u
 }
 
 /* Implementation *************************************************************/
+
+string
+CAudioSourceDecoder::AACFileName(CParameter & ReceiverParam)
+{
+    // Store AAC-data in file
+    string strAACTestFileName = "test/aac_";
+    ReceiverParam.Lock();
+    if (ReceiverParam.
+            Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
+            eAudioSamplRate == CAudioParam::AS_12KHZ)
+    {
+        strAACTestFileName += "12kHz_";
+    }
+    else
+        strAACTestFileName += "24kHz_";
+
+    switch (ReceiverParam.
+            Service[ReceiverParam.GetCurSelAudioService()].
+            AudioParam.eAudioMode)
+    {
+    case CAudioParam::AM_MONO:
+        strAACTestFileName += "mono";
+        break;
+
+    case CAudioParam::AM_P_STEREO:
+        strAACTestFileName += "pstereo";
+        break;
+
+    case CAudioParam::AM_STEREO:
+        strAACTestFileName += "stereo";
+        break;
+    }
+
+    if (ReceiverParam.
+            Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
+            eSBRFlag == CAudioParam::SB_USED)
+    {
+        strAACTestFileName += "_sbr";
+    }
+    ReceiverParam.Unlock();
+    strAACTestFileName += ".dat";
+
+    return strAACTestFileName;
+}
+
+string
+CAudioSourceDecoder::CELPFileName(CParameter & ReceiverParam)
+{
+    string strCELPTestFileName = "test/celp_";
+    ReceiverParam.Lock();
+    if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+            AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
+    {
+        strCELPTestFileName += "8kHz_";
+        strCELPTestFileName +=
+            itoa(iTableCELP8kHzUEPParams
+                 [ReceiverParam.
+                  Service[ReceiverParam.GetCurSelAudioService()].
+                  AudioParam.iCELPIndex][0], 10);
+    }
+    else
+    {
+        strCELPTestFileName += "16kHz_";
+        strCELPTestFileName +=
+            itoa(iTableCELP16kHzUEPParams
+                 [ReceiverParam.
+                  Service[ReceiverParam.GetCurSelAudioService()].
+                  AudioParam.iCELPIndex][0], 10);
+    }
+    strCELPTestFileName += "bps";
+
+    if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+            AudioParam.eSBRFlag == CAudioParam::SB_USED)
+    {
+        strCELPTestFileName += "_sbr";
+    }
+    strCELPTestFileName += ".dat";
+    ReceiverParam.Unlock();
+
+    return strCELPTestFileName;
+}
+
+string
+CAudioSourceDecoder::HVXCFileName(CParameter & ReceiverParam)
+{
+    ReceiverParam.Lock();
+
+    string strHVXCTestFileName = "test/hvxc";
+    if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+            AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
+    {
+        strHVXCTestFileName += "_8kHz";
+    }
+    else
+    {
+        strHVXCTestFileName += "_unknown";
+    }
+
+    if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+            AudioParam.eHVXCRate == CAudioParam::HR_2_KBIT)
+    {
+        strHVXCTestFileName += "_2kbps";
+    }
+    else if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+             AudioParam.eHVXCRate == CAudioParam::HR_4_KBIT)
+    {
+        strHVXCTestFileName += "4kbps";
+    }
+    else
+    {
+        strHVXCTestFileName += "unknown";
+    }
+
+    if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+            AudioParam.bHVXCCRC)
+    {
+        strHVXCTestFileName += "_crc";
+    }
+
+    if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+            AudioParam.eSBRFlag == CAudioParam::SB_USED)
+    {
+        strHVXCTestFileName += "_sbr";
+    }
+    strHVXCTestFileName += ".dat";
+
+    ReceiverParam.Unlock();
+
+    return strHVXCTestFileName;
+}
+
 void
 CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {
@@ -188,6 +353,17 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
                 celp_frame[i].Enqueue((*pvecInputData).Separate(1), 1);
         }
     }
+    else if (eAudioCoding == CAudioParam::AC_HVXC)
+    {
+        for (i = 0; i < iNumAudioFrames; i++)
+        {
+            hvxc_frame[i].ResetBitAccess();
+
+            for (j = 0; j < iNumHvxcBits; j++)
+                hvxc_frame[i].Enqueue((*pvecInputData).Separate(1), 1);
+        }
+    }
+
 
     /* Audio decoding ******************************************************** */
     /* Init output block size to zero, this variable is also used for
@@ -208,50 +384,13 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
                 for (i = 0; i < int(audio_frame[j].size()); i++)
                     vecbyPrepAudioFrame[i + 1] = audio_frame[j][i];
 
-#if 0
-// Store AAC-data in file
-                string strAACTestFileName = "test/aac_";
-                ReceiverParam.Lock();
-                if (ReceiverParam.
-                        Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
-                        eAudioSamplRate == CAudioParam::AS_12KHZ)
+                if(bWriteToFile)
                 {
-                    strAACTestFileName += "12kHz_";
+                    int iNewFrL = audio_frame[j].size() + 1;
+                    fwrite((void *) &iNewFrL, size_t(4), size_t(1), pFile);	// frame length
+                    fwrite((void *) &vecbyPrepAudioFrame[0], size_t(1), size_t(iNewFrL), pFile);	// data
+                    fflush(pFile);
                 }
-                else
-                    strAACTestFileName += "24kHz_";
-
-                switch (ReceiverParam.
-                        Service[ReceiverParam.GetCurSelAudioService()].
-                        AudioParam.eAudioMode)
-                {
-                case CAudioParam::AM_MONO:
-                    strAACTestFileName += "mono";
-                    break;
-
-                case CAudioParam::AM_P_STEREO:
-                    strAACTestFileName += "pstereo";
-                    break;
-
-                case CAudioParam::AM_STEREO:
-                    strAACTestFileName += "stereo";
-                    break;
-                }
-
-                if (ReceiverParam.
-                        Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
-                        eSBRFlag == CAudioParam::SB_USED)
-                {
-                    strAACTestFileName += "_sbr";
-                }
-                ReceiverParam.Unlock();
-                strAACTestFileName += ".dat";
-                static FILE *pFile2 = fopen(strAACTestFileName.c_str(), "wb");
-                int iNewFrL = veciFrameLength[j] + 1;
-                fwrite((void *) &iNewFrL, size_t(4), size_t(1), pFile2);	// frame length
-                fwrite((void *) &vecbyPrepAudioFrame[0], size_t(1), size_t(iNewFrL), pFile2);	// data
-                fflush(pFile2);
-#endif
 
                 /* Call decoder routine */
                 psDecOutSampleBuf = (short *) NeAACDecDecode(HandleAACDecoder,
@@ -345,56 +484,54 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
             ReceiverParam.vecbiAudioFrameStatus.Add(bCurBlockOK == TRUE ? 0 : 1);
             ReceiverParam.Unlock();
 
-#if 0
-// Store CELP-data in file
-            char cDummy[200];
-            string strCELPTestFileName = "test/celp_";
-            ReceiverParam.Lock();
-            if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
-                    AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
-            {
-                strCELPTestFileName += "8kHz_";
-                strCELPTestFileName +=
-                    _itoa(iTableCELP8kHzUEPParams
-                          [ReceiverParam.
-                           Service[ReceiverParam.GetCurSelAudioService()].
-                           AudioParam.iCELPIndex][0], cDummy, 10);
-            }
-            else
-            {
-                strCELPTestFileName += "16kHz_";
-                strCELPTestFileName +=
-                    _itoa(iTableCELP16kHzUEPParams
-                          [ReceiverParam.
-                           Service[ReceiverParam.GetCurSelAudioService()].
-                           AudioParam.iCELPIndex][0], cDummy, 10);
-            }
-            strCELPTestFileName += "bps";
-
-            if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
-                    AudioParam.eSBRFlag == CAudioParam::SB_USED)
-            {
-                strCELPTestFileName += "_sbr";
-            }
-            strCELPTestFileName += ".dat";
-            ReceiverParam.Unlock();
-
-            static FILE *pFile2 = fopen(strCELPTestFileName.c_str(), "wb");
             int iTotNumBits =
                 iNumHigherProtectedBits + iNumLowerProtectedBits;
-            int iNewFrL = (int) Ceil((CReal) iTotNumBits / 8);
-            fwrite((void *) &iNewFrL, size_t(4), size_t(1), pFile2);	// frame length
-            celp_frame[j].ResetBitAccess();
-            for (i = 0; i < iNewFrL; i++)
+            if(bWriteToFile)
             {
-                int iNumBits = Min(iTotNumBits - i * 8, 8);
-                _BYTE bCurVal = (_BYTE) celp_frame[j].Separate(iNumBits);
-                fwrite((void *) &bCurVal, size_t(1), size_t(1), pFile2);	// data
+                int iNewFrL = (int) Ceil((CReal) iTotNumBits / 8);
+                fwrite((void *) &iNewFrL, size_t(4), size_t(1), pFile);	// frame length
+                celp_frame[j].ResetBitAccess();
+                for (i = 0; i < iNewFrL; i++)
+                {
+                    int iNumBits = Min(iTotNumBits - i * 8, 8);
+                    _BYTE bCurVal = (_BYTE) celp_frame[j].Separate(iNumBits);
+                    fwrite((void *) &bCurVal, size_t(1), size_t(1), pFile);	// data
+                }
+                fflush(pFile);
             }
-            fflush(pFile2);
-#endif
 
 #ifdef USE_CELP_DECODER
+
+            /* Write zeros in current output buffer since we do not have a decoder */
+            for (i = 0; i < iResOutBlockSize; i++)
+            {
+                vecTempResBufOutCurLeft[i] = (_REAL) 0.0;
+                vecTempResBufOutCurRight[i] = (_REAL) 0.0;
+            }
+
+#endif
+
+        }
+        else if (eAudioCoding == CAudioParam::AC_HVXC)
+        {
+
+            bCurBlockOK = TRUE; /* CRC always ignored */
+
+            if(bWriteToFile)
+            {
+                int iNewFrL = (int) Ceil((CReal) iNumHvxcBits / 8);
+                fwrite((void *) &iNewFrL, size_t(4), size_t(1), pFile);	// frame length
+                hvxc_frame[j].ResetBitAccess();
+                for (i = 0; i < iNewFrL; i++)
+                {
+                    int iNumBits = Min(iNumHvxcBits - i * 8, 8);
+                    _BYTE bCurVal = (_BYTE) hvxc_frame[j].Separate(iNumBits);
+                    fwrite((void *) &bCurVal, size_t(1), size_t(1), pFile);	// data
+                }
+                fflush(pFile);
+            }
+
+#ifdef USE_HVXC_DECODER
 
             /* Write zeros in current output buffer since we do not have a decoder */
             for (i = 0; i < iResOutBlockSize; i++)
@@ -563,6 +700,11 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
     /* Decoder MUST be initialized at least once, therefore do it here in the
        constructor with arbitrary values to be sure that this is satisfied */
     NeAACDecInitDRM(&HandleAACDecoder, 24000, DRMCH_MONO);
+
+#ifdef USE_HVXC_DECODER
+    canDecodeHVXC = true;
+#endif
+
 
     /*
     	Since we use the exception mechanism in this init routine, the sequence of
@@ -756,6 +898,14 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
             /* Init AAC-decoder */
             NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate,
                             (unsigned char) iDRMchanMode);
+
+            if(bWriteToFile)
+            {
+                string fn = AACFileName(ReceiverParam);
+                if(pFile)
+                    fclose(pFile);
+                pFile = fopen(fn.c_str(), "wb");
+            }
         }
         else if (eAudioCoding == CAudioParam::AC_CELP)
         {
@@ -844,12 +994,73 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 // TEST
             iLenDecOutPerChan = 0;
 
+
 #ifdef USE_CELP_DECODER
 
 // TODO put decoder initialization here
+            bWriteToFile = TRUE;
+            if(bWriteToFile)
+            {
+                string fn = CELPFileName(ReceiverParam);
+                if(pFile)
+                    fclose(pFile);
+                pFile = fopen(fn.c_str(), "wb");
+            }
 
 #else
             /* No CELP decoder available */
+            throw CInitErr(ET_AUDDECODER);
+#endif
+        }
+        else if (eAudioCoding == CAudioParam::AC_HVXC)
+        {
+            iAudioSampleRate = 8000;
+            iNumAudioFrames = 400 / 20;
+
+            iLenDecOutPerChan = 0;
+
+            iNumHvxcBits = 0;
+            if (ReceiverParam.Service[iCurSelServ].AudioParam.
+                    eHVXCRate == CAudioParam::HR_2_KBIT)
+            {
+                iNumHvxcBits = 40;
+                if (ReceiverParam.Service[iCurSelServ].AudioParam.
+                        bHVXCCRC)
+                {
+                    iNumHvxcBits += 8;
+                }
+            }
+            else if (ReceiverParam.Service[iCurSelServ].AudioParam.
+                     eHVXCRate == CAudioParam::HR_4_KBIT)
+            {
+                iNumHvxcBits = 80;
+                if (ReceiverParam.Service[iCurSelServ].AudioParam.
+                        bHVXCCRC)
+                {
+                    iNumHvxcBits += 13;
+                }
+            }
+
+            if ( ! iNumHvxcBits ) {
+                throw CInitErr(ET_AUDDECODER);
+            }
+
+            hvxc_frame.Init(iNumAudioFrames, iNumHvxcBits);
+
+#ifdef USE_HVXC_DECODER
+
+// TODO put decoder initialization here
+            bWriteToFile = TRUE;
+            if(bWriteToFile)
+            {
+                string fn = HVXCFileName(ReceiverParam);
+                if(pFile)
+                    fclose(pFile);
+                pFile = fopen(fn.c_str(), "wb");
+            }
+
+#else
+            /* No HVXC decoder available */
             throw CInitErr(ET_AUDDECODER);
 #endif
         }
@@ -943,11 +1154,12 @@ CAudioSourceDecoder::GetNumCorDecAudio()
 }
 
 CAudioSourceDecoder::CAudioSourceDecoder()
-    :	bUseReverbEffect(TRUE), AudioRev((CReal) 1.0 /* seconds delay */ ),
+    :	bWriteToFile(FALSE), bUseReverbEffect(TRUE), AudioRev((CReal) 1.0 /* seconds delay */ ),
 #ifndef USE_FAAD2_LIBRARY
-    NeAACDecOpen (NULL), NeAACDecInitDRM(NULL), NeAACDecClose(NULL), NeAACDecDecode(NULL) ,
+        NeAACDecOpen (NULL), NeAACDecInitDRM(NULL), NeAACDecClose(NULL), NeAACDecDecode(NULL) ,
 #endif
-        canDecodeAAC(false),canDecodeCELP(false),canDecodeHVXC(false)
+        canDecodeAAC(false),canDecodeCELP(false),canDecodeHVXC(false),
+        pFile(NULL)
 {
     cerr << "looking for FAAD2" << endl;
 #ifdef USE_FAAD2_LIBRARY

@@ -46,6 +46,7 @@
 // TEST -> for now only use CRC calculation
 #define USE_CELP_DECODER
 
+#define USE_HVXC_DECODER
 
 
 /* Elements of table for UEP parameters for CELP:
@@ -144,6 +145,8 @@ public:
         return bUseReverbEffect;
     }
 
+    _BOOLEAN bWriteToFile;
+
 protected:
     enum EInitErr {ET_ALL, ET_AUDDECODER}; /* ET: Error type */
     class CInitErr
@@ -206,6 +209,10 @@ protected:
     NeAACDecClose_t *NeAACDecClose;
     NeAACDecDecode_t *NeAACDecDecode;
 #endif
+    /* HVXC decoding */
+    CMatrix<_BINARY> hvxc_frame;
+    int iNumHvxcBits;
+
     /* CELP decoding */
     CMatrix<_BINARY> celp_frame;
     CVector<_BYTE> celp_crc_bits;
@@ -219,12 +226,16 @@ protected:
     bool canDecodeCELP;
     bool canDecodeHVXC;
 
+    FILE *pFile;
+
 #ifdef USE_CELP_DECODER
     /* TODO put here decoder specific things */
 #endif
     virtual void InitInternal(CParameter& ReceiverParam);
     virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    string AACFileName(CParameter&);
+    string CELPFileName(CParameter&);
+    string HVXCFileName(CParameter&);
 };
-
 
 #endif // !defined(AUIDOSOURCEDECODER_H__3B0BA660_CABB2B_23E7A0D31912__INCLUDED_)
