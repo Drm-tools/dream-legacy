@@ -35,12 +35,19 @@
 #include<map>
 
 #include <qthread.h>
-#include "ui_AboutDlgbase.h"
-#include <QDialog>
-#include <QMenu>
-#include <QAction>
-#include <QSignalMapper>
-#include <QActionGroup>
+#if QT_VERSION < 0x040000
+# include <qaction.h>
+# include <qpopupmenu.h>
+# include "AboutDlgbase.h"
+# define QMenu QPopupMenu
+#else
+# include "ui_AboutDlgbase.h"
+# include <QDialog>
+# include <QMenu>
+# include <QSignalMapper>
+# include <QAction>
+# include <QActionGroup>
+#endif
 
 class CRig;
 typedef int rig_model_t;
@@ -116,7 +123,17 @@ public:
 protected:
 	CSelectionInterface*	pSoundInIF;
 	CSelectionInterface*	pSoundOutIF;
+
+#if QT_VERSION >= 0x040000
 	QSignalMapper* Init(const QString& text, CSelectionInterface* intf);
+#else
+        vector<string>          vecSoundInNames;
+        vector<string>          vecSoundOutNames;
+        int                     iNumSoundInDev;
+        int                     iNumSoundOutDev;
+        QPopupMenu*             pSoundInMenu;
+        QPopupMenu*             pSoundOutMenu;
+#endif
 
 public slots:
 	void OnSoundInDevice(int id);

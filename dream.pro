@@ -45,7 +45,7 @@ count(QT_VERSION, 0) {
       FORMS += fdrmdialogbase.ui fmdialogbase.ui AnalogDemDlgbase.ui
       LIBS += -lqwt
       unix { 
-        INCLUDEPATH += /usr/include/qwt
+        INCLUDEPATH += /usr/include/qwt-4.2.0
       }
       win32 { 
         INCLUDEPATH += libs/qwt

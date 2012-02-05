@@ -127,9 +127,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
     /* Now tell the layout about the menu */
     AnalogDemDlgBaseLayout->setMenuBar(pMenu);
+
+    MainPlot->SetRecObj(&DRMReceiver);
 #endif
-
-
 
     SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
     SliderBandwidth->setTickmarks(QSlider::Both);

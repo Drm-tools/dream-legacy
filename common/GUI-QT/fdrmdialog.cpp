@@ -55,7 +55,7 @@ inline QString str2qstr(const string& s) {
 FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
                        QWidget* parent, const char* name, bool modal, Qt::WFlags f)
     :
-    DRMBase(parent, name, modal, f),
+    FDRMDialogBase(parent, name, modal, f),
     DRMReceiver(NDRMR),Settings(NSettings),Timer(),serviceLabels(4)
 {
     /* recover window size and position */
@@ -88,7 +88,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     /* Evaluation window */
     pSysEvalDlg = new systemevalDlg(DRMReceiver, rig, Settings, this, "", FALSE, Qt::WStyle_MinMax);
-    pSysEvalDlg->setWindowTitle(tr("System Evaluation"));
+#if QT_VERSION < 0x040000
+        SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
+#else
+        pSysEvalDlg->setWindowTitle(tr("System Evaluation"));
+#endif
     /* Analog demodulation window */
     pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", Qt::WStyle_MinMax);
 
@@ -105,6 +109,73 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pMultSettingsDlg = new MultSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
     SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
 
+#if QT_VERSION < 0x040000
+        /* Set Menu ***************************************************************/
+        /* View menu ------------------------------------------------------------ */
+        Q3PopupMenu* EvalWinMenu = new Q3PopupMenu(this);
+        CHECK_PTR(EvalWinMenu);
+        EvalWinMenu->insertItem(tr("&Evaluation Dialog..."), pSysEvalDlg,
+                SLOT(show()), Qt::CTRL+Qt::Key_E, 0);
+        EvalWinMenu->insertItem(tr("M&ultimedia Dialog..."), pMultiMediaDlg,
+                SLOT(show()), Qt::CTRL+Qt::Key_U, 1);
+        EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
+                SLOT(OnViewStationsDlg()), Qt::CTRL+Qt::Key_T, 2);
+        EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), pLiveScheduleDlg,
+                SLOT(show()), Qt::CTRL+Qt::Key_L, 3);
+        EvalWinMenu->insertItem(tr("&Programme Guide..."), pEPGDlg,
+                SLOT(show()), Qt::CTRL+Qt::Key_P, 4);
+        EvalWinMenu->insertSeparator();
+        EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q, 5);
+
+        /* Settings menu  ------------------------------------------------------- */
+        pSettingsMenu = new Q3PopupMenu(this);
+        CHECK_PTR(pSettingsMenu);
+        pSettingsMenu->insertItem(tr("&Sound Card Selection"),
+                new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(),
+                DRMReceiver.GetSoundOutInterface(), this));
+
+        pSettingsMenu->insertItem(tr("&AM (analog)"), this,
+                SLOT(OnSwitchToAM()), Qt::CTRL+Qt::Key_A);
+        pSettingsMenu->insertItem(tr("&FM (analog)"), this,
+                SLOT(OnSwitchToFM()), Qt::CTRL+Qt::Key_F);
+        pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
+                SLOT(OnNewAcquisition()), Qt::CTRL+Qt::Key_D);
+        pSettingsMenu->insertSeparator();
+        pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
+                SLOT(OnMenuSetDisplayColor()));
+        /* Plot style settings */
+        pPlotStyleMenu = new Q3PopupMenu(this);
+        pPlotStyleMenu->insertItem(tr("&Blue / White"), this,
+                SLOT(OnMenuPlotStyle(int)), 0, 0);
+        pPlotStyleMenu->insertItem(tr("&Green / Black"), this,
+                SLOT(OnMenuPlotStyle(int)), 0, 1);
+        pPlotStyleMenu->insertItem(tr("B&lack / Grey"), this,
+                SLOT(OnMenuPlotStyle(int)), 0, 2);
+        pSettingsMenu->insertItem(tr("&Plot Style"), pPlotStyleMenu);
+
+        /* Set check */
+        pPlotStyleMenu->setItemChecked(Settings.Get("System Evaluation Dialog", "plotstyle", 0), TRUE);
+
+        /* multimedia settings */
+        pSettingsMenu->insertSeparator();
+        pSettingsMenu->insertItem(tr("&Multimedia settings..."), pMultSettingsDlg,
+                SLOT(show()));
+
+        pSettingsMenu->insertItem(tr("&General settings..."), pGeneralSettingsDlg,
+                SLOT(show()));
+
+        /* Main menu bar -------------------------------------------------------- */
+        pMenu = new QMenuBar(this);
+        CHECK_PTR(pMenu);
+        pMenu->insertItem(tr("&View"), EvalWinMenu);
+        pMenu->insertItem(tr("&Settings"), pSettingsMenu);
+        pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
+        pMenu->setSeparator(QMenuBar::InWindowsStyle);
+
+        /* Now tell the layout about the menu */
+        FDRMDialogBaseLayout->setMenuBar(pMenu);
+
+#else
     connect(action_Evaluation_Dialog, SIGNAL(triggered()), pSysEvalDlg, SLOT(show()));
     connect(action_Multimedia_Dialog, SIGNAL(triggered()), pMultiMediaDlg, SLOT(show()));
     connect(action_Stations_Dialog, SIGNAL(triggered()), this, SLOT(OnViewStationsDlg()));
@@ -144,6 +215,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     }
 
     menubar->addMenu(new CDreamHelpMenu(this));
+#endif
 
     /* Digi controls */
     /* Set display color */
@@ -151,7 +223,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     /* Init progress bar for input signal level */
     ProgrInputLevel->setRange(-50.0, 0.0);
-    ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
+#if QT_VERSION < 0x040000
+        ProgrInputLevel->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
+#else
+        ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
+#endif
     ProgrInputLevel->setAlarmLevel(-12.5);
     QBrush fillBrush(QColor(0, 190, 0));
     ProgrInputLevel->setFillBrush(fillBrush);

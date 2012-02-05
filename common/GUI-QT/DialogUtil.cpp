@@ -230,10 +230,17 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QMenu(parent)
 {
     /* Standard help menu consists of about and what's this help */
+#if QT_VERSION < 0x040000
+        insertItem(tr("What's &This"), this ,
+                SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
+        insertSeparator();
+        insertItem(tr("&About..."), this, SLOT(OnHelpAbout()));
+#else
     setTitle("?");
     addAction(tr("What's This"), this , SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
     addSeparator();
     addAction(tr("About..."), this, SLOT(OnHelpAbout()));
+#endif
 }
 
 void CDreamHelpMenu::OnHelpWhatsThis()
@@ -241,6 +248,7 @@ void CDreamHelpMenu::OnHelpWhatsThis()
     QWhatsThis::enterWhatsThisMode();
 }
 
+#if QT_VERSION >= 0x040000
 QSignalMapper* CSoundCardSelMenu::Init(const QString& text, CSelectionInterface* intf)
 {
     QMenu* menu = addMenu(text);
@@ -265,15 +273,60 @@ QSignalMapper* CSoundCardSelMenu::Init(const QString& text, CSelectionInterface*
     }
     return map;
 }
+#endif
 
 /* Sound card selection menu ------------------------------------------------ */
 CSoundCardSelMenu::CSoundCardSelMenu(
     CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
     QMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
 {
+#if QT_VERSION < 0x040000
+        pSoundInMenu = new QPopupMenu(parent);
+        CHECK_PTR(pSoundInMenu);
+        pSoundOutMenu = new QPopupMenu(parent);
+        CHECK_PTR(pSoundOutMenu);
+        int i;
+
+        /* Get sound device names */
+        pSoundInIF->Enumerate(vecSoundInNames);
+        iNumSoundInDev = vecSoundInNames.size();
+        for (i = 0; i < iNumSoundInDev; i++)
+        {
+                QString name(vecSoundInNames[i].c_str());
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+                if(name.find("blaster", 0, FALSE)>=0)
+                        name += " (has problems on some platforms)";
+#endif
+                pSoundInMenu->insertItem(name, this, SLOT(OnSoundInDevice(int)), 0, i);
+        }
+
+        pSoundOutIF->Enumerate(vecSoundOutNames);
+        iNumSoundOutDev = vecSoundOutNames.size();
+        for (i = 0; i < iNumSoundOutDev; i++)
+        {
+                pSoundOutMenu->insertItem(QString(vecSoundOutNames[i].c_str()), this,
+                        SLOT(OnSoundOutDevice(int)), 0, i);
+        }
+
+        /* Set default device. If no valid device was selected, select
+ *            "Wave mapper" */
+        int iDefaultInDev = pSoundInIF->GetDev();
+        if ((iDefaultInDev > iNumSoundInDev) || (iDefaultInDev < 0))
+                iDefaultInDev = iNumSoundInDev;
+        int iDefaultOutDev = pSoundOutIF->GetDev();
+        if ((iDefaultOutDev > iNumSoundOutDev) || (iDefaultOutDev < 0))
+                iDefaultOutDev = iNumSoundOutDev;
+
+        pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
+        pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
+
+        insertItem(tr("Sound &In"), pSoundInMenu);
+        insertItem(tr("Sound &Out"), pSoundOutMenu);
+#else
     setTitle("Sound Card Selection");
     connect(Init("Sound In", pSoundInIF), SIGNAL(mapped(int)), this, SLOT(OnSoundInDevice(int)));
     connect(Init("Sound Out", pSoundOutIF), SIGNAL(mapped(int)), this, SLOT(OnSoundOutDevice(int)));
+#endif
 }
 
 void CSoundCardSelMenu::OnSoundInDevice(int id)

@@ -62,6 +62,45 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+#if QT_VERSION < 0x040000
+        /* Set Menu ***************************************************************/
+        /* View menu ------------------------------------------------------------ */
+        Q3PopupMenu* ViewMenu = new Q3PopupMenu(this);
+        CHECK_PTR(ViewMenu);
+        ViewMenu->insertItem(tr("&Tune"), this, SLOT(OnTune()), Qt::CTRL+Qt::Key_T);
+        ViewMenu->insertSeparator();
+        ViewMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q, 5);
+
+        /* Settings menu  ------------------------------------------------------- */
+        pSettingsMenu = new Q3PopupMenu(this);
+        CHECK_PTR(pSettingsMenu);
+        pSettingsMenu->insertItem(tr("&Sound Card Selection"),
+                new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(),
+                DRMReceiver.GetSoundOutInterface(), this));
+
+        pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
+                SLOT(OnSwitchToDRM()), Qt::CTRL+Qt::Key_D);
+        pSettingsMenu->insertItem(tr("&AM (analog)"), this,
+                SLOT(OnSwitchToAM()), Qt::CTRL+Qt::Key_A);
+        pSettingsMenu->insertSeparator();
+
+        /* Remote menu  --------------------------------------------------------- */
+        RemoteMenu* pRemoteMenu = new RemoteMenu(this, rig);
+        pSettingsMenu->insertItem(tr("Set &Rig..."), pRemoteMenu->menu(), Qt::CTRL+Qt::Key_R);
+
+        pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
+                SLOT(OnMenuSetDisplayColor()));
+        /* Main menu bar -------------------------------------------------------- */
+        pMenu = new QMenuBar(this);
+        CHECK_PTR(pMenu);
+        pMenu->insertItem(tr("&View"), ViewMenu);
+        pMenu->insertItem(tr("&Settings"), pSettingsMenu);
+        pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
+        pMenu->setSeparator(QMenuBar::InWindowsStyle);
+
+        /* Now tell the layout about the menu */
+        FMDialogBaseLayout->setMenuBar(pMenu);
+#else
 	connect(actionTune, SIGNAL(triggered()), this, SLOT(OnTune()));
 	connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
 	connect(actionAM, SIGNAL(triggered()), this, SLOT(OnSwitchToAM()));
@@ -75,6 +114,7 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	);
 	//menu_Settings->addMenu(pRemoteMenu->menu());
 	menubar->addMenu(new CDreamHelpMenu(this));
+#endif
 
 	/* Digi controls */
 	/* Set display color */

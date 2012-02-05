@@ -26,8 +26,6 @@
  *
 \******************************************************************************/
 
-#include <QActionGroup>
-#include <QSignalMapper>
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>
@@ -44,13 +42,14 @@
 # include <qpopupmenu.h>
 # include "fdrmdialogbase.h"
 #else
+# include <QActionGroup>
+# include <QSignalMapper>
 # include <QDialog>
 # include <Q3PopupMenu>
 # include <QShowEvent>
 # include <QHideEvent>
 # include <QCustomEvent>
 # include <QCloseEvent>
-//# include "ui_fdrmdialogbase.h"
 # include "ui_DRMMainWindow.h"
 #endif
 
@@ -70,21 +69,20 @@
 #include "../datadecoding/DataDecoder.h"
 
 
-
 /* Classes ********************************************************************/
 #if QT_VERSION >= 0x040000
-class DRMBase : public QMainWindow, public Ui_DRMMainWindow
+class FDRMDialogBase : public QMainWindow, public Ui_DRMMainWindow
 {
 public:
-    DRMBase(QWidget* parent = 0, const char* name = 0,
+    FDRMDialogBase(QWidget* parent = 0, const char* name = 0,
             bool modal = FALSE, Qt::WFlags f = 0):
         QMainWindow(parent,name,f) {
         setupUi(this);
     }
-    virtual ~DRMBase() {}
+    virtual ~FDRMDialogBase() {}
 };
 #endif
-class FDRMDialog : public DRMBase
+class FDRMDialog : public FDRMDialogBase
 {
     Q_OBJECT
 
@@ -114,8 +112,10 @@ protected:
     Q3PopupMenu*			pSettingsMenu;
     Q3PopupMenu*			pPlotStyleMenu;
     Q3ButtonGroup*		pButtonGroup;
+#if QT_VERSION >= 0x040000
     QSignalMapper* plotStyleMapper;
     QActionGroup* plotStyleGroup;
+#endif
 
     void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
     virtual void	customEvent(QCustomEvent* Event);
