@@ -399,6 +399,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\GUI-QT\Rig.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\common\GUI-QT\main.cpp"
 				>
 			</File>
@@ -996,6 +1000,32 @@
 			<File
 				RelativePath="..\common\GPSData.h"
 				>
+			</File>
+			<File
+				RelativePath="..\common\GUI-QT\Rig.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing ..\common\GUI-QT\Rig.h..."
+						CommandLine="$(QTDIR)\bin\moc.exe ..\common\GUI-QT\Rig.h -o moc\moc_Rig.cpp&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+						Outputs="moc\moc_Rig.cpp"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing ..\common\GUI-QT\Rig.h..."
+						CommandLine="$(QTDIR)\bin\moc.exe ..\common\GUI-QT\Rig.h -o moc\moc_Rig.cpp&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+						Outputs="moc\moc_Rig.cpp"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\common\GPSReceiver.h"

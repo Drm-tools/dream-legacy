@@ -132,6 +132,10 @@ SOURCE=.\moc\LiveScheduleDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_Rig.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_AboutDlgbase.cpp
 # End Source File
 # Begin Source File
@@ -311,6 +315,10 @@ SOURCE="..\common\GUI-QT\GeneralSettingsDlg.cpp"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\LiveScheduleDlg.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\Rig.cpp"
 # End Source File
 # Begin Source File
 
@@ -869,6 +877,10 @@ SOURCE="..\common\GUI-QT\systemevalDlg.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\TransmDlg.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\Rig.h"
 # End Source File
 # End Group
 # Begin Group "Header MLC"
