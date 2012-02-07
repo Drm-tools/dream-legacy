@@ -13,8 +13,8 @@ contains(QT_VERSION, ^4\\..*) {
     VPATH += common/GUI-QT
     !console {
       QT += qt3support
-      HEADERS += common/GUI-QT/DRMPlot-qwt6.h
-      SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp
+      HEADERS += common/GUI-QT/DRMPlot-qwt6.h common/GUI-QT/EvaluationDlg.h
+      SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp
       FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui
       unix { 
         exists(/usr/local/qwt-6.0.2-svn)
@@ -40,8 +40,8 @@ count(QT_VERSION, 0) {
     message("Qt 3")
     VPATH += common/GUI-QT/qt2
     !console {
-      HEADERS += common/GUI-QT/DRMPlot.h
-      SOURCES += common/GUI-QT/DRMPlot.cpp
+      HEADERS += common/GUI-QT/DRMPlot.h common/GUI-QT/systemevalDlg.h
+      SOURCES += common/GUI-QT/DRMPlot.cpp common/GUI-QT/systemevalDlg.cpp
       FORMS += fdrmdialogbase.ui fmdialogbase.ui AnalogDemDlgbase.ui
       LIBS += -lqwt
       unix { 
@@ -486,7 +486,6 @@ SOURCES += common/GPSData.cpp \
     common/GUI-QT/MultimediaDlg.h \
     common/GUI-QT/MultSettingsDlg.h \
     common/GUI-QT/StationsDlg.h \
-    common/GUI-QT/EvaluationDlg.h \
     common/GUI-QT/TransmDlg.h
   SOURCES += common/GPSReceiver.cpp \
     common/GUI-QT/AnalogDemDlg.cpp \
@@ -500,6 +499,5 @@ SOURCES += common/GPSData.cpp \
     common/GUI-QT/MultimediaDlg.cpp \
     common/GUI-QT/MultSettingsDlg.cpp \
     common/GUI-QT/StationsDlg.cpp \
-    common/GUI-QT/EvaluationDlg.cpp \
     common/GUI-QT/TransmDlg.cpp
 }
