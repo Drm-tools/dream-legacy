@@ -28,6 +28,7 @@
 
 #include "systemevalDlg.h"
 #include "DialogUtil.h"
+#include "Rig.h"
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
 #include <qlayout.h>
@@ -729,9 +730,8 @@ void systemevalDlg::UpdatePlotsStyle()
 	MainPlot->SetPlotStyle(iPlotStyle);
 }
 
-CDRMPlot* systemevalDlg::OpenChartWin(int iNewType)
+CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
 {
-	const CDRMPlot::ECharType eNewType = CDRMPlot::ECharType(iNewType);
 	/* Create new chart window */
 	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
 	setCaption(tr("Chart Window"));
