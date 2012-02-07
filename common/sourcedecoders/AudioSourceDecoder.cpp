@@ -28,42 +28,9 @@
 
 #include "AudioSourceDecoder.h"
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <algorithm>
-
-#if !(defined(_MSC_VER) && (_MSC_VER < 1400))
-/**
- * C++ version 0.4 std::string style "itoa":
- * Contributions from Stuart Lowe, Ray-Yuan Sheu,
- * Rodrigo de Salvo Braz, Luc Gallant, John Maloney
- * and Brian Hunt
- */
-std::string itoa(int value, int base) {
-
-    std::string buf;
-
-    // check that the base if valid
-    if (base < 2 || base > 16) return buf;
-
-    enum { kMaxDigits = 35 };
-    buf.reserve( kMaxDigits ); // Pre-allocate enough space.
-
-    int quotient = value;
-
-    // Translating number to string with base:
-    do {
-        buf += "0123456789abcdef"[ std::abs( quotient % base ) ];
-        quotient /= base;
-    } while ( quotient );
-
-    // Append the negative sign
-    if ( value < 0) buf += '-';
-
-    std::reverse( buf.begin(), buf.end() );
-    return buf;
-}
-#endif
-
 
 // dummy AAC Decoder implementation if dll not found
 
@@ -89,31 +56,33 @@ string
 CAudioSourceDecoder::AACFileName(CParameter & ReceiverParam)
 {
     // Store AAC-data in file
-    string strAACTestFileName = "test/aac_";
+    stringstream ss;
+    ss << "test/aac_";
+
     ReceiverParam.Lock();
     if (ReceiverParam.
             Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
             eAudioSamplRate == CAudioParam::AS_12KHZ)
     {
-        strAACTestFileName += "12kHz_";
+        ss << "12kHz_";
     }
     else
-        strAACTestFileName += "24kHz_";
+        ss << "24kHz_";
 
     switch (ReceiverParam.
             Service[ReceiverParam.GetCurSelAudioService()].
             AudioParam.eAudioMode)
     {
     case CAudioParam::AM_MONO:
-        strAACTestFileName += "mono";
+	ss << "mono";
         break;
 
     case CAudioParam::AM_P_STEREO:
-        strAACTestFileName += "pstereo";
+        ss << "pstereo";
         break;
 
     case CAudioParam::AM_STEREO:
-        strAACTestFileName += "stereo";
+        ss << "stereo";
         break;
     }
 
@@ -121,98 +90,96 @@ CAudioSourceDecoder::AACFileName(CParameter & ReceiverParam)
             Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
             eSBRFlag == CAudioParam::SB_USED)
     {
-        strAACTestFileName += "_sbr";
+        ss << "_sbr";
     }
     ReceiverParam.Unlock();
-    strAACTestFileName += ".dat";
+    ss << ".dat";
 
-    return strAACTestFileName;
+    return ss.str();
 }
 
 string
 CAudioSourceDecoder::CELPFileName(CParameter & ReceiverParam)
 {
-    string strCELPTestFileName = "test/celp_";
+    stringstream ss;
+    ss << "test/celp_";
     ReceiverParam.Lock();
     if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
             AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
     {
-        strCELPTestFileName += "8kHz_";
-        strCELPTestFileName +=
-            itoa(iTableCELP8kHzUEPParams
+	ss << "8kHz_" << 
+            iTableCELP8kHzUEPParams
                  [ReceiverParam.
                   Service[ReceiverParam.GetCurSelAudioService()].
-                  AudioParam.iCELPIndex][0], 10);
+                  AudioParam.iCELPIndex][0];
     }
     else
     {
-        strCELPTestFileName += "16kHz_";
-        strCELPTestFileName +=
-            itoa(iTableCELP16kHzUEPParams
+        ss << "16kHz_" <<
+            iTableCELP16kHzUEPParams
                  [ReceiverParam.
                   Service[ReceiverParam.GetCurSelAudioService()].
-                  AudioParam.iCELPIndex][0], 10);
+                  AudioParam.iCELPIndex][0];
     }
-    strCELPTestFileName += "bps";
+    ss << "bps";
 
     if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
             AudioParam.eSBRFlag == CAudioParam::SB_USED)
     {
-        strCELPTestFileName += "_sbr";
+        ss << "_sbr";
     }
-    strCELPTestFileName += ".dat";
     ReceiverParam.Unlock();
+    ss << ".dat";
 
-    return strCELPTestFileName;
+    return ss.str();
 }
 
 string
 CAudioSourceDecoder::HVXCFileName(CParameter & ReceiverParam)
 {
+    stringstream ss;
+    ss << "test/hvxc_";
     ReceiverParam.Lock();
-
-    string strHVXCTestFileName = "test/hvxc";
     if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
             AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
     {
-        strHVXCTestFileName += "_8kHz";
+        ss << "8kHz";
     }
     else
     {
-        strHVXCTestFileName += "_unknown";
+        ss << "unknown";
     }
 
     if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
             AudioParam.eHVXCRate == CAudioParam::HR_2_KBIT)
     {
-        strHVXCTestFileName += "_2kbps";
+        ss << "_2kbps";
     }
     else if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
              AudioParam.eHVXCRate == CAudioParam::HR_4_KBIT)
     {
-        strHVXCTestFileName += "4kbps";
+        ss << "_4kbps";
     }
     else
     {
-        strHVXCTestFileName += "unknown";
+        ss << "_unknown";
     }
 
     if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
             AudioParam.bHVXCCRC)
     {
-        strHVXCTestFileName += "_crc";
+        ss << "_crc";
     }
 
     if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
             AudioParam.eSBRFlag == CAudioParam::SB_USED)
     {
-        strHVXCTestFileName += "_sbr";
+        ss << "_sbr";
     }
-    strHVXCTestFileName += ".dat";
-
     ReceiverParam.Unlock();
+    ss << ".dat";
 
-    return strHVXCTestFileName;
+    return ss.str();
 }
 
 void
