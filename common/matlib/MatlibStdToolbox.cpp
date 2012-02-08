@@ -488,15 +488,30 @@ CMatlibVector<CComplex> Fft(const CMatlibVector<CComplex>& cvI,
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
 	{
+#ifdef HAVE_FFTW3_H
+		pFftwComplexIn[i][0] = cvI[i].real();
+		pFftwComplexIn[i][1] = cvI[i].imag();
+#else
 		pFftwComplexIn[i].re = cvI[i].real();
 		pFftwComplexIn[i].im = cvI[i].imag();
+#endif
 	}
 
 	/* Actual fftw call */
+#ifdef HAVE_FFTW3_H
+	pCurPlan->FFTPlForw = fftw_plan_dft_1d (pCurPlan->fftw_n, pFftwComplexIn, pFftwComplexOut, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_execute(pCurPlan->FFTPlForw);
+
+#else
 	fftw_one(pCurPlan->FFTPlForw, pFftwComplexIn, pFftwComplexOut);
+#endif
 
 	for (i = 0; i < n; i++)
+#ifdef HAVE_FFTW3_H
+		cvReturn[i] = CComplex(pFftwComplexOut[i][0], pFftwComplexOut[i][1]);
+#else
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re, pFftwComplexOut[i].im);
+#endif
 
 	if (!FftPlans.IsInitialized())
 		delete pCurPlan;
@@ -540,18 +555,33 @@ CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI,
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
 	{
+#ifdef HAVE_FFTW3_H
+		pFftwComplexIn[i][0] = cvI[i].real();
+		pFftwComplexIn[i][1] = cvI[i].imag();
+#else
 		pFftwComplexIn[i].re = cvI[i].real();
 		pFftwComplexIn[i].im = cvI[i].imag();
+#endif
 	}
 
 	/* Actual fftw call */
+#ifdef HAVE_FFTW3_H
+	pCurPlan->FFTPlBackw = fftw_plan_dft_1d (pCurPlan->fftw_n, pFftwComplexIn, pFftwComplexOut, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_execute(pCurPlan->FFTPlBackw);
+#else
 	fftw_one(pCurPlan->FFTPlBackw, pFftwComplexIn, pFftwComplexOut);
+#endif
 	
 	const CReal scale = (CReal) 1.0 / n;
 	for (i = 0; i < n; i++)
 	{
+#ifdef HAVE_FFTW3_H
+		cvReturn[i] = CComplex(pFftwComplexOut[i][0] * scale,
+			pFftwComplexOut[i][1] * scale);
+#else
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re * scale,
 			pFftwComplexOut[i].im * scale);
+#endif
 	}
 
 	if (!FftPlans.IsInitialized())
@@ -565,8 +595,13 @@ CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI,
 {
 	int			i;
 	CFftPlans*	pCurPlan;
+#ifdef HAVE_FFTW3_H
+	double* 	pFftwRealIn;
+	double* 	pFftwRealOut;
+#else
 	fftw_real*	pFftwRealIn;
 	fftw_real*	pFftwRealOut;
+#endif
 
 	const int	iSizeI = fvI.GetSize();
 	const int	iLongLength(iSizeI);
@@ -602,7 +637,12 @@ CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI,
 		pFftwRealIn[i] = fvI[i];
 
 	/* Actual fftw call */
+#ifdef HAVE_FFTW3_H
+	pCurPlan->RFFTPlForw = fftw_plan_r2r_1d(pCurPlan->fftw_n, pFftwRealIn, pFftwRealOut, FFTW_R2HC, FFTW_ESTIMATE);
+	fftw_execute(pCurPlan->RFFTPlForw);
+#else
 	rfftw_one(pCurPlan->RFFTPlForw, pFftwRealIn, pFftwRealOut);
+#endif
 
 	/* Now build complex output vector */
 	/* Zero frequency */
@@ -628,8 +668,13 @@ CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI,
 */
 	int			i;
 	CFftPlans*	pCurPlan;
+#ifdef HAVE_FFTW3_H
+	double*		pFftwRealIn;
+	double*		pFftwRealOut;
+#else
 	fftw_real*	pFftwRealIn;
 	fftw_real*	pFftwRealOut;
+#endif
 
 	const int	iShortLength(cvI.GetSize() - 1); /* Nyquist frequency! */
 	const int	iLongLength(iShortLength * 2);
@@ -668,7 +713,12 @@ CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI,
 	pFftwRealIn[iShortLength] = cvI[iShortLength].real(); 
 
 	/* Actual fftw call */
+#ifdef HAVE_FFTW3_H
+        pCurPlan->RFFTPlBackw = fftw_plan_r2r_1d(pCurPlan->fftw_n, pFftwRealIn, pFftwRealOut, FFTW_HC2R, FFTW_ESTIMATE);
+	fftw_execute(pCurPlan->RFFTPlBackw);
+#else
 	rfftw_one(pCurPlan->RFFTPlBackw, pFftwRealIn, pFftwRealOut);
+#endif
 
 	/* Scale output vector */
 	const CReal scale = (CReal) 1.0 / iLongLength;
@@ -729,8 +779,13 @@ CFftPlans::~CFftPlans()
 	if (bInitialized)
 	{
 		/* Delete old plans and intermediate buffers */
+#ifdef HAVE_FFTW3_H
+		fftw_destroy_plan(RFFTPlForw);
+		fftw_destroy_plan(RFFTPlBackw);
+#else
 		rfftw_destroy_plan(RFFTPlForw);
 		rfftw_destroy_plan(RFFTPlBackw);
+#endif
 		fftw_destroy_plan(FFTPlForw);
 		fftw_destroy_plan(FFTPlBackw);
 
@@ -746,8 +801,13 @@ void CFftPlans::Init(const int iFSi)
 	if (bInitialized)
 	{
 		/* Delete old plans and intermediate buffers */
+#ifdef HAVE_FFTW3_H
+	        fftw_destroy_plan(RFFTPlForw);
+		fftw_destroy_plan(RFFTPlBackw);
+#else
 		rfftw_destroy_plan(RFFTPlForw);
 		rfftw_destroy_plan(RFFTPlBackw);
+#endif
 		fftw_destroy_plan(FFTPlForw);
 		fftw_destroy_plan(FFTPlBackw);
 
@@ -758,15 +818,29 @@ void CFftPlans::Init(const int iFSi)
 	}
 
 	/* Create new plans and intermediate buffers */
+#ifdef HAVE_FFTW3_H
+	pFftwRealIn = new double[iFSi];
+	pFftwRealOut = new double[iFSi];
+#else
 	pFftwRealIn = new fftw_real[iFSi];
 	pFftwRealOut = new fftw_real[iFSi];
+#endif
 	pFftwComplexIn = new fftw_complex[iFSi];
 	pFftwComplexOut = new fftw_complex[iFSi];
 
+#ifdef HAVE_FFTW3_H
+	fftw_n = iFSi;
+
+	RFFTPlForw = NULL;
+	RFFTPlBackw = NULL;
+	FFTPlForw = NULL;
+	FFTPlBackw = NULL;
+#else
 	RFFTPlForw = rfftw_create_plan(iFSi, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
 	RFFTPlBackw = rfftw_create_plan(iFSi, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
 	FFTPlForw = fftw_create_plan(iFSi, FFTW_FORWARD, FFTW_ESTIMATE);
 	FFTPlBackw = fftw_create_plan(iFSi, FFTW_BACKWARD, FFTW_ESTIMATE);
+#endif
 
 	bInitialized = true;
 }

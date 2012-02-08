@@ -31,18 +31,21 @@
 #include "Matlib.h"
 
 /* fftw (Homepage: http://www.fftw.org) */
-#ifdef HAVE_DFFTW_H
-# include <dfftw.h>
+#ifdef HAVE_FFTW3_H
+# include <fftw3.h>
 #else
-# include <fftw.h>
-#endif
+# ifdef HAVE_DFFTW_H
+#  include <dfftw.h>
+# else
+#  include <fftw.h>
+# endif
 
-#ifdef HAVE_DRFFTW_H
-# include <drfftw.h>
-#else
-# include <rfftw.h>
+# ifdef HAVE_DRFFTW_H
+#  include <drfftw.h>
+# else
+#  include <rfftw.h>
+# endif
 #endif
-
 
 /* Classes ********************************************************************/
 class CFftPlans
@@ -55,13 +58,21 @@ public:
 	void Init(const int iFSi);
 	inline bool IsInitialized() const {return bInitialized;}
 
-	rfftw_plan		RFFTPlForw;
-	rfftw_plan		RFFTPlBackw;
-	fftw_plan		FFTPlForw;
-	fftw_plan		FFTPlBackw;
+#ifdef HAVE_FFTW3_H
+	fftw_plan	RFFTPlForw;
+	fftw_plan	RFFTPlBackw;
+	double*		pFftwRealIn;
+	double*		pFftwRealOut;
+	int             fftw_n;
+#else
+	rfftw_plan	RFFTPlForw;
+	rfftw_plan	RFFTPlBackw;
+	fftw_real*	pFftwRealIn;
+	fftw_real*	pFftwRealOut;
+#endif
+	fftw_plan	FFTPlForw;
+	fftw_plan	FFTPlBackw;
 
-	fftw_real*		pFftwRealIn;
-	fftw_real*		pFftwRealOut;
 	fftw_complex*	pFftwComplexIn;
 	fftw_complex*	pFftwComplexOut;
 

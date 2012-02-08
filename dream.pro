@@ -134,15 +134,23 @@ unix {
         CONFIG += sndfile
         message("with libsndfile")
     }
-    exists(/usr/include/fftw.h):LIBS += -lfftw
-    exists(/usr/include/rfftw.h):LIBS += -lrfftw
-    exists(/opt/local/include/dfftw.h) { 
-        DEFINES += HAVE_DFFTW_H
-        LIBS += -ldfftw
+    exists(/usr/include/fftw3.h) { 
+        DEFINES += HAVE_FFTW3_H
+        LIBS += -lfftw3
+        message("with fftw3")
     }
-    exists(/opt/local/include/drfftw.h) { 
-        DEFINES += HAVE_DRFFTW_H
-        LIBS += -ldrfftw
+    else {
+	    exists(/usr/include/fftw.h):LIBS += -lfftw
+	    exists(/usr/include/rfftw.h):LIBS += -lrfftw
+	    exists(/opt/local/include/dfftw.h) { 
+		DEFINES += HAVE_DFFTW_H
+		LIBS += -ldfftw
+	    }
+	    exists(/opt/local/include/drfftw.h) { 
+		DEFINES += HAVE_DRFFTW_H
+		LIBS += -ldrfftw
+	    }
+	    DEFINES += HAVE_FFTW_H HAVE_RFFTW_H
     }
     LIBS += -lz \
         -ldl
@@ -163,9 +171,7 @@ unix {
         HAVE_SYS_STAT_H \
         HAVE_SYS_TYPES_H \
         HAVE_UNISTD_H
-    DEFINES += HAVE_FFTW_H \
-        HAVE_RFFTW_H \
-        HAVE_LIBZ
+    DEFINES += HAVE_LIBZ
     !macx { 
         MAKEFILE = Makefile
         INCLUDEPATH += linux
