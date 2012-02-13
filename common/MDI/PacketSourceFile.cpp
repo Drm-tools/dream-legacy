@@ -209,7 +209,7 @@ CPacketSourceFile::readFF(vector<_BYTE>& vecbydata, int& interval)
         {
             if(len != 8)
             {
-                cout << "weird length in FF " << len << " expected 8" << endl;
+                cout << "weird length in FF " << int(len) << " expected 8" << endl;
                 fclose((FILE *) pF);
                 pF = 0;
                 return;
