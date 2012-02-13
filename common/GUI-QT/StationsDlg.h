@@ -57,6 +57,8 @@
 # define Q3Ftp QFtp
 # include "StationsDlgbase.h"
 #else
+# include <QActionGroup>
+# include <QSignalMapper>
 # include <Q3Ftp>
 # include <Q3PopupMenu>
 # include <Q3Header>
@@ -218,12 +220,12 @@ class RemoteMenu;
 class CRig;
 
 #if QT_VERSION >= 0x040000
-class CStationsDlgBase : public QDialog, public Ui_CStationsDlgBase
+class CStationsDlgBase : public QMainWindow, public Ui_StationsDlgbase
 {
 public:
 	CStationsDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		QMainWindow(parent,name,f){setupUi(this);}
 	virtual ~CStationsDlgBase() {}
 };
 #endif
@@ -283,6 +285,12 @@ protected:
 
 	RemoteMenu*					pRemoteMenu;
 	CRig&						rig;
+#if QT_VERSION >= 0x040000
+    QSignalMapper* previewMapper;
+    QActionGroup* previewGroup;
+    QSignalMapper* showMapper;
+    QActionGroup* showGroup;
+#endif
 
 public slots:
 	void OnSMeterMenu(int iID);

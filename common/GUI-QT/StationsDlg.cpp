@@ -463,6 +463,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
 
+	bShowAll = FALSE;
+#if QT_VERSION < 0x040000
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
 	pViewMenu = new Q3PopupMenu(this);
@@ -473,7 +475,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 		SLOT(OnShowStationsMenu(int)), 0, 1);
 
 	/* Set stations in list view which are active right now */
-	bShowAll = FALSE;
 	pViewMenu->setItemChecked(0, TRUE);
 
 	/* Stations Preview menu ------------------------------------------------ */
@@ -516,7 +517,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 	pViewMenu->insertSeparator();
 	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
 
-	SetStationsView();
 
 	/* Remote menu  --------------------------------------------------------- */
 	pRemoteMenu = new RemoteMenu(this, rig);
@@ -528,6 +528,79 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 		this, SLOT(OnSMeterMenu(int)), 0, SMETER_MENU_ID);
 
 	connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
+
+	/* Update menu ---------------------------------------------------------- */
+	pUpdateMenu = new Q3PopupMenu(this);
+	CHECK_PTR(pUpdateMenu);
+	pUpdateMenu->insertItem(tr("&Get Update..."), this, SLOT(OnGetUpdate()), 0, 0);
+
+	/* Main menu bar -------------------------------------------------------- */
+	QMenuBar* pMenu = new QMenuBar(this);
+	CHECK_PTR(pMenu);
+	pMenu->insertItem(tr("&View"), pViewMenu);
+	pMenu->insertItem(tr("&Remote"), pRemoteMenu->menu());
+	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Update" used below */
+	pMenu->setSeparator(QMenuBar::InWindowsStyle);
+
+	/* Now tell the layout about the menu */
+	CStationsDlgBaseLayout->setMenuBar(pMenu);
+#else
+    previewMapper = new QSignalMapper(this);
+    previewGroup = new QActionGroup(this);
+    showMapper = new QSignalMapper(this);
+    showGroup = new QActionGroup(this);
+    showGroup->addAction(actionShowAllStations);
+    showMapper->setMapping(actionShowAllStations, 0);
+    showGroup->addAction(actionShowOnlyActiveStations);
+    showMapper->setMapping(actionShowOnlyActiveStations, 1);
+    connect(actionShowAllStations, SIGNAL(triggered()), showMapper, SLOT(map()));
+    connect(actionShowOnlyActiveStations, SIGNAL(triggered()), showMapper, SLOT(map()));
+    connect(showMapper, SIGNAL(mapped(int)), this, SLOT(OnShowStationsMenu(int)));
+	if(Settings.Get("Stations Dialog", "showall", 1))
+		actionShowAllStations->setChecked(true);
+	else
+		actionShowOnlyActiveStations->setChecked(true);
+    previewGroup->addAction(actionDisabled);
+    previewMapper->setMapping(actionDisabled, 0);
+    previewGroup->addAction(action5minutes);
+    previewMapper->setMapping(action5minutes, 1);
+    previewGroup->addAction(action15minutes);
+    previewMapper->setMapping(action15minutes, 2);
+    previewGroup->addAction(action30minutes);
+    previewMapper->setMapping(action30minutes, 3);
+    connect(actionDisabled, SIGNAL(triggered()), previewMapper, SLOT(map()));
+    connect(action5minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
+    connect(action15minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
+    connect(action30minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
+    connect(previewMapper, SIGNAL(mapped(int)), this, SLOT(OnShowPreviewMenu(int)));
+	switch (Settings.Get("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN))
+	{
+	case NUM_SECONDS_PREV_5MIN:
+		action5minutes->setChecked(true);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
+		break;
+
+	case NUM_SECONDS_PREV_15MIN:
+		action5minutes->setChecked(true);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
+		break;
+
+	case NUM_SECONDS_PREV_30MIN:
+		action30minutes->setChecked(true);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
+		break;
+
+	default: /* case 0, also takes care of out of value parameters */
+		actionDisabled->setChecked(true);
+		DRMSchedule.SetSecondsPreview(0);
+		break;
+	}
+
+//		this, SLOT(OnSMeterMenu(int)), 0, SMETER_MENU_ID);
+	//connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
+    connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
+#endif
+	SetStationsView();
 	connect(&rig, SIGNAL(sigstr(double)), this, SLOT(OnSigStr(double)));
 
 	/* Init progress bar for input s-meter */
@@ -550,25 +623,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
         QBrush fillBrush(QColor(0, 190, 0));
         ProgrSigStrength->setFillBrush(fillBrush);
 
-	/* Update menu ---------------------------------------------------------- */
-	pUpdateMenu = new Q3PopupMenu(this);
-	CHECK_PTR(pUpdateMenu);
-	pUpdateMenu->insertItem(tr("&Get Update..."), this, SLOT(OnGetUpdate()), 0, 0);
 
-	/* Main menu bar -------------------------------------------------------- */
-	QMenuBar* pMenu = new QMenuBar(this);
-	CHECK_PTR(pMenu);
-	pMenu->insertItem(tr("&View"), pViewMenu);
-	pMenu->insertItem(tr("&Remote"), pRemoteMenu->menu());
-	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Update" used below */
-	pMenu->setSeparator(QMenuBar::InWindowsStyle);
-
-	/* Now tell the layout about the menu */
-#if QT_VERSION < 0x040000
-	CStationsDlgBaseLayout->setMenuBar(pMenu);
-#else
-//TODO
-#endif
 
 
 	/* Register the network protokol (ftp). This is needed for the DRMSchedule

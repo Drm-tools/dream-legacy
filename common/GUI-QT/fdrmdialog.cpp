@@ -75,12 +75,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     /* Stations window */
     pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
-    SetDialogCaption(pStationsDlg, tr("Stations"));
 
     /* Live Schedule window */
     pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
     pLiveScheduleDlg->LoadSettings(Settings);
-    SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
 
     /* Programme Guide Window */
     pEPGDlg = new EPGDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
@@ -91,6 +89,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 #if QT_VERSION < 0x040000
     SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
     SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
+    SetDialogCaption(pStationsDlg, tr("Stations"));
+    SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
 #endif
     /* Analog demodulation window */
     pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", Qt::WStyle_MinMax);
