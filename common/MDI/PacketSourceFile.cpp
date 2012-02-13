@@ -191,7 +191,7 @@ CPacketSourceFile::OnDataReceived ()
 void
 CPacketSourceFile::readTagPacketHeader(string& tag, uint32_t& len)
 {
-    uint32_t bits;
+    uint32_t bytes;
     size_t n;
 
     tag = "";
@@ -202,8 +202,8 @@ CPacketSourceFile::readTagPacketHeader(string& tag, uint32_t& len)
         tag += c;
     }
 
-    n = fread(&bits, sizeof(bits), 1, (FILE *) pF);
-    len = ntohl(bits)/8;
+    n = fread(&bytes, sizeof(bytes), 1, (FILE *) pF);
+    len = ntohl(bytes)/8;
 }
 
 void
@@ -222,11 +222,13 @@ CPacketSourceFile::readFF(vector<_BYTE>& vecbydata, int& interval)
         pF = 0;
         return;
     }
-    while(fflen>0)
+
+    long remaining = fflen; // use a signed muber here to help loop exit
+    while(remaining>0)
     {
         readTagPacketHeader(tag, len);
-	fflen -= 64; // 4*8 nits tag, 4*8 bits length;
-	fflen -= len;
+	remaining -= 64; // 4*8 nits tag, 4*8 bytes length;
+	remaining -= len;
 
         if(tag=="time")
         {
@@ -259,17 +261,24 @@ CPacketSourceFile::readFF(vector<_BYTE>& vecbydata, int& interval)
 void
 CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
 {
-    string tag;
-    uint32_t bits;
+    char sync[2];
+    uint32_t bytes;
 
     interval = 400;
 
-    fseek((FILE*)pF, 2, SEEK_CUR);
-    size_t n = fread(&bits, 4, 1, (FILE *) pF);
+    size_t n = fread(sync, 2, 1, (FILE *) pF);
+    n = fread(&bytes, 4, 1, (FILE *) pF);
     fseek((FILE*)pF, -6, SEEK_CUR);
 
+    if (sync[0] != 'A' || sync[1] != 'F')
+    {
+        // throw?
+        fclose((FILE *) pF);
+        pF = 0;
+        return;
+    }
     // get the length
-    size_t iAFPacketLen = iAFHeaderLen + (ntohl(bits)/8) + iAFCRCLen;
+    size_t iAFPacketLen = iAFHeaderLen + ntohl(bytes) + iAFCRCLen;
 
     if (iAFPacketLen > iMaxPacketSize)
     {
