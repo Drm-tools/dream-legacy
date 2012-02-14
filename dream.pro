@@ -28,7 +28,7 @@ contains(QT_VERSION, ^4\\..*) {
             LIBS += -L/usr/local/qwt-6.0.2-svn/lib -lqwt
           }
           else {
-		message("no usable qwt version 6 found")
+		error("no usable qwt version 6 found")
           }
         }
       }
@@ -43,7 +43,7 @@ contains(QT_VERSION, ^4\\..*) {
 	        LIBS += -lqwt5
 	    }
           else {
-		message("no usable qwt version 6 found")
+		error("no usable qwt version found")
           }
 	}
       }
