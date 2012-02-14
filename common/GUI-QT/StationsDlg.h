@@ -48,8 +48,6 @@
 # include <qurloperator.h>
 # include <qlistview.h>
 # define Q3PopupMenu QPopupMenu
-# define Q3ListView QListView
-# define Q3ListViewItem QListViewItem
 # define Q3UrlOperator QUrlOperator
 # define Q3NetworkOperation QNetworkOperation
 # define Q3NetworkProtocol QNetworkProtocol
@@ -62,7 +60,6 @@
 # include <Q3Ftp>
 # include <Q3PopupMenu>
 # include <Q3Header>
-# include <Q3ListView>
 # include <Q3ButtonGroup>
 # include <Q3UrlOperator>
 # include <Q3NetworkProtocol>
@@ -201,20 +198,22 @@ protected:
 };
 
 
-class MyListViewItem : public Q3ListViewItem
+#if QT_VERSION < 0x040000
+class MyListViewItem : public QListViewItem
 {
 public:
 	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
 	   Settings.h! */
-	MyListViewItem(Q3ListView* parent, QString s1, QString s2 = QString::null,
+	MyListViewItem(QListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
 		QString s7 = QString::null, QString s8 = QString::null) :
-		Q3ListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
+		QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
 
 	/* Custom "key()" function for correct sorting behaviour */
 	virtual QString key(int column, bool ascending) const;
 };
+#endif
 
 class RemoteMenu;
 class CRig;
@@ -225,7 +224,7 @@ class CStationsDlgBase : public QMainWindow, public Ui_StationsDlgbase
 public:
 	CStationsDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QMainWindow(parent,name,f){setupUi(this);}
+		QMainWindow(parent,name,f){}
 	virtual ~CStationsDlgBase() {}
 };
 #endif
@@ -261,6 +260,9 @@ protected:
 	void			DisableSMeter();
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
+#if QT_VERSION < 0x040000
+	void			setupUi(QObject*);
+#endif
 
 	CDRMReceiver&				DRMReceiver;
 	CSettings&					Settings;
@@ -280,7 +282,6 @@ protected:
 	Q3PopupMenu*					pPreviewMenu;
 	Q3PopupMenu*					pUpdateMenu;
 
-	vector<MyListViewItem*>		vecpListItems;
 	QMutex						ListItemsMutex;
 
 	RemoteMenu*					pRemoteMenu;
@@ -290,6 +291,8 @@ protected:
     QActionGroup* previewGroup;
     QSignalMapper* showMapper;
     QActionGroup* showGroup;
+#else
+	vector<MyListViewItem*>		vecpListItems;
 #endif
 
 public slots:
@@ -302,12 +305,12 @@ public slots:
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 #else
-	void OnListItemClicked(Q3ListViewItem* item);
+	//void OnListItemClicked(Q3ListViewItem* item);
 	void OnUrlFinished(Q3NetworkOperation* pNetwOp);
 #endif
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);
-	void OnGetUpdate();
+	void on_actionGetUpdate_triggered();
 	void OnFreqCntNewValue(double dVal);
 	void OnHeaderClicked(int c);
 	void FilterChanged(const QString&);

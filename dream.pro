@@ -13,9 +13,9 @@ contains(QT_VERSION, ^4\\..*) {
     VPATH += common/GUI-QT
     !console {
       QT += qt3support
-      HEADERS += common/GUI-QT/DRMPlot-qwt6.h common/GUI-QT/EvaluationDlg.h
-      SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp
-      FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui
+      HEADERS += common/GUI-QT/DRMPlot-qwt6.h common/GUI-QT/EvaluationDlg.h common/GUI-QT/RigDlg.h
+      SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp common/GUI-QT/RigDlg.cpp
+      FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui RigDlg.ui
       unix { 
         exists(/usr/lib/libqwt.so.6) {
 	    message("with qwt6")
@@ -69,7 +69,7 @@ TEMPLATE = app
 TARGET = dream
 CONFIG += qt \
     warn_on \
-    release \
+    debug \
     thread
 INCLUDEPATH += common/GUI-QT
 INCLUDEPATH += libs
@@ -128,9 +128,15 @@ exists(../usr/local) {
     LIBS += -L../usr/local/lib
 }
 unix { 
-    CONFIG += portaudio
     target.path = /usr/bin
     INSTALLS += target
+    exists(/usr/include/portaudio.h) { 
+        CONFIG += portaudio
+        message("with portaudio")
+    }
+    else {
+        error("no usable sound library found - install portaudio dev package")
+    }
     exists(/usr/include/hamlib/rig.h) { 
         CONFIG += hamlib
         message("with hamlib")
