@@ -17,24 +17,37 @@ contains(QT_VERSION, ^4\\..*) {
       SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp
       FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui
       unix { 
-        exists(/usr/local/qwt-6.0.2-svn)
-         { 
+        exists(/usr/lib/libqwt.so.6) {
+	    message("with qwt6")
+            INCLUDEPATH += /usr/include/qwt
+            LIBS += -lqwt
+        }
+        else {
+          exists(/usr/local/qwt-6.0.2-svn) { 
             INCLUDEPATH += /usr/local/qwt-6.0.2-svn/include
-            LIBS += -L/usr/local/qwt-6.0.2-svn/lib \
-                -lqwt
+            LIBS += -L/usr/local/qwt-6.0.2-svn/lib -lqwt
+          }
+          else {
+		message("no usable qwt version 6 found")
+          }
         }
       }
       win32 { 
         exists(libs/qwt6) { 
 	        INCLUDEPATH += libs/qwt6
 	        LIBS += -lqwt6
-	    }
-        exists(libs/qwt5) { 
+        }
+        else {
+           exists(libs/qwt5) { 
 	        INCLUDEPATH += libs/qwt5
 	        LIBS += -lqwt5
 	    }
+          else {
+		message("no usable qwt version 6 found")
+          }
+	}
       }
-    }
+   }
 }
 count(QT_VERSION, 0) { 
     message("Qt 3")
