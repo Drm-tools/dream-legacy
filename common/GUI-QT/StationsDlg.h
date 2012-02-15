@@ -333,14 +333,14 @@ public slots:
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 #else
 	void OnUrlFinished(Q3NetworkOperation* pNetwOp);
-	void on_ListViewStations_itemSelectionChanged();
 #endif
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);
-	void on_actionGetUpdate_triggered();
 	void OnFreqCntNewValue(double dVal);
 	void OnHeaderClicked(int c);
 	void FilterChanged(const QString&);
+	void on_actionGetUpdate_triggered();
+	void on_ListViewStations_itemSelectionChanged();
 
 };
 #endif

@@ -377,8 +377,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     bReInitOnFrequencyChange(FALSE)
 #if QT_VERSION < 0x040000
     , vecpListItems(0)
-#endif
+#else
 ,greenCube(":/icons/greenCube.png"),redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":/icons/pinkCube.png")
+#endif
 {
     setupUi(this);
     /* Set help text for the controls */
@@ -1296,16 +1297,18 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 	SetFrequencyFromGUI(QString(item->text(2)).toInt());
     }
 }
-#else
+#endif
+
 void StationsDlg::on_ListViewStations_itemSelectionChanged()
 {
+#if QT_VERSION >= 0x040000
 	QList<QTreeWidgetItem *> items =  ListViewStations->selectedItems();
 	if(items.size()==1)
 	{
 		SetFrequencyFromGUI(QString(items.first()->text(2)).toInt());
 	}
-}
 #endif
+}
 
 void StationsDlg::OnSMeterAvailable()
 {
