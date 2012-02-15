@@ -30,7 +30,6 @@
 
 #include "StationsDlg.h"
 #include "DialogUtil.h"
-#include "RigDlg.h"
 #include "Rig.h"
 #if QT_VERSION < 0x040000
 # include <qheader.h>
@@ -38,6 +37,7 @@
 # include <qwhatsthis.h>
 # define Q3WhatsThis QWhatsThis
 #else
+# include "RigDlg.h"
 # include <q3ftp.h>
 # include <q3whatsthis.h>
 # include <QHideEvent>
@@ -60,7 +60,7 @@ QString MyListViewItem::key(int column, bool ascending) const
                                         (text(column).toFloat() * 10000.0))).rightJustify(20, '0');
     }
     else
-        return Q3ListViewItem::key(column, ascending);
+        return QListViewItem::key(column, ascending);
 }
 #endif
 
@@ -544,8 +544,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     connect(ListViewStations->header(), SIGNAL(clicked(int)),
             this, SLOT(OnHeaderClicked(int)));
 #else
-    connect(ListViewStations, SIGNAL(selectionChanged(Q3ListViewItem*)),
-            this, SLOT(OnListItemClicked(Q3ListViewItem*)));
+    connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
+            this, SLOT(OnListItemClicked(QListViewItem*)));
     connect(ListViewStations->header(), SIGNAL(clicked(int)),
             this, SLOT(OnHeaderClicked(int)));
 
@@ -566,7 +566,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 }
 
 #if QT_VERSION < 0x040000
-void StationsDlg::setupUi()
+void StationsDlg::setupUi(QObject*)
 {
     /* We assume that one column is already there */
     ListViewStations->setColumnText(0, tr("Station Name"));
@@ -1062,7 +1062,6 @@ void StationsDlg::SetStationsView()
     /* Set lock because of list view items. These items could be changed
        by another thread */
 
-    const size_t iNumStations = DRMSchedule.GetStationNumber();
     _BOOLEAN bListHastChanged = FALSE;
 
     /* if the list got smaller, we need to free some memory */
@@ -1261,7 +1260,7 @@ void StationsDlg::OnHeaderClicked(int c)
 
 
 #if QT_VERSION < 0x040000
-void StationsDlg::OnListItemClicked(Q3ListViewItem* item)
+void StationsDlg::OnListItemClicked(QListViewItem* item)
 {
     /* Check that it is a valid item (!= 0) */
     if (item)
