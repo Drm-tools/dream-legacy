@@ -49,12 +49,12 @@
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QLineEdit" name="selectedRigType"/>
      </item>
     </layout>
    </item>
    <item row="3" column="1">
-    <widget class="QCheckBox" name="checkBoxModified">
+    <widget class="QCheckBox" name="modified">
      <property name="text">
       <string>Modified for DRM</string>
      </property>
@@ -81,14 +81,14 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
-       <widget class="QProgressBar" name="ProgrSigStrength">
+       <widget class="QProgressBar" name="sMeter">
         <property name="value">
          <number>24</number>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="CheckBoxEnableSMeter">
+       <widget class="QCheckBox" name="enableSMeter">
         <property name="text">
          <string>Enable</string>
         </property>
@@ -98,7 +98,7 @@
     </widget>
    </item>
    <item row="5" column="1">
-    <widget class="QPushButton" name="pushButtonTestRig">
+    <widget class="QPushButton" name="testRig">
      <property name="text">
       <string>Test</string>
      </property>

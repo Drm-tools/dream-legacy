@@ -55,16 +55,22 @@ protected:
     void		hideEvent(QHideEvent* pEvent);
 
     CSettings&		Settings;
-    bool		loading;
     QTimer		TimerRig;
-    int			iWantedrigModel;
     CRig&		rig;
+    rig_model_t		prev_rig_model;
+    string		prev_port;
+    map<rig_model_t,string> rigmap;
 
 public slots:
-    void		on_rigList_itemSelectionChanged(); 
-    void 		OnCheckEnableSMeterToggled(bool);
-    void		OnButtonTestRig();
+    void		on_rigTypes_itemSelectionChanged(); 
+    void		on_modified_stateChanged(int);
+    void		on_enableSMeter_stateChanged(int);
+    void		on_testRig_clicked();
+    void		on_buttonBox_accepted();
+    void		on_buttonBox_rejected();
+    void		on_comboBoxPort_currentIndexChanged(int);
     void		OnTimerRig();
+    void		on_rig_sigstr(double);
 };
 
 #endif
