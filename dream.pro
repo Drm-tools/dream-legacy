@@ -18,19 +18,12 @@ contains(QT_VERSION, ^4\\..*) {
       SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp common/GUI-QT/RigDlg.cpp
       FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui RigDlg.ui
       unix { 
-        exists(/usr/lib/libqwt.so.6) {
-	    message("with qwt6")
+        exists(/usr/include/qwt) {
             INCLUDEPATH += /usr/include/qwt
             LIBS += -lqwt
         }
         else {
-          exists(/usr/local/qwt-6.0.2-svn) { 
-            INCLUDEPATH += /usr/local/qwt-6.0.2-svn/include
-            LIBS += -L/usr/local/qwt-6.0.2-svn/lib -lqwt
-          }
-          else {
-		error("no usable qwt version 6 found")
-          }
+	    error("no usable qwt version 6 found")
         }
       }
       win32 { 
