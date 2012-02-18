@@ -394,6 +394,38 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     vecpListItems[0] =
         new MyListLiveViewItem(ListViewStations, "00000000000000000");
 
+    connect(buttonOk,  SIGNAL(clicked()), this, SLOT(close()));
+
+#if QT_VERSION >= 0x040000
+    connect(actionSave,  SIGNAL(triggered()), this, SLOT(OnSave()));
+
+    previewMapper = new QSignalMapper(this);
+    previewGroup = new QActionGroup(this);
+    showMapper = new QSignalMapper(this);
+    showGroup = new QActionGroup(this);
+    showGroup->addAction(actionShowOnlyActiveStations);
+    showMapper->setMapping(actionShowOnlyActiveStations, 0);
+    showGroup->addAction(actionShowAllStations);
+    showMapper->setMapping(actionShowAllStations, 1);
+    connect(actionShowAllStations, SIGNAL(triggered()), showMapper, SLOT(map()));
+    connect(actionShowOnlyActiveStations, SIGNAL(triggered()), showMapper, SLOT(map()));
+    connect(showMapper, SIGNAL(mapped(int)), this, SLOT(OnShowStationsMenu(int)));
+    previewGroup->addAction(actionDisabled);
+    previewMapper->setMapping(actionDisabled, 0);
+    previewGroup->addAction(action5minutes);
+    previewMapper->setMapping(action5minutes, NUM_SECONDS_PREV_5MIN);
+    previewGroup->addAction(action15minutes);
+    previewMapper->setMapping(action15minutes, NUM_SECONDS_PREV_15MIN);
+    previewGroup->addAction(action30minutes);
+    previewMapper->setMapping(action30minutes, NUM_SECONDS_PREV_30MIN);
+    connect(actionDisabled, SIGNAL(triggered()), previewMapper, SLOT(map()));
+    connect(action5minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
+    connect(action15minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
+    connect(action30minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
+    connect(previewMapper, SIGNAL(mapped(int)), this, SLOT(OnShowPreviewMenu(int)));
+#endif
+
+    //connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
     /* Init UTC time shown with a label control */
     SetUTCTimeLabel();
 
@@ -487,6 +519,7 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
 
     /* Set stations in list view which are active right now */
     bShowAll = Settings.Get("Live Schedule Dialog", "showall", FALSE);
+    int iPrevSecs = Settings.Get("Live Schedule Dialog", "preview", 0);
 
 #if QT_VERSION < 0x040000
     if (bShowAll)
@@ -495,7 +528,7 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
         pViewMenu->setItemChecked(0, TRUE);
 
     /* Set stations preview */
-    switch (Settings.Get("Live Schedule Dialog", "preview", 0))
+    switch (iPrevSecs)
     {
     case NUM_SECONDS_PREV_5MIN:
         pPreviewMenu->setItemChecked(1, TRUE);
@@ -518,7 +551,29 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
         break;
     }
 #else
-//TODO
+    if(bShowAll)
+        actionShowAllStations->setChecked(true);
+    else
+        actionShowOnlyActiveStations->setChecked(true);
+    DRMSchedule.SetSecondsPreview(iPrevSecs);
+    switch (iPrevSecs)
+    {
+    case NUM_SECONDS_PREV_5MIN:
+        action5minutes->setChecked(true);
+        break;
+
+    case NUM_SECONDS_PREV_15MIN:
+        action5minutes->setChecked(true);
+        break;
+
+    case NUM_SECONDS_PREV_30MIN:
+        action30minutes->setChecked(true);
+        break;
+
+    default: /* case 0, also takes care of out of value parameters */
+        actionDisabled->setChecked(true);
+        break;
+    }
 #endif
 
 }
@@ -597,7 +652,6 @@ LiveScheduleDlg::SetUTCTimeLabel()
 void
 LiveScheduleDlg::OnShowStationsMenu(int iID)
 {
-#if QT_VERSION < 0x040000
     /* Show only active stations if ID is 0, else show all */
     if (iID == 0)
         bShowAll = FALSE;
@@ -607,11 +661,10 @@ LiveScheduleDlg::OnShowStationsMenu(int iID)
     /* Update list view */
     SetStationsView();
 
+#if QT_VERSION < 0x040000
     /* Taking care of checks in the menu */
     pViewMenu->setItemChecked(0, 0 == iID);
     pViewMenu->setItemChecked(1, 1 == iID);
-#else
-//TODO
 #endif
 }
 
@@ -731,12 +784,9 @@ LiveScheduleDlg::LoadSchedule()
 
 #if QT_VERSION < 0x040000
     /* Enable disable save menu item */
-    if (iNumStations > 0)
-        pFileMenu->setItemEnabled(0, TRUE);
-    else
-        pFileMenu->setItemEnabled(0, FALSE);
+    pFileMenu->setItemEnabled(0, (iNumStations > 0);
 #else
-//TODO
+    actionSave->setEnabled(iNumStations > 0);
 #endif
     /* Unlock BEFORE calling the stations view update because in this function
        the mutex is locked, too! */

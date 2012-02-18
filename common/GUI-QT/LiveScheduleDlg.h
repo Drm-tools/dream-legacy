@@ -202,6 +202,11 @@ protected:
 	QPopupMenu*					pPreviewMenu;
 	QPopupMenu*					pFileMenu;
 	void setupUi(QWidget*);
+#else
+	QSignalMapper* previewMapper;
+	QActionGroup* previewGroup;
+	QSignalMapper* showMapper;
+	QActionGroup* showGroup;
 #endif
 
 	vector<MyListLiveViewItem*>	vecpListItems;

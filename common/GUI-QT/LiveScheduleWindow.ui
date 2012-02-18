@@ -179,9 +179,15 @@
      <height>18</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuView">
+   <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>View</string>
+     <string>&amp;File</string>
+    </property>
+    <addaction name="actionSave"/>
+   </widget>
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
+     <string>&amp;View</string>
     </property>
     <widget class="QMenu" name="menuStations_preview">
      <property name="title">
@@ -195,7 +201,9 @@
     <addaction name="actionShowOnlyActiveStations"/>
     <addaction name="actionShowAllStations"/>
     <addaction name="menuStations_preview"/>
-  </widget>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menu_View"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionShowOnlyActiveStations">
@@ -238,22 +246,17 @@
     <string>30 minutes</string>
    </property>
   </action>
-  <action name="actionGetUpdate">
-   <property name="text">
-    <string>Get Update...</string>
-   </property>
-  </action>
-  <action name="actionChooseRig">
-   <property name="text">
-    <string>Rig Settings...</string>
-   </property>
-  </action>
   <action name="actionDisabled">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
     <string>&amp;Disabled</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save...</string>
    </property>
   </action>
  </widget>
