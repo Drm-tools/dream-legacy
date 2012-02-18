@@ -42,23 +42,14 @@
 #include <qwt_thermo.h>
 #include <qpixmap.h>
 
-#if QT_VERSION < 0x040000
-# include <qpopupmenu.h>
-# include <qlistview.h>
-# define Q3ListView QListView
-# define Q3ListViewItem QListViewItem
-# define Q3PopupMenu QPopupMenu
-# include "systemevalDlgbase.h"
-# include "DRMPlot.h"
-#else
-# include <Q3ListView>
-# include <Q3ButtonGroup>
-# include <Q3PopupMenu>
-# include <QMainWindow>
-# include "ui_systemevalDlgbase.h"
+#include <qpopupmenu.h>
+#include <qlistview.h>
+#include "systemevalDlgbase.h"
+#if QWT_VERSION > 0x050200
 # include "DRMPlot-qwt6.h"
+#else
+# include "DRMPlot.h"
 #endif
-
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
@@ -129,7 +120,7 @@ protected:
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();
 
-	Q3PopupMenu*		pListViewContextMenu;
+	QPopupMenu*		pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
 	CGPSReceiver*		pGPSReceiver;
@@ -163,8 +154,8 @@ public slots:
 	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
 #else
-	void OnListSelChanged(Q3ListViewItem* NewSelIt);
-	void OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
+	void OnListSelChanged(QListViewItem* NewSelIt);
+	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
 #endif
 };
 

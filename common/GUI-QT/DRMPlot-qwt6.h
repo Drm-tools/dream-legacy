@@ -43,6 +43,9 @@
 #include "../Parameter.h"
 #include "../DrmReceiver.h"
 
+#if QWT_VERSION < 0x050200
+# error "Qwt 5.2 or higher needed"
+#endif
 
 /* Definitions ****************************************************************/
 #define GUI_CONTROL_UPDATE_WATERFALL			100	/* Milliseconds */

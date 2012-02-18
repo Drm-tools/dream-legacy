@@ -1450,7 +1450,7 @@ int StationsDlg::currentSortColumn()
 _BOOLEAN StationsDlg::showAll()
 {
 #if QT_VERSION < 0x040000
-	return pViewMenu->isItemChecked(1);
+	return pViewMenu->isItemChecked(0);
 #else
 	return actionShowAllStations->isChecked();
 #endif

@@ -34,6 +34,9 @@
 #include <QHideEvent>
 #include <QMouseEvent>
 #include <QShowEvent>
+#if QWT_VERSION < 0x060000
+# define setSamples(x,y,s) setData(x,y,s)
+#endif
 
 /* Define the plot color profiles */
 
@@ -537,7 +540,11 @@ void CDRMPlot::SetData(QwtPlotCurve* curve, CVector<_COMPLEX>& veccData, const Q
         pdData[i] = veccData[i].real();
         pdScale[i] = veccData[i].imag();
     }
+#if QWT_VERSION < 0x060000
+    curve->setSymbol( marker );
+#else
     curve->setSymbol( &marker );
+#endif
     curve->setStyle( QwtPlotCurve::NoCurve );
     curve->setSamples(pdScale, pdData, iDataSize);
     delete[] pdData;

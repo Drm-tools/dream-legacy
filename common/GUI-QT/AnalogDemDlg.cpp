@@ -35,7 +35,11 @@
 #include <qwt_dial.h>
 #include <qwt_dial_needle.h>
 #if QT_VERSION < 0x040000
-# include "DRMPlot.h"
+# if QWT_VERSION > 0x050200
+#  include "DRMPlot-qwt6.h"
+# else
+#  include "DRMPlot.h"
+# endif
 # include <qpopupmenu.h>
 # include <qmenubar.h>
 # include <qbuttongroup.h>
