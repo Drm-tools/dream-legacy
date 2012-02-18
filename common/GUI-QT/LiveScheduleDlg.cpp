@@ -350,6 +350,7 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     iColStationID(0),
     iWidthColStationID(0)
 {
+    setupUi(this);
     /* Set help text for the controls */
     AddWhatsThisHelp();
 
@@ -396,55 +397,6 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     /* Init UTC time shown with a label control */
     SetUTCTimeLabel();
 
-    /* Set Menu ************************************************************** */
-    /* View menu ------------------------------------------------------------ */
-    pViewMenu = new Q3PopupMenu(this);
-    CHECK_PTR(pViewMenu);
-    pViewMenu->insertItem(tr("Show &only active stations"), this,
-                          SLOT(OnShowStationsMenu(int)), 0, 0);
-    pViewMenu->insertItem(tr("Show &all stations"), this,
-                          SLOT(OnShowStationsMenu(int)), 0, 1);
-
-    /* Stations Preview menu ------------------------------------------------ */
-    pPreviewMenu = new Q3PopupMenu(this);
-    CHECK_PTR(pPreviewMenu);
-    pPreviewMenu->insertItem(tr("&Disabled"), this,
-                             SLOT(OnShowPreviewMenu(int)), 0, 0);
-    pPreviewMenu->insertItem(tr("&5 minutes"), this,
-                             SLOT(OnShowPreviewMenu(int)), 0, 1);
-    pPreviewMenu->insertItem(tr("&15 minutes"), this,
-                             SLOT(OnShowPreviewMenu(int)), 0, 2);
-    pPreviewMenu->insertItem(tr("&30 minutes"), this,
-                             SLOT(OnShowPreviewMenu(int)), 0, 3);
-
-    pViewMenu->insertSeparator();
-    pViewMenu->insertItem(tr("Stations &preview"), pPreviewMenu);
-
-    SetStationsView();
-
-    /* File menu ------------------------------------------------------------ */
-    pFileMenu = new Q3PopupMenu(this);
-    CHECK_PTR(pFileMenu);
-    pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), Qt::CTRL+Qt::Key_S,0);
-
-    /* Main menu bar -------------------------------------------------------- */
-    QMenuBar *pMenu = new QMenuBar(this);
-    CHECK_PTR(pMenu);
-    pMenu->insertItem(tr("&File"), pFileMenu);
-    pMenu->insertItem(tr("&View"), pViewMenu);
-
-    pMenu->setSeparator(QMenuBar::InWindowsStyle);
-
-    /* disable save menu */
-    pFileMenu->setItemEnabled(0, FALSE);
-
-    /* Now tell the layout about the menu */
-#if QT_VERSION < 0x040000
-    CLiveScheduleDlgBaseLayout->setMenuBar(pMenu);
-#else
-//TODO
-#endif
-
     /* Connections ---------------------------------------------------------- */
     connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
     connect(&TimerUTCLabel, SIGNAL(timeout()), this, SLOT(OnTimerUTCLabel()));
@@ -462,6 +414,57 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
 LiveScheduleDlg::~LiveScheduleDlg()
 {
 }
+
+#if QT_VERSION < 0x040000
+void
+LiveScheduleDlg::setupUi(QWidget*)
+{
+    /* Set Menu ************************************************************** */
+    /* View menu ------------------------------------------------------------ */
+    pViewMenu = new QPopupMenu(this);
+    CHECK_PTR(pViewMenu);
+    pViewMenu->insertItem(tr("Show &only active stations"), this,
+                          SLOT(OnShowStationsMenu(int)), 0, 0);
+    pViewMenu->insertItem(tr("Show &all stations"), this,
+                          SLOT(OnShowStationsMenu(int)), 0, 1);
+
+    /* Stations Preview menu ------------------------------------------------ */
+    pPreviewMenu = new QPopupMenu(this);
+    CHECK_PTR(pPreviewMenu);
+    pPreviewMenu->insertItem(tr("&Disabled"), this,
+                             SLOT(OnShowPreviewMenu(int)), 0, 0);
+    pPreviewMenu->insertItem(tr("&5 minutes"), this,
+                             SLOT(OnShowPreviewMenu(int)), 0, 1);
+    pPreviewMenu->insertItem(tr("&15 minutes"), this,
+                             SLOT(OnShowPreviewMenu(int)), 0, 2);
+    pPreviewMenu->insertItem(tr("&30 minutes"), this,
+                             SLOT(OnShowPreviewMenu(int)), 0, 3);
+    pViewMenu->insertSeparator();
+    pViewMenu->insertItem(tr("Stations &preview"), pPreviewMenu);
+
+    SetStationsView();
+
+    /* File menu ------------------------------------------------------------ */
+    pFileMenu = new QPopupMenu(this);
+    CHECK_PTR(pFileMenu);
+    pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), Qt::CTRL+Qt::Key_S,0);
+
+    /* Main menu bar -------------------------------------------------------- */
+    QMenuBar *pMenu = new QMenuBar(this);
+    CHECK_PTR(pMenu);
+    pMenu->insertItem(tr("&File"), pFileMenu);
+    pMenu->insertItem(tr("&View"), pViewMenu);
+
+    pMenu->setSeparator(QMenuBar::InWindowsStyle);
+
+    /* disable save menu */
+    pFileMenu->setItemEnabled(0, FALSE);
+
+    /* Now tell the layout about the menu */
+    CLiveScheduleDlgBaseLayout->setMenuBar(pMenu);
+}
+#endif
+
 void
 LiveScheduleDlg::LoadSettings(const CSettings& Settings)
 {
@@ -485,6 +488,7 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
     /* Set stations in list view which are active right now */
     bShowAll = Settings.Get("Live Schedule Dialog", "showall", FALSE);
 
+#if QT_VERSION < 0x040000
     if (bShowAll)
         pViewMenu->setItemChecked(1, TRUE);
     else
@@ -513,6 +517,9 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
         DRMSchedule.SetSecondsPreview(0);
         break;
     }
+#else
+//TODO
+#endif
 
 }
 
@@ -536,7 +543,7 @@ LiveScheduleDlg::SaveSettings(CSettings& Settings)
     Settings.Put("Live Schedule Dialog", "sortascending", bCurrentSortAscending);
 
     /* Store preview settings */
-    Settings.Put("Live Schedule Dialog", "showall", bShowAll);
+    Settings.Put("Live Schedule Dialog", "showall", showAll());
 }
 
 void
@@ -550,6 +557,24 @@ LiveScheduleDlg::OnCheckFreeze()
         OnTimerList();
         TimerList.start(GUI_TIMER_LIST_VIEW_UPDATE);	/* Stations list */
     }
+}
+
+int LiveScheduleDlg::currentSortColumn()
+{
+#if QT_VERSION < 0x030000
+	return iSortColumn;
+#else
+	return ListViewStations->sortColumn();
+#endif
+}
+
+_BOOLEAN LiveScheduleDlg::showAll()
+{
+#if QT_VERSION < 0x040000
+	return pViewMenu->isItemChecked(0);
+#else
+	return actionShowAllStations->isChecked();
+#endif
 }
 
 void
@@ -572,6 +597,7 @@ LiveScheduleDlg::SetUTCTimeLabel()
 void
 LiveScheduleDlg::OnShowStationsMenu(int iID)
 {
+#if QT_VERSION < 0x040000
     /* Show only active stations if ID is 0, else show all */
     if (iID == 0)
         bShowAll = FALSE;
@@ -584,11 +610,15 @@ LiveScheduleDlg::OnShowStationsMenu(int iID)
     /* Taking care of checks in the menu */
     pViewMenu->setItemChecked(0, 0 == iID);
     pViewMenu->setItemChecked(1, 1 == iID);
+#else
+//TODO
+#endif
 }
 
 void
 LiveScheduleDlg::OnShowPreviewMenu(int iID)
 {
+#if QT_VERSION < 0x040000
     switch (iID)
     {
     case 1:
@@ -616,6 +646,9 @@ LiveScheduleDlg::OnShowPreviewMenu(int iID)
     pPreviewMenu->setItemChecked(1, 1 == iID);
     pPreviewMenu->setItemChecked(2, 2 == iID);
     pPreviewMenu->setItemChecked(3, 3 == iID);
+#else
+    DRMSchedule.SetSecondsPreview(iID);
+#endif
 }
 
 void
@@ -696,12 +729,15 @@ LiveScheduleDlg::LoadSchedule()
 
     vecpListItems.resize(iNumStations, NULL);
 
+#if QT_VERSION < 0x040000
     /* Enable disable save menu item */
     if (iNumStations > 0)
         pFileMenu->setItemEnabled(0, TRUE);
     else
         pFileMenu->setItemEnabled(0, FALSE);
-
+#else
+//TODO
+#endif
     /* Unlock BEFORE calling the stations view update because in this function
        the mutex is locked, too! */
     ListItemsMutex.unlock();
@@ -734,7 +770,11 @@ LiveScheduleDlg::LoadSchedule()
         Parameters.Unlock();
     }
 
-    SetDialogCaption(this, strTitle);
+#if QT_VERSION < 0x040000
+	SetDialogCaption(this, strTitle);
+#else
+	setWindowTitle(strTitle);
+#endif
 }
 
 void
@@ -784,7 +824,7 @@ LiveScheduleDlg::SetStationsView()
     /* Add new item for each station in list view */
     for (int i = 0; i < iNumStations; i++)
     {
-        if (!((bShowAll == FALSE) &&
+        if (!((showAll() == FALSE) &&
                 (DRMSchedule.CheckState(i) == CDRMLiveSchedule::IS_INACTIVE)))
         {
             /* Only insert item if it is not already in the list */

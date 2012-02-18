@@ -263,8 +263,6 @@ public:
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
 
-	int			currentSortColumn();
-	_BOOLEAN		bCurrentSortAscending;
 
 protected:
 	void			SetFrequencyFromGUI(int);
@@ -279,8 +277,10 @@ protected:
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
 	_BOOLEAN		showAll();
-#if QT_VERSION < 0x040000
-	void			setupUi(QObject*);
+	int			currentSortColumn();
+	_BOOLEAN		bCurrentSortAscending;
+#if QT_VERSION < 0x030000
+	int iSortColumn;
 #endif
 
 	CDRMReceiver&		DRMReceiver;
@@ -288,6 +288,7 @@ protected:
 
 	CDRMSchedule		DRMSchedule;
 #if QT_VERSION < 0x040000
+	void			setupUi(QObject*);
 	QPixmap			BitmCubeGreen;
 	QPixmap			BitmCubeYellow;
 	QPixmap			BitmCubeRed;
@@ -296,11 +297,16 @@ protected:
 	QPopupMenu*		pViewMenu;
 	QPopupMenu*		pPreviewMenu;
 	QPopupMenu*		pUpdateMenu;
+	vector<MyListViewItem*>	vecpListItems;
 #else
 	QIcon			greenCube;
 	QIcon			redCube;
 	QIcon			orangeCube;
 	QIcon			pinkCube;
+	QSignalMapper* previewMapper;
+	QActionGroup* previewGroup;
+	QSignalMapper* showMapper;
+	QActionGroup* showGroup;
 #endif
 	QTimer			TimerList;
 	QTimer			TimerUTCLabel;
@@ -311,17 +317,6 @@ protected:
 
 	RemoteMenu*		pRemoteMenu;
 	CRig&			rig;
-#if QT_VERSION >= 0x040000
-    QSignalMapper* previewMapper;
-    QActionGroup* previewGroup;
-    QSignalMapper* showMapper;
-    QActionGroup* showGroup;
-#else
-	vector<MyListViewItem*>		vecpListItems;
-#endif
-#if QT_VERSION < 0x030000
-    int iSortColumn;
-#endif
 
 public slots:
 	void OnSMeterMenu(int iID);

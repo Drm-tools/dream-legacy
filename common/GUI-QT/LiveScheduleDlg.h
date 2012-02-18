@@ -37,15 +37,13 @@
 # include <qpopupmenu.h>
 # include <qurloperator.h>
 # include <qlistview.h>
-# define Q3PopupMenu QPopupMenu
 # define Q3ListView QListView
 # define Q3ListViewItem QListViewItem
 #else
 # include <QDialog>
-# include <Q3PopupMenu>
 # include <Q3Header>
 # include <Q3ListView>
-# include "ui_LiveScheduleDlgbase.h"
+# include "ui_LiveScheduleWindow.h"
 #endif
 #include <qpixmap.h>
 #include <qradiobutton.h>
@@ -150,12 +148,12 @@ public:
 
 
 #if QT_VERSION >= 0x040000
-class CLiveScheduleDlgBase : public QDialog, public Ui_CLiveScheduleDlgBase
+class CLiveScheduleDlgBase : public QMainWindow, public Ui_LiveScheduleWindow
 {
 public:
 	CLiveScheduleDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		QMainWindow(parent,name,f){}
 	virtual ~CLiveScheduleDlgBase() {}
 };
 #endif
@@ -185,6 +183,8 @@ protected:
 	virtual void	hideEvent(QHideEvent* pEvent);
 	QString			ExtractDaysFlagString(const int iDayCode);
 	QString			ExtractTime(const CAltFreqSched& schedule);
+	_BOOLEAN		showAll();
+	int			currentSortColumn();
 
 	CDRMReceiver&				DRMReceiver;
 	CDRMLiveSchedule			DRMSchedule;
@@ -197,9 +197,12 @@ protected:
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
 	_BOOLEAN					bShowAll;
-	Q3PopupMenu*					pViewMenu;
-	Q3PopupMenu*					pPreviewMenu;
-	Q3PopupMenu*					pFileMenu;
+#if QT_VERSION < 0x040000
+	QPopupMenu*					pViewMenu;
+	QPopupMenu*					pPreviewMenu;
+	QPopupMenu*					pFileMenu;
+	void setupUi(QWidget*);
+#endif
 
 	vector<MyListLiveViewItem*>	vecpListItems;
 	QMutex						ListItemsMutex;
