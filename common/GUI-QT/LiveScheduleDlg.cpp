@@ -29,6 +29,7 @@
 # include <qfile.h>
 # include <qdir.h>
 #if QT_VERSION < 0x040000
+# include <qpushbutton.h>
 # include <qfiledialog.h>
 # include <qtextstream.h>
 # include <qheader.h>
@@ -784,7 +785,7 @@ LiveScheduleDlg::LoadSchedule()
 
 #if QT_VERSION < 0x040000
     /* Enable disable save menu item */
-    pFileMenu->setItemEnabled(0, (iNumStations > 0);
+    pFileMenu->setItemEnabled(0, (iNumStations > 0));
 #else
     actionSave->setEnabled(iNumStations > 0);
 #endif
