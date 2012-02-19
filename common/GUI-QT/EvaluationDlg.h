@@ -95,6 +95,7 @@ protected:
 
 	QTimer			Timer;
 	QTimer			TimerInterDigit;
+	QTimer			TimerChart;
 
 	/* logging */
 	QTimer			TimerLogFileLong;

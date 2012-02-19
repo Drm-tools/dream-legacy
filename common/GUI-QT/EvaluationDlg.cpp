@@ -43,7 +43,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
-	Timer(), TimerInterDigit(),
+	Timer(), TimerInterDigit(), TimerChart(),
 	TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
 	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
 	iLogDelay(0), rig(nr), pGPSReceiver(NULL)
@@ -60,6 +60,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	AddWhatsThisHelp();
 
 	MainPlot = new CDRMPlot(plot);
+	connect(&TimerChart, SIGNAL(timeout()), MainPlot, SLOT(OnTimerChart()));
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
@@ -435,6 +436,7 @@ void systemevalDlg::showEvent(QShowEvent*)
 
 	/* Activate real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
+	TimerChart.start(GUI_CONTROL_UPDATE_TIME);
 	setIconSize(QSize(16,16));
 }
 
@@ -442,6 +444,7 @@ void systemevalDlg::hideEvent(QHideEvent*)
 {
 	/* Stop the real-time timer */
 	Timer.stop();
+	TimerChart.stop();
 
 	/* Store size and position of all additional chart windows */
 	int iNumOpenCharts = 0;
@@ -518,6 +521,8 @@ CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
 	/* Create new chart window */
 	CDRMPlot* pNewChartWin = new CDRMPlot(new QwtPlot(NULL));
 	pNewChartWin->setCaption(tr("Chart Window"));
+
+	connect(&TimerChart, SIGNAL(timeout()), pNewChartWin, SLOT(OnTimerChart()));
 
 	/* Set plot style*/
 	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));

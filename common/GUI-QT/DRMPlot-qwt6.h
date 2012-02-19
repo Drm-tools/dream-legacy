@@ -64,6 +64,183 @@
 
 
 /* Classes ********************************************************************/
+class Chart: public QObject
+{
+public:
+    Chart(CDRMReceiver *pDRMRec, QwtPlot* p);
+    virtual void Setup()=0;
+    virtual void Update()=0;
+    void SetPlotStyle(const int iNewStyleID);
+protected:
+    void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2, CVector<_REAL>& vecrScale);
+    void SetData(QwtPlotCurve*, CVector<_COMPLEX>&, const QwtSymbol&);
+    void SetDCCarrier();
+    void SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth);
+    CDRMReceiver* receiver;
+    QwtPlot* plot;
+    QwtPlotGrid* grid;;
+    CPlotManager* plotManager;
+    QwtPlotCurve	*main1curve, *main2curve;
+    QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5;
+    QColor			MainPenColorPlot;
+    QColor			MainPenColorConst;
+    QColor			MainGridColorPlot;
+    QColor			SpecLine1ColorPlot;
+    QColor			SpecLine2ColorPlot;
+    QColor			PassBandColorPlot;
+    QColor			BckgrdColorPlot;
+};
+
+class AvIR: public Chart
+{
+public:
+    AvIR(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+protected:
+    void SetVerticalBounds(
+        const _REAL rStartGuard, const _REAL rEndGuard,
+        const _REAL rBeginIR, const _REAL rEndIR);
+    void SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLowerB, _REAL rHigherB);
+};
+
+class InpSpecWaterf: public Chart
+{
+public:
+    InpSpecWaterf(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class TranFct: public Chart
+{
+public:
+    TranFct(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class AudioSpec: public Chart
+{
+public:
+    AudioSpec(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class FreqSamOffsHist: public Chart
+{
+public:
+    FreqSamOffsHist(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2, CVector<_REAL>& vecrScale);
+};
+
+class DopplerDelayHist: public Chart
+{
+public:
+    DopplerDelayHist(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class SNRAudHist: public Chart
+{
+public:
+    SNRAudHist(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2, CVector<_REAL>& vecrScale);
+};
+
+class PSD: public Chart
+{
+public:
+    PSD(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class SNRSpectrum: public Chart
+{
+public:
+    SNRSpectrum(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+};
+
+class InpSpec: public Chart
+{
+public:
+    InpSpec(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class InpPSD: public Chart
+{
+public:
+    InpPSD(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class AnalogInpPSD: public InpPSD
+{
+public:
+    AnalogInpPSD(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Update();
+};
+
+class ConstellationChart: public Chart
+{
+public:
+    ConstellationChart(CDRMReceiver* pDRMRec, QwtPlot* plot);
+    void Setup();
+    void Update();
+protected:
+    QwtSymbol symbolMSC, symbolSDC, symbolFAC;
+    void SetQAM4Grid();
+    void SetQAM16Grid();
+    void SetQAM64Grid();
+    void getAxisScaleBounds(double& dXMax0, double& dXMax1, double& dYMax0, double& dYMax1);
+};
+
+class FACConst: public ConstellationChart
+{
+public:
+    FACConst(CDRMReceiver* pDRMRec, QwtPlot* plot);
+    void Setup();
+    void Update();
+};
+
+class SDCConst: public ConstellationChart
+{
+public:
+    SDCConst(CDRMReceiver* pDRMRec, QwtPlot* plot);
+    void Setup();
+    void Update();
+};
+
+class MSCConst: public ConstellationChart
+{
+public:
+    MSCConst(CDRMReceiver* pDRMRec, QwtPlot* plot);
+    void Setup();
+    void Update();
+};
+
+class AllConst: public ConstellationChart
+{
+public:
+    AllConst(CDRMReceiver* pDRMRec, QwtPlot* plot);
+    void Setup();
+    void Update();
+};
+
 class CDRMPlot : public QObject
 {
     Q_OBJECT
@@ -100,99 +277,59 @@ public:
         pDRMRec = pNDRMRec;
     }
 
-    void SetupChart(const ECharType eNewType);
+    void SetPlotStyle(const int iNewStyleID);
+
     ECharType GetChartType() const {
         return CurCharType;
     }
     void Update() {
         OnTimerChart();
     }
-    void SetPlotStyle(const int iNewStyleID);
-    void setGeometry(const QRect& g) { plot->setGeometry(g); }
-    void setCaption(const QString& s) { plot->setWindowTitle(s); }
-    void setIcon(const QPixmap& s) { plot->setWindowIcon(QIcon(s)); }
+    void setGeometry(const QRect& g) {
+        plot->setGeometry(g);
+    }
+    void setCaption(const QString& s) {
+        plot->setWindowTitle(s);
+    }
+    void setIcon(const QPixmap& s) {
+        plot->setWindowIcon(QIcon(s));
+    }
 
-    bool isVisible() { return plot->isVisible(); }
-    QRect geometry() {return plot->geometry();}
-    void close() { plot->close(); }
-    void show() { plot->show(); }
+    bool isVisible() {
+        return plot->isVisible();
+    }
+    QRect geometry() {
+        return plot->geometry();
+    }
+    void close() {
+        plot->close();
+    }
+    void show() {
+        plot->show();
+    }
 
-
+    void SetupChart(ECharType);
 
 protected:
-    void SetVerticalBounds(
-        const _REAL rStartGuard, const _REAL rEndGuard,
-        const _REAL rBeginIR, const _REAL rEndIR);
-    void SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLowerB, _REAL rHigherB);
-    void SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-    void SetDCCarrier(const _REAL rDCFreq);
-    void SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth);
-    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
-                   CVector<_REAL>& vecrScale);
-    void AutoScale2(CVector<_REAL>& vecrData,
-                    CVector<_REAL>& vecrData2,
-                    CVector<_REAL>& vecrScale);
-    void AutoScale3(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-    void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-    void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
-                 CVector<_REAL>& vecrScale);
-    void SetData(QwtPlotCurve*, CVector<_COMPLEX>&, const QwtSymbol&);
-    void SetData(CVector<_COMPLEX>& veccMSCConst,
-                 CVector<_COMPLEX>& veccSDCConst,
-                 CVector<_COMPLEX>& veccFACConst);
-    void SetQAM4Grid();
-    void SetQAM16Grid();
-    void SetQAM64Grid();
-
-    void SetupAvIR();
-    void SetupTranFct();
-    void SetupAudioSpec();
-    void SetupFreqSamOffsHist();
-    void SetupDopplerDelayHist();
-    void SetupSNRAudHist();
-    void SetupPSD();
-    void SetupSNRSpectrum();
-    void SetupInpSpec();
-    void SetupFACConst();
-    void SetupSDCConst(const ECodScheme eNewCoSc);
-    void SetupMSCConst(const ECodScheme eNewCoSc);
-    void SetupAllConst();
-    void SetupInpPSD();
-    void SetupInpSpecWaterf();
-    void clear();
 
     void AddWhatsThisHelpChar(const ECharType NCharType);
-    virtual void showEvent(QShowEvent* pEvent);
-    virtual void hideEvent(QHideEvent* pEvent);
-
-    /* Colors */
-    QColor			MainPenColorPlot;
-    QColor			MainPenColorConst;
-    QColor			MainGridColorPlot;
-    QColor			SpecLine1ColorPlot;
-    QColor			SpecLine2ColorPlot;
-    QColor			PassBandColorPlot;
-    QColor			BckgrdColorPlot;
 
     QSize			LastCanvasSize;
 
     ECharType		CurCharType;
     ECharType		InitCharType;
-    QwtPlotCurve	*main1curve, *main2curve;
-    QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5;
-    QwtPlotGrid*    	grid;
-    QwtSymbol		symbolMSC, symbolSDC, symbolFAC;
     QwtText         	leftTitle, rightTitle, bottomTitle;
 
     _BOOLEAN		bOnTimerCharMutexFlag;
-    QTimer		TimerChart;
 
     CDRMReceiver*	pDRMRec;
+    Chart*		chart;
 
 
 public slots:
     void OnClicked(const QMouseEvent& e);
     void OnTimerChart();
+
 
 signals:
     void xAxisValSet(double);
