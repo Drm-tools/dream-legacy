@@ -684,9 +684,9 @@ void systemevalDlg::OnFrequencyEdited ( const QString & )
 	TimerInterDigit.changeInterval(100);
 }
 
-void systemevalDlg::UpdatePlotsStyle()
+void systemevalDlg::UpdatePlotsStyle(int iPlotStyle)
 {
-	int iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
+	Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
 	/* Update chart windows */
 	for (size_t i = 0; i < vecpDRMPlots.size(); i++)
 		vecpDRMPlots[i]->SetPlotStyle(iPlotStyle);

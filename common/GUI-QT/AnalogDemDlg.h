@@ -123,7 +123,6 @@ public:
 	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0);
 
-	void 			UpdatePlotsStyle();
 
 protected:
 	CDRMReceiver&	DRMReceiver;
@@ -144,6 +143,7 @@ protected:
 	virtual void	closeEvent(QCloseEvent* pEvent);
 
 public slots:
+	void UpdatePlotsStyle(int);
 	void OnTimer();
 	void OnTimerPLLPhaseDial();
 	void OnRadioDemodulation(int iID);

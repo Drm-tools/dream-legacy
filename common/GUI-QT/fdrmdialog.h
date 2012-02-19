@@ -153,11 +153,12 @@ public slots:
     void OnSelectDataService(int);
     void OnViewStationsDlg();
     void OnMenuSetDisplayColor();
-    void OnMenuPlotStyle(int value);
     void OnNewAcquisition();
     void OnSwitchMode(int);
     void OnSwitchToFM();
     void OnSwitchToAM();
+signals:
+    void plotStyleChanged(int);
 };
 
 #endif

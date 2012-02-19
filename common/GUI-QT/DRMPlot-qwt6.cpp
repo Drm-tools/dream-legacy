@@ -222,13 +222,13 @@ void Chart::SetPlotStyle(const int iNewStyleID)
 
     case 0: /* 0 is default */
     default:
-        MainPenColorPlot = BLUEWHITE_MAIN_PEN_COLOR_PLOT;
-        MainPenColorConst = BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION;
-        BckgrdColorPlot = BLUEWHITE_BCKGRD_COLOR_PLOT;
-        MainGridColorPlot = BLUEWHITE_MAIN_GRID_COLOR_PLOT;
-        SpecLine1ColorPlot = BLUEWHITE_SPEC_LINE1_COLOR_PLOT;
-        SpecLine2ColorPlot = BLUEWHITE_SPEC_LINE2_COLOR_PLOT;
-        PassBandColorPlot = BLUEWHITE_PASS_BAND_COLOR_PLOT;
+        MainPenColorPlot = Qt::blue;
+        MainPenColorConst = Qt::blue;
+        BckgrdColorPlot = Qt::white;
+        MainGridColorPlot = Qt::gray;
+        SpecLine1ColorPlot = Qt::red;
+        SpecLine2ColorPlot = Qt::black;
+        PassBandColorPlot = QColor(192, 192, 255);
         break;
     }
 
@@ -556,6 +556,7 @@ void AudioSpec::Setup()
 
     /* Curve color */
     main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+qDebug(QString("pen color %1").arg(MainPenColorPlot.rgb(), 0, 16));
 }
 
 void AudioSpec::Update()
@@ -602,10 +603,8 @@ void FreqSamOffsHist::Setup()
     main2curve->attach(plot);
 
     /* Curve colors */
-    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                            Qt::RoundJoin));
-    main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                            Qt::RoundJoin));
+    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
 }
 
@@ -728,10 +727,8 @@ void SNRAudHist::Setup()
     main2curve->attach(plot);
 
     /* Curve colors */
-    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                            Qt::RoundJoin));
-    main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                            Qt::RoundJoin));
+    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 void SNRAudHist::Update()
@@ -817,17 +814,14 @@ void PSD::Setup()
     dY[0] = MIN_VAL_SHIF_PSD_Y_AXIS_DB;
     dY[1] = MAX_VAL_SHIF_PSD_Y_AXIS_DB;
 
-#if QWT_VERSION < 0x060000
-#else
     curve1->setSamples(dX, dY, 2);
-#endif
+
     /* Add main curve */
     main1curve->setTitle(tr("Shifted PSD"));
     main1curve->attach(plot);
 
     /* Curve color */
-    main1curve->setPen(QPen(MainPenColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                            Qt::RoundJoin));
+    main1curve->setPen(QPen(MainPenColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 void PSD::Update()
@@ -857,8 +851,7 @@ void SNRSpectrum::Setup()
     main1curve->attach(plot);
 
     /* Curve color */
-    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                            Qt::RoundJoin));
+    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 void SNRSpectrum::Update()
@@ -930,8 +923,7 @@ void InpSpec::Setup()
     main1curve->attach(plot);
 
     /* Curve color */
-    main1curve->setPen(QPen(MainPenColorPlot, 1, Qt::SolidLine, Qt::RoundCap,
-                            Qt::RoundJoin));
+    main1curve->setPen(QPen(MainPenColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 
@@ -952,10 +944,10 @@ void InpPSD::Setup()
     /* Init chart for power spectram density estimation */
     plot->setTitle(tr("Input PSD"));
     plot->enableAxis(QwtPlot::yRight, FALSE);
-    grid->enableXMin(FALSE);
-    grid->enableYMin(FALSE);
+    grid->enableXMin(false);
+    grid->enableYMin(false);
     plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-    plot->enableAxis(QwtPlot::yLeft, TRUE);
+    plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 
     /* Fixed scale */
@@ -972,60 +964,19 @@ void InpPSD::Setup()
        setting the width to a very large value. TODO: better solution */
     curve1->setPen(QPen(PassBandColorPlot, 10000));
 
-#if QWT_VERSION < 0x050000
     /* Since we want to have the "filter bandwidth" bar behind the grid, we have
        to draw our own grid after the previous curve was inserted. TODO: better
        solution */
-    /* y-axis: get major ticks */
-    const int iNumMajTicksYAx = axisScale(QwtPlot::yLeft)->majCnt();
-
-    /* Make sure the grid does not end close to the border of the canvas.
-       Introduce some "margin" */
-    dX[0] = -dXScaleMax;
-    dX[1] = dXScaleMax + dXScaleMax;
-
-    /* Draw the grid for y-axis */
-    for (i = 0; i < iNumMajTicksYAx; i++)
-    {
-        const long curvegrid = insertCurve(tr("My Grid"));
-        curvegrid->setPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
-
-        dY[0] = dY[1] = axisScale(QwtPlot::yLeft)->majMark(i);
-        curvegrid->setSamples(dX, dY, 2);
-    }
-
-    /* x-axis: get major ticks */
-    const int iNumMajTicksXAx = axisScale(QwtPlot::xBottom)->majCnt();
-
-    /* Make sure the grid does not end close to the border of the canvas.
-       Introduce some "margin" */
-    const double dDiffY =
-        MAX_VAL_INP_SPEC_Y_AXIS_DB - MIN_VAL_INP_SPEC_Y_AXIS_DB;
-
-    dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB - dDiffY;
-    dY[1] = MAX_VAL_INP_SPEC_Y_AXIS_DB + dDiffY;
-
-    /* Draw the grid for x-axis */
-    for (i = 0; i < iNumMajTicksXAx; i++)
-    {
-        const long curvegrid = insertCurve(tr("My Grid"));
-        curvegrid->setPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
-
-        dX[0] = dX[1] = axisScale(QwtPlot::xBottom)->majMark(i);
-        curvegrid->setSamples(dX, dY, 2);
-    }
 
     /* Insert line for DC carrier */
     curve2->attach(plot);
     curve2->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
-#endif
     /* Add main curve */
     main1curve->setTitle(tr("Input PSD"));
     main1curve->attach(plot);
 
     /* Curve color */
-    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap,
-                            Qt::RoundJoin));
+    main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 }
 
 void InpPSD::Update()

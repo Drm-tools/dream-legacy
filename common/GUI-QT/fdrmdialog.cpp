@@ -144,12 +144,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
                 SLOT(OnMenuSetDisplayColor()));
         /* Plot style settings */
         pPlotStyleMenu = new Q3PopupMenu(this);
-        pPlotStyleMenu->insertItem(tr("&Blue / White"), this,
-                SLOT(OnMenuPlotStyle(int)), 0, 0);
-        pPlotStyleMenu->insertItem(tr("&Green / Black"), this,
-                SLOT(OnMenuPlotStyle(int)), 0, 1);
-        pPlotStyleMenu->insertItem(tr("B&lack / Grey"), this,
-                SLOT(OnMenuPlotStyle(int)), 0, 2);
+        pPlotStyleMenu->insertItem(tr("&Blue / White"), this, SIGNAL(plotStyleChanged(int)), 0, 0);
+        pPlotStyleMenu->insertItem(tr("&Green / Black"), this, SIGNAL(plotStyleChanged(int)), 0, 1);
+        pPlotStyleMenu->insertItem(tr("B&lack / Grey"), this, SIGNAL(plotStyleChanged(int)), 0, 2);
         pSettingsMenu->insertItem(tr("&Plot Style"), pPlotStyleMenu);
 
         /* Set check */
@@ -208,7 +205,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     connect(actionBlueWhite, SIGNAL(triggered()), plotStyleMapper, SLOT(map()));
     connect(actionGreenBlack, SIGNAL(triggered()), plotStyleMapper, SLOT(map()));
     connect(actionBlackGrey, SIGNAL(triggered()), plotStyleMapper, SLOT(map()));
-    connect(plotStyleMapper, SIGNAL(mapped(int)), this, SLOT(OnMenuPlotStyle(int)));
+    connect(plotStyleMapper, SIGNAL(mapped(int)), this, SIGNAL(plotStyleChanged(int)));
     switch(Settings.Get("System Evaluation Dialog", "plotstyle", int(0)))
     {
     case 0: actionBlueWhite->setChecked(true);break;
@@ -218,6 +215,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     menubar->addMenu(new CDreamHelpMenu(this));
 #endif
+    connect(this, SIGNAL(plotStyleChanged(int)), pSysEvalDlg, SLOT(UpdatePlotStyle(int)));
+    connect(this, SIGNAL(plotStyleChanged(int)), pAnalogDemDlg, SLOT(UpdatePlotStyle(int)));
 
     /* Digi controls */
     /* Set display color */
@@ -860,16 +859,6 @@ void FDRMDialog::OnMenuSetDisplayColor()
         SetDisplayColor(newColor);
         Settings.Put("DRM Dialog", "colorscheme", CRGBConversion::RGB2int(newColor));
     }
-}
-
-void FDRMDialog::OnMenuPlotStyle(int value)
-{
-    /* Save new style in global variable */
-    Settings.Put("System Evaluation Dialog", "plotstyle", value);
-
-    /* Set new plot style in other dialogs */
-    pSysEvalDlg->UpdatePlotsStyle();
-    pAnalogDemDlg->UpdatePlotsStyle();
 }
 
 void FDRMDialog::closeEvent(QCloseEvent* ce)

@@ -132,6 +132,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     /* Now tell the layout about the menu */
     AnalogDemDlgBaseLayout->setMenuBar(pMenu);
 
+
     MainPlot->SetRecObj(&DRMReceiver);
 #endif
 
@@ -155,12 +156,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 
     /* Connect controls ----------------------------------------------------- */
-    connect(ButtonDRM, SIGNAL(clicked()),
-            this, SLOT(OnSwitchToDRM()));
-    connect(ButtonAMSS, SIGNAL(clicked()),
-            this, SLOT(OnButtonAMSS()));
-    connect(ButtonWaterfall, SIGNAL(clicked()),
-            this, SLOT(OnButtonWaterfall()));
+    connect(ButtonDRM, SIGNAL(clicked()), this, SLOT(OnSwitchToDRM()));
+    connect(ButtonAMSS, SIGNAL(clicked()), this, SLOT(OnButtonAMSS()));
+    connect(ButtonWaterfall, SIGNAL(clicked()), this, SLOT(OnButtonWaterfall()));
 
     /* Button groups */
     connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
@@ -368,10 +366,11 @@ void AnalogDemDlg::UpdateControls()
     CheckBoxPLL->setChecked(DRMReceiver.GetAMDemod()->PLLEnabled());
 }
 
-void AnalogDemDlg::UpdatePlotsStyle()
+void AnalogDemDlg::UpdatePlotsStyle(int iPlotstyle)
 {
     /* Update main plot window */
-    MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
+    if(MainPlot)
+    	MainPlot->SetPlotStyle(iPlotstyle);
 }
 
 void AnalogDemDlg::OnTimer()
@@ -500,7 +499,8 @@ void AnalogDemDlg::OnSliderBWChange(int value)
     TextLabelBandWidth->setText(QString().setNum(value) + tr(" Hz"));
 
     /* Update chart */
-    MainPlot->Update();
+    if(MainPlot)
+	MainPlot->Update();
 }
 
 void AnalogDemDlg::OnCheckAutoFreqAcq()
@@ -555,11 +555,14 @@ void AnalogDemDlg::OnChartxAxisValSet(double dVal)
     DRMReceiver.SetAMDemodAcq(dVal);
 
     /* Update chart */
-    MainPlot->Update();
+    if(MainPlot)
+	MainPlot->Update();
 }
 
 void AnalogDemDlg::OnButtonWaterfall()
 {
+    if(MainPlot==NULL)
+	return;
     /* Toggle between normal spectrum plot and waterfall spectrum plot */
 #if QT_VERSION < 0x040000
     if (ButtonWaterfall->state() == QCheckBox::On)
@@ -758,10 +761,8 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
     /* Connect controls ----------------------------------------------------- */
     /* Timers */
-    connect(&Timer, SIGNAL(timeout()),
-            this, SLOT(OnTimer()));
-    connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
-            this, SLOT(OnTimerPLLPhaseDial()));
+    connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
+    connect(&TimerPLLPhaseDial, SIGNAL(timeout()), this, SLOT(OnTimerPLLPhaseDial()));
 
     /* set the progress bar style */
     ProgressBarAMSS->setStyle( new QMotifStyle() );

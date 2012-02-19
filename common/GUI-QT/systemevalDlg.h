@@ -88,7 +88,6 @@ public:
 
 	void SetStatus(int MessID, int iMessPara);
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	void UpdatePlotsStyle();
 	void StopLogTimers();
 
 protected:
@@ -126,6 +125,7 @@ protected:
 	CGPSReceiver*		pGPSReceiver;
 
 public slots:
+	void UpdatePlotsStyle(int);
 	void OnTimer();
 	void OnTimerInterDigit();
 	void OnTimerLogFileStart();
