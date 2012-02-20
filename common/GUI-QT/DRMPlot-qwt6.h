@@ -227,12 +227,9 @@ public:
     void Setup();
     void Update();
 protected:
-    QwtSymbol symbolMSC, symbolSDC, symbolFAC;
-    QwtPlotCurve *main2,*main3;
-    void SetData(QwtPlotCurve*, CVector<_COMPLEX>&, const QwtSymbol&);
-    void SetQAM4Grid();
-    void SetQAM16Grid();
-    void SetQAM64Grid();
+    QwtSymbol *symbol;
+    void SetData(QwtPlotCurve*, const CVector<_COMPLEX>&);
+    void SetSymbol(QwtPlotCurve* curve, QwtSymbol*);
     void getAxisScaleBounds(double& dXMax0, double& dXMax1, double& dYMax0, double& dYMax1);
 };
 
@@ -266,6 +263,9 @@ public:
     AllConst(CDRMReceiver* pDRMRec, QwtPlot* plot);
     void Setup();
     void Update();
+protected:
+    QwtSymbol *symbolMSC, *symbolSDC, *symbolFAC;
+    QwtPlotCurve *main2,*main3;
 };
 
 class CDRMPlot : public QObject

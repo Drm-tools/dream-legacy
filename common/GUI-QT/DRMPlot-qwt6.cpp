@@ -275,10 +275,9 @@ void AvIR::Update()
     _REAL rLowerBound, rHigherBound, rStartGuard, rEndGuard, rPDSBegin, rPDSEnd;;
     plotManager->GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
                              rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
-cerr << rLowerBound << " " << rHigherBound << " " << rStartGuard << " " << rEndGuard << " " << rPDSBegin << " " << rPDSEnd << endl;
     if (vecrScale.Size() != 0)
     {
-// TODO the markers should move around
+	// TODO the markers should move around
         SetVerticalBounds(rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
         SetData(vecrData, vecrScale);
         SetHorizontalBounds(vecrScale[0], vecrScale[vecrScale.Size() - 1], rLowerBound, rHigherBound);
@@ -907,36 +906,35 @@ void AnalogInpPSD::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 
 }
 
-ConstellationChart::ConstellationChart(CDRMReceiver* pDRMRec, QwtPlot* p):Chart(pDRMRec, p),
-    symbolMSC(), symbolSDC(), symbolFAC()
+ConstellationChart::ConstellationChart(CDRMReceiver* pDRMRec, QwtPlot* p):Chart(pDRMRec, p), symbol(NULL)
 {
-    /* initialise constellation symbols */
-    symbolMSC.setStyle(QwtSymbol::Rect);
-    symbolMSC.setSize(2);
-    symbolMSC.setPen(QPen(Qt::blue));
-    symbolMSC.setBrush(QBrush(Qt::blue));
-
-    symbolSDC.setStyle(QwtSymbol::XCross);
-    symbolSDC.setSize(4);
-    symbolSDC.setPen(QPen(Qt::red));
-    symbolSDC.setBrush(QBrush(Qt::red));
-
-    symbolFAC.setStyle(QwtSymbol::Ellipse);
-    symbolFAC.setSize(4);
-    symbolFAC.setPen(QPen(Qt::black));
-    symbolFAC.setBrush(QBrush(Qt::black));
 
 }
 
 void ConstellationChart::Setup()
 {
+    Chart::Setup();
+    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
+    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+    symbol = new QwtSymbol(QwtSymbol::Ellipse, QBrush(MainPenColorConst), QPen(), QSize(4,4));
+    SetSymbol(main, symbol);
 }
 
 void ConstellationChart::Update()
 {
 }
 
-void ConstellationChart::SetData(QwtPlotCurve* curve, CVector<_COMPLEX>& veccData, const QwtSymbol& marker)
+void ConstellationChart::SetSymbol(QwtPlotCurve* curve, QwtSymbol* symbol)
+{
+#if QWT_VERSION < 0x060000
+    curve->setSymbol( *symbol );
+#else
+    curve->setSymbol( symbol );
+#endif
+    curve->setStyle( QwtPlotCurve::NoCurve );
+}
+
+void ConstellationChart::SetData(QwtPlotCurve* curve, const CVector<_COMPLEX>& veccData)
 {
     /* Copy data from vectors in temporary arrays */
     int iDataSize = veccData.Size();
@@ -947,12 +945,6 @@ void ConstellationChart::SetData(QwtPlotCurve* curve, CVector<_COMPLEX>& veccDat
         pdData[i] = veccData[i].real();
         pdScale[i] = veccData[i].imag();
     }
-#if QWT_VERSION < 0x060000
-    curve->setSymbol( marker );
-#else
-    curve->setSymbol( &marker );
-#endif
-    curve->setStyle( QwtPlotCurve::NoCurve );
     curve->setSamples(pdScale, pdData, iDataSize);
     delete[] pdData;
     delete[] pdScale;
@@ -967,149 +959,6 @@ void ConstellationChart::getAxisScaleBounds(double& dXMax0, double& dXMax1, doub
     dYMax1 = plot->axisScaleDiv(QwtPlot::yLeft)->upperBound();
 }
 
-void ConstellationChart::SetQAM4Grid()
-{
-#if QWT_VERSION < 0x050000
-    long	curve;
-    double	dXMax[2], dYMax[2];
-    double	dX[2];
-
-    /* Set scale style */
-    QPen ScalePen(MainGridColorPlot, 1, Qt::DotLine);
-
-    getAxisScaleBounds(this, dXMax[0], dXMax[1], dYMax[0], dYMax[1]);
-
-    dX[0] = dX[1] = (double) 0.0;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-#endif
-}
-
-void ConstellationChart::SetQAM16Grid()
-{
-#if QWT_VERSION < 0x050000
-    long	curve;
-    double	dXMax[2], dYMax[2];
-    double	dX[2];
-
-    /* Set scale style */
-    QPen ScalePen(MainGridColorPlot, 1, Qt::DotLine);
-
-    /* Get bounds of scale */
-    getAxisScaleBounds(this, dXMax[0], dXMax[1], dYMax[0], dYMax[1]);
-
-    dX[0] = dX[1] = (double) 0.0;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-
-    dX[0] = dX[1] = (double) 0.6333;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-
-    dX[0] = dX[1] = (double) -0.6333;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-#endif
-}
-
-void ConstellationChart::SetQAM64Grid()
-{
-#if QWT_VERSION < 0x050000
-    long	curve;
-    double	dXMax[2], dYMax[2];
-    double	dX[2];
-
-    /* Set scale style */
-    QPen ScalePen(MainGridColorPlot, 1, Qt::DotLine);
-
-    /* Get bounds of scale */
-    getAxisScaleBounds(this, dXMax[0], dXMax[1], dYMax[0], dYMax[1]);
-
-    dX[0] = dX[1] = (double) 0.0;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-
-    dX[0] = dX[1] = (double) 0.3086;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-
-    dX[0] = dX[1] = (double) -0.3086;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-
-    dX[0] = dX[1] = (double) 0.6172;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-
-    dX[0] = dX[1] = (double) -0.6172;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-
-    dX[0] = dX[1] = (double) 0.9258;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-
-    dX[0] = dX[1] = (double) -0.9258;
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dX, dYMax, 2);
-
-    curve = insertCurve("line");
-    curve->setPen(ScalePen);
-    curve->setSamples(dXMax, dX, 2);
-#endif
-}
-
 FACConst::FACConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec, p)
 {
 }
@@ -1119,28 +968,19 @@ void FACConst::Setup()
     ConstellationChart::Setup();
     /* Init chart for FAC constellation */
     plot->setTitle(tr("FAC Constellation"));
-    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
     /* Fixed scale (2 / sqrt(2)) */
     plot->setAxisScale(QwtPlot::xBottom, (double) -1.4142, (double) 1.4142);
     plot->setAxisScale(QwtPlot::yLeft, (double) -1.4142, (double) 1.4142);
 
-    /* Set marker symbol */
-    symbolMSC.setStyle(QwtSymbol::Ellipse);
-    symbolMSC.setSize(4);
-    symbolMSC.setPen(QPen(MainPenColorConst));
-    symbolMSC.setBrush(QBrush(MainPenColorConst));
 
-    /* Insert grid */
-    SetQAM4Grid();
 }
 
 void FACConst::Update()
 {
     CVector<_COMPLEX> veccData;
     receiver->GetFACMLC()->GetVectorSpace(veccData);
-    SetData(main, veccData, symbolFAC);
+    SetData(main, veccData);
 }
 
 SDCConst::SDCConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec, p)
@@ -1157,10 +997,6 @@ void SDCConst::Setup()
 
     /* Init chart for SDC constellation */
     plot->setTitle(tr("SDC Constellation"));
-    plot->enableAxis(QwtPlot::yRight, FALSE);
-    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-    plot->enableAxis(QwtPlot::yLeft, TRUE);
-    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
     /* Fixed scale (4 / sqrt(10)) */
     plot->setAxisScale(QwtPlot::xBottom, (double) -1.2649, (double) 1.2649);
@@ -1168,18 +1004,18 @@ void SDCConst::Setup()
 
     /* Insert grid */
     if(eSDCCodingScheme == CS_1_SM)
-        SetQAM4Grid();
+    {
+    }
     else
-        SetQAM16Grid();
+    {
+    }
 }
 
 void SDCConst::Update()
 {
     CVector<_COMPLEX> veccData;
-    /* Get data vector */
     receiver->GetSDCMLC()->GetVectorSpace(veccData);
-
-    SetData(main, veccData, symbolSDC);
+    SetData(main, veccData);
 }
 
 MSCConst::MSCConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec, p)
@@ -1196,10 +1032,6 @@ void MSCConst::Setup()
 
     /* Init chart for MSC constellation */
     plot->setTitle(tr("MSC Constellation"));
-    plot->enableAxis(QwtPlot::yRight, FALSE);
-    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-    plot->enableAxis(QwtPlot::yLeft, TRUE);
-    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
     /* Fixed scale (8 / sqrt(42)) */
     plot->setAxisScale(QwtPlot::xBottom, (double) -1.2344, (double) 1.2344);
@@ -1207,20 +1039,27 @@ void MSCConst::Setup()
 
     /* Insert grid */
     if (eMSCCodingScheme == CS_2_SM)
-        SetQAM16Grid();
+    {
+    }
     else
-        SetQAM64Grid();
+    {
+    }
 }
 
 void MSCConst::Update()
 {
     CVector<_COMPLEX> veccData;
     receiver->GetMSCMLC()->GetVectorSpace(veccData);
-    SetData(main, veccData, symbolMSC);
+    SetData(main, veccData);
 }
 
 AllConst::AllConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec, p)
 {
+    main2 = new QwtPlotCurve(tr("SDC"));
+    main3 = new QwtPlotCurve(tr("FAC"));
+    symbolMSC = new QwtSymbol(QwtSymbol::Ellipse, QBrush(Qt::blue), QPen(), QSize(4,4));
+    symbolSDC = new QwtSymbol(QwtSymbol::XCross, QBrush(Qt::red), QPen(), QSize(4,4));
+    symbolFAC = new QwtSymbol(QwtSymbol::Rect, QBrush(Qt::black), QPen(), QSize(4,4));
 }
 
 void AllConst::Setup()
@@ -1228,12 +1067,15 @@ void AllConst::Setup()
     ConstellationChart::Setup();
     /* Init chart for constellation */
     plot->setTitle(tr("MSC / SDC / FAC Constellation"));
-    plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-    plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
     /* Fixed scale */
     plot->setAxisScale(QwtPlot::xBottom, (double) -1.5, (double) 1.5);
     plot->setAxisScale(QwtPlot::yLeft, (double) -1.5, (double) 1.5);
+    main->setTitle(tr("MSC"));
+
+    SetSymbol(main, symbolMSC);
+    SetSymbol(main2, symbolSDC);
+    SetSymbol(main3, symbolFAC);
 
     /* Insert "dummy" curves for legend */
     // TODO plot->enableLegend(TRUE, curve1);
@@ -1243,11 +1085,11 @@ void AllConst::Update()
 {
     CVector<_COMPLEX> veccData;
     receiver->GetMSCMLC()->GetVectorSpace(veccData);
-    SetData(main, veccData, symbolMSC);
+    SetData(main, veccData);
     receiver->GetSDCMLC()->GetVectorSpace(veccData);
-    SetData(main2, veccData, symbolSDC);
+    SetData(main2, veccData);
     receiver->GetFACMLC()->GetVectorSpace(veccData);
-    SetData(main2, veccData, symbolFAC);
+    SetData(main3, veccData);
 }
 
 /* Implementation *************************************************************/
