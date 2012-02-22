@@ -458,7 +458,7 @@ void systemevalDlg::showEvent(QShowEvent*)
 
     /* Activate real-time timer */
     Timer.start(GUI_CONTROL_UPDATE_TIME);
-    TimerChart.start(GUI_CONTROL_UPDATE_TIME);
+    TimerChart.start(100);
     setIconSize(QSize(16,16));
 }
 

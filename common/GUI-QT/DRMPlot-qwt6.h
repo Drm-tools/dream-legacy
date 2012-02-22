@@ -116,6 +116,8 @@ public:
     InpSpecWaterf(CDRMReceiver *pDRMRec, QwtPlot* p);
     void Setup();
     void Update();
+protected:
+    QPixmap* canvas;
 };
 
 class AudioSpec: public Chart

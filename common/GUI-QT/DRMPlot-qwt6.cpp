@@ -68,8 +68,6 @@
 #define BLACKGREY_PASS_BAND_COLOR_PLOT			QColor(128, 128, 128)
 
 Chart::Chart(CDRMReceiver *pDRMRec, QwtPlot* p):receiver(pDRMRec),plot(p),grid(NULL)
-    //,MainPenColorPlot (), MainPenColorConst (), BckgrdColorPlot (), MainGridColorPlot(), SpecLine1ColorPlot(),
-    //SpecLine2ColorPlot(), PassBandColorPlot()
 {
     grid = new QwtPlotGrid();
     main = new QwtPlotCurve("");
@@ -367,7 +365,7 @@ void AvIR::SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLowerB,
     plot->setAxisScale(QwtPlot::xBottom, rScaleMin, rScaleMax);
 }
 
-InpSpecWaterf::InpSpecWaterf(CDRMReceiver *pDRMRec, QwtPlot* p):Chart(pDRMRec, p)
+InpSpecWaterf::InpSpecWaterf(CDRMReceiver *pDRMRec, QwtPlot* p):Chart(pDRMRec, p),canvas(NULL)
 {
 }
 
@@ -375,9 +373,9 @@ void InpSpecWaterf::Setup()
 {
     Chart::Setup();
     plot->setTitle(tr("Waterfall Input Spectrum"));
-    plot->enableAxis(QwtPlot::yRight, FALSE);
     plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-    plot->enableAxis(QwtPlot::yLeft, FALSE);
+    grid->detach();
+    plot->enableAxis(QwtPlot::yLeft, false);
 
     /* Fixed scale */
     plot->setAxisScale(QwtPlot::xBottom,
@@ -387,6 +385,7 @@ void InpSpecWaterf::Setup()
            "The input spectrum is displayed as a waterfall type. The "
            "different colors represent different levels.");
     plot->setWhatsThis(strCurPlotHelp);
+    canvas = new QPixmap(plot->canvas()->size());
 }
 
 void InpSpecWaterf::Update()
@@ -396,17 +395,64 @@ void InpSpecWaterf::Update()
     /* Get data from module */
     receiver->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
 
-#if QWT_VERSION < 0x050000
+#if 0
+samples.
+#else
+#if 1
+    
+    QPainter painter;
+    if(!painter.begin(canvas))
+    {
+cerr << "failed to initialise painter" << endl;
+cerr << canvas->width() << " , " << canvas->height() << endl;
+cerr << plot->canvas()->height() << endl;
+cerr << vecrData.Size() << endl;
+canvas = new QPixmap(vecrData.Size(),  plot->canvas()->height());
+
+    if(!painter.begin(canvas))
+    {
+cerr << "failed again to initialise painter" << endl;
+	return;
+    }
+    }
+    // copy down one pixel
+    painter.drawImage(0, 1, *canvas, 0, 0, canvas->width(), canvas->height()-1);
+    for (int i = 0; i < vecrData.Size(); i++)
+    {
+        /* Init some constants */
+        const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
+        const int iMaxSat = 255; /* Range of saturation is 0-255 */
+
+        /* Translate dB-values in colors */
+        const int iCurCol =
+            (int) Round((vecrData[i] - MIN_VAL_INP_SPEC_Y_AXIS_DB) /
+                        (MAX_VAL_INP_SPEC_Y_AXIS_DB - MIN_VAL_INP_SPEC_Y_AXIS_DB) *
+                        iMaxHue);
+
+        /* Reverse colors and add some offset (to make it look a bit nicer) */
+        const int iColOffset = 60;
+        int iFinalCol = iMaxHue - iColOffset - iCurCol;
+        if (iFinalCol < 0) /* Prevent from out-of-range */
+            iFinalCol = 0;
+
+        /* Also change saturation to get dark colors when low level */
+        const int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
+
+        /* Generate pixel */
+        painter.setPen(QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv));
+        painter.drawPoint(i, 0); /* line 0 -> top line */
+    }
+    painter.end();
+    plot->canvas()->setBackgroundPixmap(*canvas);
+#else
     /* Calculate sizes */
     const QSize CanvSize = plot->canvas()->size();
-    int iLenScale = axisScaleDraw(QwtPlot::xBottom)->length();
+    int iLenScale = plot->axisScaleDraw(QwtPlot::xBottom)->length();
 
     if ((iLenScale > 0) && (iLenScale < CanvSize.width()))
     {
         /* Calculate start and end of scale (needed for the borders) */
-        iStartScale =
-            (int) Floor(((_REAL) CanvSize.width() - iLenScale) / 2) - 1;
-
+        iStartScale = (int) Floor(((_REAL) CanvSize.width() - iLenScale) / 2) - 1;
         iEndScale = iLenScale + iStartScale;
     }
     else
@@ -418,49 +464,39 @@ void InpSpecWaterf::Update()
     }
 
     const QPixmap* pBPixmap = plot->canvas()->backgroundPixmap();
+    QColor backgroundColor = plot->backgroundColor();
 
     QPixmap Canvas(CanvSize);
+    QPainter painter;
+    painter.begin(&Canvas);
     /* In case the canvas width has changed or there is no bitmap, reset
        background */
     if ((pBPixmap == NULL) || (LastCanvasSize.width() != CanvSize.width()))
-        Canvas.fill(backgroundColor());
+        Canvas.fill(backgroundColor);
     else
     {
         /* If height is larger, write background color in new space */
         if (LastCanvasSize.height() < CanvSize.height())
         {
-            /* Prepare bitmap for copying background color */
-            QPixmap CanvasTMP(CanvSize);
-            CanvasTMP.fill(backgroundColor());
+	    painter.fillRect(QRect(0, LastCanvasSize.height(), CanvSize.width(), CanvSize.height() - LastCanvasSize.height()), backgroundColor);
 
-            /* Actual copy */
-            bitBlt(&Canvas, 0, LastCanvasSize.height(), &CanvasTMP, 0, 0,
-                   CanvSize.width(), CanvSize.height() - LastCanvasSize.height(),
-                   Qt::CopyROP);
         }
 
         /* Move complete block one line further. Use old bitmap */
-        bitBlt(&Canvas, 0, 1, pBPixmap, 0, 0,
-               CanvSize.width(), CanvSize.height() - 1, Qt::CopyROP);
+	painter.drawPixmap(0, 1, *pBPixmap, 0, 0, CanvSize.width(), CanvSize.height() - 1);
     }
 
     /* Store current canvas size */
     LastCanvasSize = CanvSize;
 
     /* Paint new line (top line) */
-    QPainter Painter;
-    Painter.begin(&Canvas);
 
     /* Left of the scale (left border) */
-    for (i = 0; i < iStartScale; i++)
-    {
-        /* Generate pixel */
-        Painter.setPen(backgroundColor());
-        Painter.drawPoint(i, 0); /* line 0 -> top line */
-    }
+    painter.setPen(backgroundColor);
+    painter.drawLine(0, 0, iStartScale-1, 0);
 
     /* Actual waterfall data */
-    for (i = iStartScale; i < iEndScale; i++)
+    for (int i = iStartScale; i < iEndScale; i++)
     {
         /* Init some constants */
         const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
@@ -486,22 +522,19 @@ void InpSpecWaterf::Update()
         const int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
 
         /* Generate pixel */
-        Painter.setPen(QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv));
-        Painter.drawPoint(i, 0); /* line 0 -> top line */
+        painter.setPen(QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv));
+        painter.drawPoint(i, 0); /* line 0 -> top line */
     }
 
     /* Right of scale (right border) */
-    for (i = iEndScale; i < CanvSize.width(); i++)
-    {
-        /* Generate pixel */
-        Painter.setPen(backgroundColor());
-        Painter.drawPoint(i, 0); /* line 0 -> top line */
-    }
+    painter.setPen(backgroundColor);
+    painter.drawLine(iEndScale, 0, CanvSize.width(), 0);
 
-    Painter.end();
+    painter.end();
 
     /* Show the bitmap */
     plot->canvas()->setBackgroundPixmap(Canvas);
+#endif
 #endif
 }
 
