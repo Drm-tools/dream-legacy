@@ -51,15 +51,15 @@
 /* Definitions ****************************************************************/
 #define GUI_CONTROL_UPDATE_WATERFALL			100	/* Milliseconds */
 
-/* Maximum and minimum values of x-axis of input spectrum plots */
+/* Maximum and minimum values of y-axis of input spectrum plots */
 #define MIN_VAL_INP_SPEC_Y_AXIS_DB				((double) -125.0)
 #define MAX_VAL_INP_SPEC_Y_AXIS_DB				((double) -25.0)
 
-/* Maximum and minimum values of x-axis of input PSD (shifted) */
+/* Maximum and minimum values of y-axis of input PSD (shifted) */
 #define MIN_VAL_SHIF_PSD_Y_AXIS_DB				((double) -85.0)
 #define MAX_VAL_SHIF_PSD_Y_AXIS_DB				((double) -35.0)
 
-/* Maximum and minimum values of x-axis of SNR spectrum */
+/* Maximum and minimum values of y-axis of SNR spectrum */
 #define MIN_VAL_SNR_SPEC_Y_AXIS_DB				((double) 0.0)
 #define MAX_VAL_SNR_SPEC_Y_AXIS_DB				((double) 35.0)
 

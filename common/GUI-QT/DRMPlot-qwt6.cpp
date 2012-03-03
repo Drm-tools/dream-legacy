@@ -380,49 +380,39 @@ void InpSpecWaterf::Setup()
     /* Fixed scale */
     plot->setAxisScale(QwtPlot::xBottom,
                        (double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
-    QString strCurPlotHelp =
+    plot->setWhatsThis(
         tr("<b>Waterfall Display of Input Spectrum:</b> "
            "The input spectrum is displayed as a waterfall type. The "
-           "different colors represent different levels.");
-    plot->setWhatsThis(strCurPlotHelp);
+           "different colors represent different levels."));
     canvas = new QPixmap(plot->canvas()->size());
+    canvas->fill(Qt::black);
+    plot->canvas()->setBackgroundPixmap(*canvas);
 }
 
 void InpSpecWaterf::Update()
 {
     CVector<_REAL> vecrData;
     CVector<_REAL> vecrScale;
+    /* Init some constants */
+    const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
+    const int iMaxSat = 255; /* Range of saturation is 0-255 */
+    const int iColOffset = 60;
+
     /* Get data from module */
     receiver->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
 
-#if 0
-samples.
-#else
-#if 1
-    
     QPainter painter;
     if(!painter.begin(canvas))
     {
-cerr << "failed to initialise painter" << endl;
-cerr << canvas->width() << " , " << canvas->height() << endl;
-cerr << plot->canvas()->height() << endl;
-cerr << vecrData.Size() << endl;
-canvas = new QPixmap(vecrData.Size(),  plot->canvas()->height());
-
-    if(!painter.begin(canvas))
-    {
-cerr << "failed again to initialise painter" << endl;
-	return;
-    }
+        if(!painter.begin(canvas))
+        {
+            return;
+        }
     }
     // copy down one pixel
     painter.drawImage(0, 1, *canvas, 0, 0, canvas->width(), canvas->height()-1);
     for (int i = 0; i < vecrData.Size(); i++)
     {
-        /* Init some constants */
-        const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
-        const int iMaxSat = 255; /* Range of saturation is 0-255 */
-
         /* Translate dB-values in colors */
         const int iCurCol =
             (int) Round((vecrData[i] - MIN_VAL_INP_SPEC_Y_AXIS_DB) /
@@ -430,13 +420,16 @@ cerr << "failed again to initialise painter" << endl;
                         iMaxHue);
 
         /* Reverse colors and add some offset (to make it look a bit nicer) */
-        const int iColOffset = 60;
         int iFinalCol = iMaxHue - iColOffset - iCurCol;
         if (iFinalCol < 0) /* Prevent from out-of-range */
             iFinalCol = 0;
+	if(iFinalCol>iMaxHue)
+	    iFinalCol=iMaxHue;
 
         /* Also change saturation to get dark colors when low level */
-        const int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
+        int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
+        if(iCurSat<0) iCurSat=0;
+        if(iCurSat>iMaxSat) iCurSat=iMaxSat;
 
         /* Generate pixel */
         painter.setPen(QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv));
@@ -444,98 +437,6 @@ cerr << "failed again to initialise painter" << endl;
     }
     painter.end();
     plot->canvas()->setBackgroundPixmap(*canvas);
-#else
-    /* Calculate sizes */
-    const QSize CanvSize = plot->canvas()->size();
-    int iLenScale = plot->axisScaleDraw(QwtPlot::xBottom)->length();
-
-    if ((iLenScale > 0) && (iLenScale < CanvSize.width()))
-    {
-        /* Calculate start and end of scale (needed for the borders) */
-        iStartScale = (int) Floor(((_REAL) CanvSize.width() - iLenScale) / 2) - 1;
-        iEndScale = iLenScale + iStartScale;
-    }
-    else
-    {
-        /* Something went wrong, use safe parameters */
-        iStartScale = 0;
-        iEndScale = CanvSize.width();
-        iLenScale = CanvSize.width();
-    }
-
-    const QPixmap* pBPixmap = plot->canvas()->backgroundPixmap();
-    QColor backgroundColor = plot->backgroundColor();
-
-    QPixmap Canvas(CanvSize);
-    QPainter painter;
-    painter.begin(&Canvas);
-    /* In case the canvas width has changed or there is no bitmap, reset
-       background */
-    if ((pBPixmap == NULL) || (LastCanvasSize.width() != CanvSize.width()))
-        Canvas.fill(backgroundColor);
-    else
-    {
-        /* If height is larger, write background color in new space */
-        if (LastCanvasSize.height() < CanvSize.height())
-        {
-	    painter.fillRect(QRect(0, LastCanvasSize.height(), CanvSize.width(), CanvSize.height() - LastCanvasSize.height()), backgroundColor);
-
-        }
-
-        /* Move complete block one line further. Use old bitmap */
-	painter.drawPixmap(0, 1, *pBPixmap, 0, 0, CanvSize.width(), CanvSize.height() - 1);
-    }
-
-    /* Store current canvas size */
-    LastCanvasSize = CanvSize;
-
-    /* Paint new line (top line) */
-
-    /* Left of the scale (left border) */
-    painter.setPen(backgroundColor);
-    painter.drawLine(0, 0, iStartScale-1, 0);
-
-    /* Actual waterfall data */
-    for (int i = iStartScale; i < iEndScale; i++)
-    {
-        /* Init some constants */
-        const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
-        const int iMaxSat = 255; /* Range of saturation is 0-255 */
-
-        /* Stretch width to entire canvas width */
-        const int iCurIdx =
-            (int) Round((_REAL) (i - iStartScale) / iLenScale * vecrData.Size());
-
-        /* Translate dB-values in colors */
-        const int iCurCol =
-            (int) Round((vecrData[iCurIdx] - MIN_VAL_INP_SPEC_Y_AXIS_DB) /
-                        (MAX_VAL_INP_SPEC_Y_AXIS_DB - MIN_VAL_INP_SPEC_Y_AXIS_DB) *
-                        iMaxHue);
-
-        /* Reverse colors and add some offset (to make it look a bit nicer) */
-        const int iColOffset = 60;
-        int iFinalCol = iMaxHue - iColOffset - iCurCol;
-        if (iFinalCol < 0) /* Prevent from out-of-range */
-            iFinalCol = 0;
-
-        /* Also change saturation to get dark colors when low level */
-        const int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
-
-        /* Generate pixel */
-        painter.setPen(QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv));
-        painter.drawPoint(i, 0); /* line 0 -> top line */
-    }
-
-    /* Right of scale (right border) */
-    painter.setPen(backgroundColor);
-    painter.drawLine(iEndScale, 0, CanvSize.width(), 0);
-
-    painter.end();
-
-    /* Show the bitmap */
-    plot->canvas()->setBackgroundPixmap(Canvas);
-#endif
-#endif
 }
 
 TranFct::TranFct(CDRMReceiver *pDRMRec, QwtPlot* p):Chart2(pDRMRec, p)
@@ -694,14 +595,13 @@ void FreqSamOffsHist::AutoScale(CVector<_REAL>& vecrData,
                        (double) Ceil(MaxSam / rMinScaleRange));
     plot->setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
-    QString strCurPlotHelp =
+    plot->setWhatsThis(
         tr("<b>Frequency Offset / Sample Rate Offset History:"
            "</b> The history "
            "of the values for frequency offset and sample rate offset "
            "estimation is shown. If the frequency offset drift is very small, "
            "this is an indication that the analog front end is of high "
-           "quality.");
-    plot->setWhatsThis(strCurPlotHelp);
+           "quality."));
 }
 
 
@@ -1053,7 +953,7 @@ void AnalogInpPSD::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 }
 
 ConstellationChart::ConstellationChart(CDRMReceiver* pDRMRec, QwtPlot* p)
-:Chart(pDRMRec, p), points(4),symbol(NULL)
+    :Chart(pDRMRec, p), points(4),symbol(NULL)
 {
 }
 
@@ -1067,7 +967,7 @@ void ConstellationChart::Setup()
 
     // scaling factor for equal energy see http://www.dsplog.com/2007/09/23/scaling-factor-in-qam/
     double scale = 2.0/3.0*(points-1);
-    double lim =  sqrt(points) / sqrt(scale); 
+    double lim =  sqrt(points) / sqrt(scale);
     double steps = sqrt(points)/2;
     plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
     plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
@@ -1143,9 +1043,9 @@ void SDCConst::Setup()
     Parameters.Unlock();
 
     if(eSDCCodingScheme == CS_1_SM)
-	points = 4;
+        points = 4;
     else
-	points = 16;
+        points = 16;
     ConstellationChart::Setup();
 
     /* Init chart for SDC constellation */
@@ -1171,9 +1071,9 @@ void MSCConst::Setup()
     Parameters.Unlock();
 
     if (eMSCCodingScheme == CS_2_SM)
-	points = 16;
+        points = 16;
     else
-	points = 64;
+        points = 64;
     ConstellationChart::Setup();
     /* Init chart for MSC constellation */
     plot->setTitle(tr("MSC Constellation"));
@@ -1198,7 +1098,7 @@ AllConst::AllConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec
 
 void AllConst::Setup()
 {
-   
+
     points = 64;
     ConstellationChart::Setup();
     /* Init chart for constellation */

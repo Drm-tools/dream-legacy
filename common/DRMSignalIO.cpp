@@ -436,6 +436,9 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
     for (i = 0; i < NUM_SMPLS_4_INPUT_SPECTRUM; i++)
         vecrFFTInput[i] = vecrInpData[i];
 
+    /* Release resources */
+    Unlock();
+
     /* Get squared magnitude of spectrum */
     CRealVector vecrSqMagSpect(iLenSpecWithNyFreq);
     vecrSqMagSpect =
@@ -454,8 +457,6 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
         vecrScale[i] = (_REAL) i * rFactorScale;
     }
 
-    /* Release resources */
-    Unlock();
 }
 
 void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
