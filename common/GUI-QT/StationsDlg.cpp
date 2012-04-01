@@ -37,7 +37,6 @@
 # define Q3WhatsThis QWhatsThis
 # ifdef HAVE_LIBHAMLIB
 #  include "Rig.h"
-#  include "RigDlg.h"
 # endif
 #else
 # ifdef HAVE_LIBHAMLIB
@@ -482,8 +481,10 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 
     //connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
 # ifdef HAVE_LIBHAMLIB
+#  if QT_VERSION < 0x040000
     RigDlg *pRigDlg = new RigDlg(Settings, rig, this);
     connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
+#  endif
 # endif
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 #endif

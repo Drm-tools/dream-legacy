@@ -483,7 +483,13 @@ AudioSpec::AudioSpec(CDRMReceiver *pDRMRec, QwtPlot* p):Chart(pDRMRec, p)
 void AudioSpec::Setup()
 {
     /* Init chart for audio spectrum */
+<<<<<<< DRMPlot-qwt6.cpp
+    plot->enableAxis(QwtPlot::yRight, FALSE);
+    grid->enableXMin(false);
+    grid->enableYMin(false);
+=======
     Chart::Setup();
+>>>>>>> 1.12
     plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
     plot->setAxisTitle(QwtPlot::yLeft, "AS [dB]");
 
