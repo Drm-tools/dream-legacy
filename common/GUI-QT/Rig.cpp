@@ -39,7 +39,11 @@ void CRig::subscribe()
 #endif
     subscribers++;
     //cerr << "subscribe " << subscribers << endl;
+#if QT_VERSION < 0x040000
     if((subscribers>0) && !running())
+#else
+    if((subscribers>0) && !isRunning())
+#endif
         start();
 }
 

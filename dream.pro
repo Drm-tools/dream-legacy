@@ -325,7 +325,6 @@ HEADERS += common/GPSData.h \
    common/PlotManager.h \
    common/ServiceInformation.h \
    common/DrmReceiver.h \
-   common/GUI-QT/Rig.h \
    common/DRMSignalIO.h \
    common/DrmSimulation.h \
    common/DrmTransmitter.h \
@@ -403,6 +402,7 @@ HEADERS += common/GPSData.h \
    common/util/Settings.h \
    common/util/Utilities.h \
    common/util/Vector.h \
+    common/GUI-QT/Rig.h \
    common/Version.h
 SOURCES += common/GPSData.cpp \
       common/AMDemodulation.cpp \
@@ -499,7 +499,7 @@ SOURCES += common/GPSData.cpp \
       common/util/Settings.cpp \
       common/util/Utilities.cpp \
       common/Version.cpp \
-      common/GUI-QT/Rig.cpp \
+    common/GUI-QT/Rig.cpp \
       common/GUI-QT/main.cpp
 !console {
     HEADERS += common/GPSReceiver.h \

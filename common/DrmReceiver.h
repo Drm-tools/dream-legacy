@@ -161,9 +161,11 @@ public:
     void					SetAMDemodType(CAMDemodulation::EDemodType);
     void					SetAMFilterBW(int iBw);
     void					SetAMDemodAcq(_REAL rNewNorCen);
+#ifdef HAVE_LIBHAMLIB
     void	 				SetRig(CRig* n) {
         pRig=n;
     }
+#endif
     void	 				SetFrequency(int);
     int		 				GetFrequency() {
         return pReceiverParam->GetFrequency();
@@ -438,7 +440,9 @@ protected:
     int						iBwFM;
     _BOOLEAN				bReadFromFile;
     time_t					time_keeper;
+#ifdef HAVE_LIBHAMLIB
     CRig*				pRig;
+#endif
 
     CPlotManager PlotManager;
     string			rsiOrigin;

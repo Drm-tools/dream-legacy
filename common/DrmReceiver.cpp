@@ -65,7 +65,11 @@ CDRMReceiver::CDRMReceiver():
         iDataStreamID(STREAM_ID_NOT_USED), bRestartFlag(TRUE),
         rInitResampleOffset((_REAL) 0.0),
         iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-        bReadFromFile(FALSE), time_keeper(0),pRig(NULL),PlotManager(),rsiOrigin("")
+        bReadFromFile(FALSE), time_keeper(0),
+#ifdef HAVE_LIBHAMLIB
+	pRig(NULL),
+#endif
+	PlotManager(),rsiOrigin("")
 {
     pReceiverParam = new CParameter(this);
     downstreamRSCI.SetReceiver(this);
@@ -1226,8 +1230,10 @@ void CDRMReceiver::SetFrequency(int iNewFreqkHz)
         upstreamRSCI.SetFrequency(iNewFreqkHz);
     }
 
+#ifdef HAVE_LIBHAMLIB
 	if(pRig)
 		pRig->SetFrequency(iNewFreqkHz);
+#endif
 
 	if (downstreamRSCI.GetOutEnabled() == TRUE)
 		downstreamRSCI.NewFrequency(*pReceiverParam);
