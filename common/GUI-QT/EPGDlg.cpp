@@ -47,7 +47,12 @@ static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f):
     CEPGDlgbase(parent, name, modal, f),
-    BitmCubeGreen(),date(QDate::currentDate()),
+#if QT_VERSION < 0x040000
+    BitmCubeGreen(),
+	date(QDate::currentDate()),
+#else
+	greenCube(":/icons/greenCube.png"),
+#endif
     do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
     Settings(NSettings),Timer(),sids(),next(NULL)
 {
@@ -61,23 +66,13 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     /* auto resize of the programme name column */
 #if QT_VERSION < 0x040000
     Data->setColumnWidthMode(COL_NAME, QListView::Maximum);
-#else
-#endif
     /* Define size of the bitmaps */
     const int iXSize = 8;
     const int iYSize = 8;
 
     /* Create bitmaps */
-#if QT_VERSION < 0x040000
     BitmCubeGreen.resize(iXSize, iYSize);
-#endif
     BitmCubeGreen.fill(QColor(0, 255, 0));
-
-    /* Connections ---------------------------------------------------------- */
-    connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
-    connect(this, SIGNAL(NowNext(QString)), this, SLOT(sendNowNext(QString)));
-
-#if QT_VERSION < 0x040000
     connect(Prev, SIGNAL(clicked()), this, SLOT(previousDay()));
     connect(Next, SIGNAL(clicked()), this, SLOT(nextDay()));
     connect(channel, SIGNAL(activated(const QString&)), this
@@ -93,7 +88,10 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     year->setMaxValue(3000);
 #else
 	connect(dateEdit, SIGNAL(dateChanged(const QDate&)), this, SLOT(onDateChanged(const QDate&))); // TODO is this autowired ?
+	dateEdit->setDate(QDate::currentDate());
 #endif
+    connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
+    connect(this, SIGNAL(NowNext(QString)), this, SLOT(sendNowNext(QString)));
 
     /* Deactivate real-time timer */
     Timer.stop();
@@ -131,14 +129,14 @@ void EPGDlg::setActive(QTreeWidgetItem* myItem)
     MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
     if(item->IsActive())
     {
-        item->setIcon(COL_START, BitmCubeGreen);
+        item->setIcon(COL_START, greenCube);
         Data->scrollToItem(myItem);
         emit NowNext(item->text(COL_NAME));
         next = Data->itemBelow(item);
     }
     else
     {
-        item->setIcon(COL_START,QPixmap()); /* no pixmap */
+        item->setIcon(COL_START, QPixmap()); /* no pixmap */
     }
 }
 #endif
@@ -158,7 +156,6 @@ void EPGDlg::sendNowNext(QString s)
     a.setAddress(addr.c_str());
     sock.writeBlock(s.utf8(), s.length(), a, port);
 #else
-	// TODO
 #endif
 }
 
@@ -201,7 +198,7 @@ void EPGDlg::OnTimer()
         next = NULL;
 
         /* Check the items now on line. */
-        if (date == todayUTC) /* if today */
+		if (dateEdit->date() == todayUTC) /* if today */
         {
 #if QT_VERSION < 0x040000
             for(QListViewItem * myItem = Data->firstChild();
@@ -227,32 +224,41 @@ void EPGDlg::showEvent(QShowEvent *)
     uint32_t sid = Parameters.Service[sNo].iServiceID;
 
     // use the current date
-    date = QDate::currentDate();
+    dateEdit->setDate(QDate::currentDate());
     // update the channels combobox from the epg
     channel->clear();
     int n = -1;
     sids.clear();
-#if QT_VERSION < 0x040000
     for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin();
             i != Parameters.ServiceInformation.end(); i++) {
         QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
         uint32_t channel_id = i->second.id;
         sids[channel_label] = channel_id;
+#if QT_VERSION < 0x040000
         channel->insertItem(channel_label);
         if (channel_id == sid) {
             n = channel->currentItem();
         }
+#else
+        channel->addItem(channel_label);
+        if (channel_id == sid) {
+            n = channel->currentIndex();
+        }
+#endif
     }
     Parameters.Unlock();
     // update the current selection
     if (n >= 0) {
+#if QT_VERSION < 0x040000
         channel->setCurrentItem(n);
-    }
 #else
-	// TODO
+        channel->setCurrentIndex(n);
 #endif
+    }
     do_updates = true;
+#if QT_VERSION < 0x040000
     setDate();
+#endif
     epg.progs.clear ();
     select();
 
@@ -274,14 +280,14 @@ void EPGDlg::hideEvent(QHideEvent*)
     Settings.Put("EPG Dialog", s);
 }
 
+#if QT_VERSION < 0x040000
 void EPGDlg::setDate()
 {
-#if QT_VERSION < 0x040000
     day->setValue(date.day());
     month->setValue(date.month());
     year->setValue(date.year());
-#endif
 }
+#endif
 
 #if QT_VERSION < 0x040000
 
@@ -319,10 +325,9 @@ void EPGDlg::setYear(int n)
 }
 #endif
 
-void EPGDlg::onDateChanged(const QDate& ndate)
+void EPGDlg::onDateChanged(const QDate&)
 {
-    date = ndate;
-    setDate();
+    select();
 }
 
 void EPGDlg::selectChannel(const QString &)
@@ -337,6 +342,7 @@ void EPGDlg::select()
     QListViewItem* CurrActiveItem = NULL;
 #else
     QTreeWidgetItem* CurrActiveItem = NULL;
+	QDate date = dateEdit->date();
 #endif
 
     if (!do_updates)

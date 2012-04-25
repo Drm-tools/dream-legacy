@@ -129,14 +129,14 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 			/* Reset flag for data unit ok when receiving the first packet of
 			   a new data unit */
-			if (biFirstFlag == TRUE)
+			if (biFirstFlag == 1)
 			{
 				DataUnit[iPacketID].Reset();
 				DataUnit[iPacketID].bOK = TRUE;
 			}
 
 			/* If all packets are received correctely, data unit is ready */
-			if (biLastFlag == TRUE)
+			if (biLastFlag == 1)
 			{
 				if (DataUnit[iPacketID].bOK == TRUE)
 					DataUnit[iPacketID].bReady = TRUE;
@@ -144,7 +144,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 			/* Data field --------------------------------------------------- */
 			/* Get size of new data block */
-			if (biPadPackInd == TRUE)
+			if (biPadPackInd == 1)
 			{
 				/* Padding is present: the first byte gives the number of
 				   useful data bytes in the data field. */
@@ -177,8 +177,8 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				   shall be set to 0 to indicate no useful data. The first
 				   and last flags shall be set to 1. The continuity index
 				   shall be incremented for these empty packets */
-				if ((biFirstFlag == TRUE) &&
-					(biLastFlag == TRUE) && (iNewPacketDataSize == 0))
+				if ((biFirstFlag == 1) &&
+					(biLastFlag == 1) && (iNewPacketDataSize == 0))
 				{
 					/* Packet with no useful data, reset flag */
 					DataUnit[iPacketID].bReady = FALSE;
@@ -217,7 +217,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				if(eAppType[iPacketID] == AT_NOT_SUP)
 				{
 					int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
-					int iCurDataStreamID = ReceiverParam.Service[iCurSelDataServ].DataParam.iStreamID;
+					// TODO int iCurDataStreamID = ReceiverParam.Service[iCurSelDataServ].DataParam.iStreamID;
 					for (int i = 0; i <=3; i++)
 					{
 						if(ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID == iPacketID)

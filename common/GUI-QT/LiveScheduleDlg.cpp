@@ -344,6 +344,10 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     strCurrentSavePath("."),
     iColStationID(0),
     iWidthColStationID(0)
+#if QT_VERSION >= 0x040000
+,smallGreenCube(":/icons/smallGreenCube.png"),greenCube(":/icons/greenCube.png"),
+redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":/icons/pinkCube.png")
+#endif
 {
     setupUi(this);
     /* Set help text for the controls */
@@ -352,13 +356,6 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     /* Clear list box for file names and set up columns */
     ListViewStations->clear();
 
-	/* Create bitmaps */
-    BitmCubeGreen.fill(QColor(0, 255, 0));
-    BitmCubeGreenLittle.fill(QColor(0, 255, 0));
-    BitmCubeYellow.fill(QColor(255, 255, 0));
-    BitmCubeRed.fill(QColor(255, 0, 0));
-    BitmCubeOrange.fill(QColor(255, 128, 0));
-    BitmCubePink.fill(QColor(255, 128, 128));
 
 
 #if QT_VERSION < 0x040000
@@ -371,6 +368,13 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     BitmCubeRed.resize(iXSize, iYSize);
     BitmCubeOrange.resize(iXSize, iYSize);
     BitmCubePink.resize(iXSize, iYSize);
+	/* Create bitmaps */
+    BitmCubeGreen.fill(QColor(0, 255, 0));
+    BitmCubeGreenLittle.fill(QColor(0, 255, 0));
+    BitmCubeYellow.fill(QColor(255, 255, 0));
+    BitmCubeRed.fill(QColor(255, 0, 0));
+    BitmCubeOrange.fill(QColor(255, 128, 0));
+    BitmCubePink.fill(QColor(255, 128, 128));
 
 	/* We assume that one column is already there */
     ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz/MHz]"));
@@ -927,7 +931,8 @@ LiveScheduleDlg::SetStationsView()
                 bListHastChanged = TRUE;
             }
 
-            /* If receiver coordinates are into target area add a little green cube */
+#if QT_VERSION < 0x040000
+            /* If receiver coordinates are within the target area add a little green cube */
             if (DRMSchedule.GetItem(i).bInsideTargetArea == TRUE)
                 vecpListItems[i]->setPixmap(COL_TARGET, BitmCubeGreenLittle);
 
@@ -951,6 +956,32 @@ LiveScheduleDlg::SetStationsView()
                 vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeRed);
                 break;
             }
+#else
+            /* If receiver coordinates are within the target area add a little green cube */
+            if (DRMSchedule.GetItem(i).bInsideTargetArea == TRUE)
+                vecpListItems[i]->setIcon(COL_TARGET, smallGreenCube);
+
+            /* Check, if station is currently transmitting. If yes, set
+               special pixmap */
+            switch (DRMSchedule.CheckState(i))
+            {
+            case CDRMLiveSchedule::IS_ACTIVE:
+                vecpListItems[i]->setIcon(COL_FREQ, greenCube);
+                break;
+            case CDRMLiveSchedule::IS_PREVIEW:
+                vecpListItems[i]->setIcon(COL_FREQ, orangeCube);
+                break;
+            case CDRMLiveSchedule::IS_SOON_INACTIVE:
+                vecpListItems[i]->setIcon(COL_FREQ, pinkCube);
+                break;
+            case CDRMLiveSchedule::IS_INACTIVE:
+                vecpListItems[i]->setIcon(COL_FREQ, redCube);
+                break;
+            default:
+                vecpListItems[i]->setIcon(COL_FREQ, redCube);
+                break;
+            }
+#endif
         }
         else
         {

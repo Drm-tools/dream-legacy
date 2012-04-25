@@ -72,8 +72,7 @@
 class CEPGDlgbase : public QDialog, public Ui_CEPGDlgbase
 {
 public:
-	CEPGDlgbase(QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WFlags f = 0):
+	CEPGDlgbase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
 		QDialog(parent,f){setupUi(this);}
 	virtual ~CEPGDlgbase() {}
 };
@@ -84,14 +83,13 @@ class EPGDlg : public CEPGDlgbase
 
 public:
 
-	EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
+	EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~EPGDlg();
 	/* dummy assignment operator to help MSVC8 */
 	EPGDlg& operator=(const EPGDlg&)
 	{ throw "should not happen"; return *this;}
 
-    void setDate();
     void select();
 
 protected:
@@ -134,9 +132,6 @@ protected:
 	int duration;
     };
 
-	QPixmap			BitmCubeGreen;
-
-    QDate date;
     bool do_updates;
     EPG epg;
 	CDRMReceiver&	DRMReceiver;
@@ -144,9 +139,13 @@ protected:
 	QTimer			Timer;
 	map<QString,uint32_t> sids;
 #if QT_VERSION < 0x040000
+    void setDate();
+    QDate date;
 	QListViewItem*	next;
+	QPixmap			BitmCubeGreen;
 #else
 	QTreeWidgetItem* next;
+	QIcon			greenCube;
 #endif
 
 signals:

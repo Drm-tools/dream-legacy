@@ -33,11 +33,15 @@
 # include <qbuttongroup.h>
 # include <qwhatsthis.h>
 # include <qcstring.h>
+# include "MultimediaDlg.h"
 #else
 # include <QHideEvent>
 # include <QEvent>
 # include <QShowEvent>
 # include <QCloseEvent>
+# include "BWSViewer.h"
+# include "SlideShowViewer.h"
+# include "JLViewer.h"
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 
@@ -70,8 +74,12 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 #if QT_VERSION < 0x040000
     /* Multimedia window */
-    pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this);
-    pMultiMediaDlg->LoadSettings(Settings);
+	pBWSDlg = new MultimediaDlg(DRMReceiver, this);
+    pBWSDlg->LoadSettings(Settings);
+	pJLDlg = new MultimediaDlg(DRMReceiver, this);
+    pJLDlg->LoadSettings(Settings);
+	pSlideShowDlg = new MultimediaDlg(DRMReceiver, this);
+    pSlideShowDlg->LoadSettings(Settings);
 
     /* Stations window */
     pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
@@ -183,8 +191,13 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pButtonGroup->insert(PushButtonService2, 1);
     pButtonGroup->insert(PushButtonService3, 2);
     pButtonGroup->insert(PushButtonService4, 3);
+    connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectAudioService(int)));
+    connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectDataService(int)));
 #else
-	// TODO BWS, Slideshow, Journaline
+	pBWSDlg = new BWSViewer(DRMReceiver, Settings);
+	pJLDlg = new JLViewer(DRMReceiver, Settings);
+	pSlideShowDlg = new SlideShowViewer(DRMReceiver, Settings);
+
 
 	/* Stations window */
     pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this);
@@ -212,7 +225,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pMultSettingsDlg = new MultSettingsDlg(Parameters, Settings, this);
 
     connect(action_Evaluation_Dialog, SIGNAL(triggered()), pSysEvalDlg, SLOT(show()));
-    connect(action_Multimedia_Dialog, SIGNAL(triggered()), pMultiMediaDlg, SLOT(show()));
+    connect(action_Multimedia_Dialog, SIGNAL(triggered()), pBWSDlg, SLOT(show()));
+    connect(action_Multimedia_Dialog, SIGNAL(triggered()), pJLDlg, SLOT(show()));
+    connect(action_Multimedia_Dialog, SIGNAL(triggered()), pSlideShowDlg, SLOT(show()));
     connect(action_Stations_Dialog, SIGNAL(triggered()), this, SLOT(OnViewStationsDlg()));
     connect(action_Live_Schedule_Dialog, SIGNAL(triggered()), pLiveScheduleDlg, SLOT(show()));
     connect(action_Programme_Guide_Dialog, SIGNAL(triggered()), pEPGDlg, SLOT(show()));
@@ -270,6 +285,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pButtonGroup->addButton(PushButtonService2, 1);
     pButtonGroup->addButton(PushButtonService3, 2);
     pButtonGroup->addButton(PushButtonService4, 3);
+    connect(pButtonGroup, SIGNAL(buttonClicked(int)), this, SLOT(OnSelectAudioService(int)));
+    connect(pButtonGroup, SIGNAL(buttonClicked(int)), this, SLOT(OnSelectDataService(int)));
+
 #endif
     ProgrInputLevel->setAlarmLevel(-12.5);
     QBrush fillBrush(QColor(0, 190, 0));
@@ -280,9 +298,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     CLED_FAC->SetUpdateTime(1500);
     CLED_SDC->SetUpdateTime(1500);
     CLED_MSC->SetUpdateTime(600);
-
-    connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectAudioService(int)));
-    connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectDataService(int)));
 
     connect(pAnalogDemDlg, SIGNAL(SwitchMode(int)), this, SLOT(OnSwitchMode(int)));
     connect(pAnalogDemDlg, SIGNAL(NewAMAcquisition()), this, SLOT(OnNewAcquisition()));
@@ -755,8 +770,14 @@ void FDRMDialog::showEvent(QShowEvent*)
     if (Settings.Get("DRM Dialog", "System Evaluation Dialog visible", false))
         pSysEvalDlg->show();
 
-    if (Settings.Get("DRM Dialog", "Multimedia Dialog visible", false))
-        pMultiMediaDlg->show();
+    if (Settings.Get("DRM Dialog", "BWS Dialog visible", false))
+        pBWSDlg->show();
+
+	if (Settings.Get("DRM Dialog", "SS Dialog visible", false))
+        pSlideShowDlg->show();
+
+	if (Settings.Get("DRM Dialog", "JL Dialog visible", false))
+        pJLDlg->show();
 
     if (Settings.Get("DRM Dialog", "EPG Dialog visible", false))
         pEPGDlg->show();
@@ -775,12 +796,16 @@ void FDRMDialog::hideEvent(QHideEvent*)
     /* remember the state of the windows */
     Settings.Put("DRM Dialog", "Live Schedule Dialog visible", pLiveScheduleDlg->isVisible());
     Settings.Put("DRM Dialog", "System Evaluation Dialog visible", pSysEvalDlg->isVisible());
-    Settings.Put("DRM Dialog", "Multimedia Dialog visible", pMultiMediaDlg->isVisible());
+    Settings.Put("DRM Dialog", "BWS Dialog visible", pBWSDlg->isVisible());
+    Settings.Put("DRM Dialog", "JL Dialog visible", pJLDlg->isVisible());
+    Settings.Put("DRM Dialog", "SS Dialog visible", pSlideShowDlg->isVisible());
     Settings.Put("DRM Dialog", "EPG Dialog visible", pEPGDlg->isVisible());
 
     /* now close all the other windows */
     pSysEvalDlg->hide();
-    pMultiMediaDlg->hide();
+    pSlideShowDlg->hide();
+    pBWSDlg->hide();
+    pJLDlg->hide();
     pLiveScheduleDlg->hide();
     pEPGDlg->hide();
     pStationsDlg->hide();
@@ -840,9 +865,15 @@ void FDRMDialog::OnSelectDataService(int shortId)
         Parameters.SetCurSelDataService(shortId);
         break;
     case DAB_AT_BROADCASTWEBSITE:
+        pDlg = pBWSDlg;
+        Parameters.SetCurSelDataService(shortId);
+        break;
     case DAB_AT_JOURNALINE:
+        pDlg = pJLDlg;
+        Parameters.SetCurSelDataService(shortId);
+        break;
     case DAB_AT_MOTSLIDESHOW:
-        pDlg = pMultiMediaDlg;
+        pDlg = pSlideShowDlg;
         Parameters.SetCurSelDataService(shortId);
         break;
     default:

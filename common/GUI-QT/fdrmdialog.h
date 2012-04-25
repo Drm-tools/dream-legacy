@@ -42,7 +42,6 @@
 #if QT_VERSION < 0x040000
 # include <qpopupmenu.h>
 # include "fdrmdialogbase.h"
-# include "MultimediaDlg.h"
 # include "systemevalDlg.h"
 #else
 # include <QActionGroup>
@@ -71,6 +70,14 @@
 #include "../datadecoding/DataDecoder.h"
 
 /* Classes ********************************************************************/
+#if QT_VERSION < 0x040000
+class MultimediaDlg;
+#else
+class BWSViewer;
+class JLViewer;
+class SlideShowViewer;
+#endif
+
 #if QT_VERSION >= 0x040000
 class FDRMDialogBase : public QMainWindow, public Ui_DRMMainWindow
 {
@@ -100,9 +107,13 @@ protected:
 
     systemevalDlg*		pSysEvalDlg;
 #if QT_VERSION < 0x040000
-    MultimediaDlg*		pMultiMediaDlg;
+    MultimediaDlg*		pBWSDlg;
+    MultimediaDlg*		pJLDlg;
+    MultimediaDlg*		pSlideShowDlg;
 #else
-    QMainWindow*		pMultiMediaDlg;
+    BWSViewer*			pBWSDlg;
+    JLViewer*			pJLDlg;
+    SlideShowViewer*	pSlideShowDlg;
 #endif
     MultSettingsDlg*	pMultSettingsDlg;
     StationsDlg*		pStationsDlg;

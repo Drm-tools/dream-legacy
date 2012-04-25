@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="/icons" >
     <file>greenCube.png</file>
+    <file>smallGreenCube.png</file>
     <file>redCube.png</file>
     <file>pinkCube.png</file>
     <file>orangeCube.png</file>

@@ -132,7 +132,9 @@ public:
 		eVType(eNTy), iVectorLength(0), pData(NULL) {Init(iNLen);}
 	CMatlibVector(const int iNLen, const T tIniVal) :
 		eVType(VTY_CONST), iVectorLength(0), pData(NULL) {Init(iNLen, tIniVal);}
+#ifndef _MSC_VER
 	CMatlibVector(CMatlibVector<T>& vecI);
+#endif
 	CMatlibVector(const CMatlibVector<T>& vecI);
 	virtual ~CMatlibVector() {if (pData != NULL) delete[] pData;}
 
@@ -375,6 +377,8 @@ CMatlibVector<CComplex> // c, Tv
 
 /* Implementation **************************************************************
    (the implementation of template classes must be in the header file!) */
+
+#ifndef _MSC_VER
 template<class T>
 CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) :
 	 eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(vecI.GetSize()), pData(NULL)
@@ -410,6 +414,7 @@ CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) :
 		}
 	}
 }
+#endif
 
 /* Copy constructor for constant Matlib vectors */
 template<class T>

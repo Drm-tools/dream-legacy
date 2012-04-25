@@ -165,8 +165,7 @@ public:
 class CLiveScheduleDlgBase : public QMainWindow, public Ui_LiveScheduleWindow
 {
 public:
-	CLiveScheduleDlgBase(QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WFlags f = 0):
+	CLiveScheduleDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
 		QMainWindow(parent,f){}
 	virtual ~CLiveScheduleDlgBase() {}
 };
@@ -202,21 +201,26 @@ protected:
 
 	CDRMReceiver&				DRMReceiver;
 	CDRMLiveSchedule			DRMSchedule;
+	QTimer						TimerList;
+	QTimer						TimerUTCLabel;
+	_BOOLEAN					bShowAll;
+#if QT_VERSION < 0x040000
 	QPixmap						BitmCubeGreen;
 	QPixmap						BitmCubeGreenLittle;
 	QPixmap						BitmCubeYellow;
 	QPixmap						BitmCubeRed;
 	QPixmap						BitmCubeOrange;
 	QPixmap						BitmCubePink;
-	QTimer						TimerList;
-	QTimer						TimerUTCLabel;
-	_BOOLEAN					bShowAll;
-#if QT_VERSION < 0x040000
 	QPopupMenu*					pViewMenu;
 	QPopupMenu*					pPreviewMenu;
 	QPopupMenu*					pFileMenu;
 	void setupUi(QWidget*);
 #else
+	QIcon			smallGreenCube;
+	QIcon			greenCube;
+	QIcon			redCube;
+	QIcon			orangeCube;
+	QIcon			pinkCube;
 	QSignalMapper* previewMapper;
 	QActionGroup* previewGroup;
 	QSignalMapper* showMapper;

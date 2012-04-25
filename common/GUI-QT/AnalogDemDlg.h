@@ -75,8 +75,7 @@ class CDRMPlot;
 class CAMSSDlgBase : public QDialog, public Ui_CAMSSDlgBase
 {
 public:
-	CAMSSDlgBase(QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WFlags f = 0):
+	CAMSSDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
 		QDialog(parent,f){setupUi(this);}
 	virtual ~CAMSSDlgBase() {}
 };

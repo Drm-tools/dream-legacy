@@ -551,11 +551,7 @@ class CMOTDABDec
 {
   public:
 
-    CMOTDABDec ():MOTmode (unknown), MOTHeaders(),
-    MOTDirectoryEntity(), MOTDirComprEntity(),
-    MOTDirectory(), MOTCarousel(), qiNewObjects()
-    {
-    }
+    CMOTDABDec ();
 
     virtual ~ CMOTDABDec ()
     {
