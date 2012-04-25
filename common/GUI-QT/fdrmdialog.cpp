@@ -74,12 +74,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 #if QT_VERSION < 0x040000
     /* Multimedia window */
-	pBWSDlg = new MultimediaDlg(DRMReceiver, this);
-    pBWSDlg->LoadSettings(Settings);
-	pJLDlg = new MultimediaDlg(DRMReceiver, this);
-    pJLDlg->LoadSettings(Settings);
-	pSlideShowDlg = new MultimediaDlg(DRMReceiver, this);
-    pSlideShowDlg->LoadSettings(Settings);
+    pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this);
+    pMultiMediaDlg->LoadSettings(Settings);
 
     /* Stations window */
     pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
@@ -109,7 +105,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pMultSettingsDlg = new MultSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
     SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
 
-	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
+    SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
     SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
     SetDialogCaption(pStationsDlg, tr("Stations"));
     SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
@@ -770,6 +766,10 @@ void FDRMDialog::showEvent(QShowEvent*)
     if (Settings.Get("DRM Dialog", "System Evaluation Dialog visible", false))
         pSysEvalDlg->show();
 
+#if QT_VERSION < 0x040000
+    if (Settings.Get("DRM Dialog", "MultiMedia Dialog visible", false))
+        pMultiMediaDlg->show();
+#else
     if (Settings.Get("DRM Dialog", "BWS Dialog visible", false))
         pBWSDlg->show();
 
@@ -778,6 +778,7 @@ void FDRMDialog::showEvent(QShowEvent*)
 
 	if (Settings.Get("DRM Dialog", "JL Dialog visible", false))
         pJLDlg->show();
+#endif
 
     if (Settings.Get("DRM Dialog", "EPG Dialog visible", false))
         pEPGDlg->show();
@@ -796,16 +797,21 @@ void FDRMDialog::hideEvent(QHideEvent*)
     /* remember the state of the windows */
     Settings.Put("DRM Dialog", "Live Schedule Dialog visible", pLiveScheduleDlg->isVisible());
     Settings.Put("DRM Dialog", "System Evaluation Dialog visible", pSysEvalDlg->isVisible());
+#if QT_VERSION < 0x040000
+    Settings.Put("DRM Dialog", "MultiMedia Dialog visible", pMultiMediaDlg->isVisible());
+    pMultiMediaDlg->hide();
+#else
     Settings.Put("DRM Dialog", "BWS Dialog visible", pBWSDlg->isVisible());
     Settings.Put("DRM Dialog", "JL Dialog visible", pJLDlg->isVisible());
     Settings.Put("DRM Dialog", "SS Dialog visible", pSlideShowDlg->isVisible());
+    pSlideShowDlg->hide();
+    pBWSDlg->hide();
+    pJLDlg->hide();
+#endif
     Settings.Put("DRM Dialog", "EPG Dialog visible", pEPGDlg->isVisible());
 
     /* now close all the other windows */
     pSysEvalDlg->hide();
-    pSlideShowDlg->hide();
-    pBWSDlg->hide();
-    pJLDlg->hide();
     pLiveScheduleDlg->hide();
     pEPGDlg->hide();
     pStationsDlg->hide();
@@ -813,7 +819,9 @@ void FDRMDialog::hideEvent(QHideEvent*)
 #if QT_VERSION < 0x040000
 	pMultiMediaDlg->SaveSettings(Settings);
 #else
-	// TODO
+	pBWSDlg->SaveSettings(Settings);
+	pJLDlg->SaveSettings(Settings);
+	pSlideShowDlg->SaveSettings(Settings);
 #endif
     pLiveScheduleDlg->SaveSettings(Settings);
 
@@ -864,6 +872,14 @@ void FDRMDialog::OnSelectDataService(int shortId)
         pDlg = pEPGDlg;
         Parameters.SetCurSelDataService(shortId);
         break;
+#if QT_VERSION < 0x040000
+    case DAB_AT_BROADCASTWEBSITE:
+    case DAB_AT_JOURNALINE:
+    case DAB_AT_MOTSLIDESHOW:
+        pDlg = pMultiMediaDlg;
+        Parameters.SetCurSelDataService(shortId);
+        break;
+#else
     case DAB_AT_BROADCASTWEBSITE:
         pDlg = pBWSDlg;
         Parameters.SetCurSelDataService(shortId);
@@ -876,6 +892,7 @@ void FDRMDialog::OnSelectDataService(int shortId)
         pDlg = pSlideShowDlg;
         Parameters.SetCurSelDataService(shortId);
         break;
+#endif
     default:
         ;
     }

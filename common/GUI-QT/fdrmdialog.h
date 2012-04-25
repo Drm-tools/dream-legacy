@@ -107,9 +107,7 @@ protected:
 
     systemevalDlg*		pSysEvalDlg;
 #if QT_VERSION < 0x040000
-    MultimediaDlg*		pBWSDlg;
-    MultimediaDlg*		pJLDlg;
-    MultimediaDlg*		pSlideShowDlg;
+    MultimediaDlg*		pMultiMediaDlg;
 #else
     BWSViewer*			pBWSDlg;
     JLViewer*			pJLDlg;

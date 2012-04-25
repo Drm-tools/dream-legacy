@@ -49,9 +49,9 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     CEPGDlgbase(parent, name, modal, f),
 #if QT_VERSION < 0x040000
     BitmCubeGreen(),
-	date(QDate::currentDate()),
+    date(QDate::currentDate()),
 #else
-	greenCube(":/icons/greenCube.png"),
+    greenCube(":/icons/greenCube.png"),
 #endif
     do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
     Settings(NSettings),Timer(),sids(),next(NULL)
@@ -87,8 +87,8 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     year->setMinValue(0000);
     year->setMaxValue(3000);
 #else
-	connect(dateEdit, SIGNAL(dateChanged(const QDate&)), this, SLOT(onDateChanged(const QDate&))); // TODO is this autowired ?
-	dateEdit->setDate(QDate::currentDate());
+    connect(dateEdit, SIGNAL(dateChanged(const QDate&)), this, SLOT(onDateChanged(const QDate&))); // TODO is this autowired ?
+    dateEdit->setDate(QDate::currentDate());
 #endif
     connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
     connect(this, SIGNAL(NowNext(QString)), this, SLOT(sendNowNext(QString)));
@@ -96,7 +96,7 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     /* Deactivate real-time timer */
     Timer.stop();
 
-	TextEPGDisabled->hide();
+    TextEPGDisabled->hide();
 }
 
 EPGDlg::~EPGDlg()
@@ -191,28 +191,31 @@ void EPGDlg::OnTimer()
             select();
         }
 #else
-		// TODO
+        // TODO
 #endif
         next = NULL;
 
         next = NULL;
 
         /* Check the items now on line. */
-		if (dateEdit->date() == todayUTC) /* if today */
-        {
 #if QT_VERSION < 0x040000
+        if (date == todayUTC) /* if today */
+        {
             for(QListViewItem * myItem = Data->firstChild();
-				myItem;
-                myItem = myItem->itemBelow()
-				)
+                    myItem;
+                    myItem = myItem->itemBelow()
+               )
             {
                 setActive(myItem);
             }
-#else
-			for(int i=0; i<Data->topLevelItemCount(); i++)
-				setActive(Data->topLevelItem(i));
-#endif
         }
+#else
+        if (dateEdit->date() == todayUTC) /* if today */
+        {
+            for(int i=0; i<Data->topLevelItemCount(); i++)
+                setActive(Data->topLevelItem(i));
+        }
+#endif
     }
 }
 
@@ -224,7 +227,11 @@ void EPGDlg::showEvent(QShowEvent *)
     uint32_t sid = Parameters.Service[sNo].iServiceID;
 
     // use the current date
+#if QT_VERSION < 0x040000
+    date = QDate::currentDate();
+#else
     dateEdit->setDate(QDate::currentDate());
+#endif
     // update the channels combobox from the epg
     channel->clear();
     int n = -1;
@@ -342,7 +349,7 @@ void EPGDlg::select()
     QListViewItem* CurrActiveItem = NULL;
 #else
     QTreeWidgetItem* CurrActiveItem = NULL;
-	QDate date = dateEdit->date();
+    QDate date = dateEdit->date();
 #endif
 
     if (!do_updates)
@@ -407,7 +414,7 @@ void EPGDlg::select()
 #if QT_VERSION < 0x040000
         const EPG::CProg & p = i.data();
 #else
-		const EPG::CProg & p = i.value();
+        const EPG::CProg & p = i.value();
 #endif
         // TODO - let user choose time or actualTime if available, or show as tooltip
         time_t start;
@@ -512,7 +519,7 @@ EPGDlg::getFile(const QString& path)
     if (!file.open (QIODevice::ReadOnly))
 #endif
     {
-	return NULL;
+        return NULL;
     }
     vector<_BYTE> vecData;
     vecData.resize (file.size ());
@@ -525,8 +532,8 @@ EPGDlg::getFile(const QString& path)
     CEPGDecoder *epg = new CEPGDecoder();
     epg->decode (vecData);
     epg->doc.documentElement().insertBefore(
-		epg->doc.createComment(path),
-		epg->doc.documentElement().firstChild()
+        epg->doc.createComment(path),
+        epg->doc.documentElement().firstChild()
     );
     return &(epg->doc);
 }
@@ -534,11 +541,11 @@ EPGDlg::getFile(const QString& path)
 QDomDocument*
 EPGDlg::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
 {
-	QString path = getFileName(date, sid, bAdvanced);
-	QDomDocument* doc = getFile(path);
-	if(doc != NULL)
-		return doc;
-	return getFile(getFileName_etsi(date, sid, bAdvanced));
+    QString path = getFileName(date, sid, bAdvanced);
+    QDomDocument* doc = getFile(path);
+    if(doc != NULL)
+        return doc;
+    return getFile(getFileName_etsi(date, sid, bAdvanced));
 }
 
 _BOOLEAN EPGDlg::MyListViewItem::IsActive()

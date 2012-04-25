@@ -349,7 +349,7 @@ void CSoundCardSelMenu::OnSoundOutDevice(int id)
     pSoundOutIF->SetDev(id);
 }
 
-RemoteMenu::RemoteMenu(QWidget*, CRig& nrig)
+RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 #ifdef HAVE_LIBHAMLIB
     :rigmenus(),specials(),rig(nrig)
 #endif

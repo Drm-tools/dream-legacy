@@ -346,11 +346,10 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 {
 	bool udp = SocketDevice.type() == QSocketDevice::Datagram;
 # if QT_VERSION < 0x030000
-		sourceAddr = AddrSource.ip4Addr();
+	sourceAddr = AddrSource.ip4Addr();
 # else
-		sourceAddr = AddrSource.toIPv4Address();
+	sourceAddr = AddrSource.toIPv4Address();
 # endif
-	AddrSource = source;
 	SOCKET s = SocketDevice.socket();
 	if(udp)
 	{
