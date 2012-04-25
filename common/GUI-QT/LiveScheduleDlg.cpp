@@ -816,7 +816,7 @@ LiveScheduleDlg::LoadSchedule()
             /* Do UTF-8 to string conversion with the label strings */
             QString strStationName = QString().fromUtf8(
 #if QT_VERSION < 0x040000
-				Q3CString(Parameters.Service[iCurSelAudioServ].strLabel.c_str())
+				QCString(Parameters.Service[iCurSelAudioServ].strLabel.c_str())
 #else
 				Parameters.Service[iCurSelAudioServ].strLabel.c_str()
 #endif
@@ -1035,12 +1035,12 @@ LiveScheduleDlg::OnSave()
     /* Lock mutex for use the vecpListItems */
     ListItemsMutex.lock();
 
+#if QT_VERSION < 0x040000
     /* Force the sort for all items */
-	ListViewStations->sortItems(iCurrentSortColumn, bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
+	ListViewStations->sort();
 
     /* Extract values from the list */
 
-#if QT_VERSION < 0x040000
     QListViewItem *myItem = ListViewStations->firstChild();
     while (myItem)
     {
@@ -1053,6 +1053,11 @@ LiveScheduleDlg::OnSave()
         myItem = myItem->nextSibling();
     }
 #else
+    /* Force the sort for all items */
+	ListViewStations->sortItems(iCurrentSortColumn, bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
+
+    /* Extract values from the list */
+
 	for(int i=0; i<ListViewStations->topLevelItemCount(); i++)
 	{
 		QTreeWidgetItem* myItem = ListViewStations->topLevelItem(i);

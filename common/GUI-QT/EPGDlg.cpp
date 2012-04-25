@@ -317,13 +317,13 @@ void EPGDlg::setYear(int n)
     setDate();
     select();
 }
-#else
+#endif
+
 void EPGDlg::onDateChanged(const QDate& ndate)
 {
     date = ndate;
     setDate();
 }
-#endif
 
 void EPGDlg::selectChannel(const QString &)
 {

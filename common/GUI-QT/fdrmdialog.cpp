@@ -107,7 +107,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
         /* Set Menu ***************************************************************/
         /* View menu ------------------------------------------------------------ */
-        Q3PopupMenu* EvalWinMenu = new Q3PopupMenu(this);
+        QPopupMenu* EvalWinMenu = new QPopupMenu(this);
         CHECK_PTR(EvalWinMenu);
         EvalWinMenu->insertItem(tr("&Evaluation Dialog..."), pSysEvalDlg,
                 SLOT(show()), Qt::CTRL+Qt::Key_E, 0);
@@ -123,7 +123,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
         EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q, 5);
 
         /* Settings menu  ------------------------------------------------------- */
-        pSettingsMenu = new Q3PopupMenu(this);
+        pSettingsMenu = new QPopupMenu(this);
         CHECK_PTR(pSettingsMenu);
         pSettingsMenu->insertItem(tr("&Sound Card Selection"),
                 new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(),
@@ -139,7 +139,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
         pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
                 SLOT(OnMenuSetDisplayColor()));
         /* Plot style settings */
-        pPlotStyleMenu = new Q3PopupMenu(this);
+        pPlotStyleMenu = new QPopupMenu(this);
         pPlotStyleMenu->insertItem(tr("&Blue / White"), this, SIGNAL(plotStyleChanged(int)), 0, 0);
         pPlotStyleMenu->insertItem(tr("&Green / Black"), this, SIGNAL(plotStyleChanged(int)), 0, 1);
         pPlotStyleMenu->insertItem(tr("B&lack / Grey"), this, SIGNAL(plotStyleChanged(int)), 0, 2);

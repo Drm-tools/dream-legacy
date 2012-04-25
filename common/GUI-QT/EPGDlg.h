@@ -162,9 +162,8 @@ public slots:
     void setDay(int);
     void setMonth(int);
     void setYear(int);
-#else
-	void onDateChanged(const QDate&);
 #endif
+    void onDateChanged(const QDate&);
 };
 
 #endif

@@ -35,7 +35,7 @@
 
 /* Implementation *************************************************************/
 CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) : 
-	QLabel(""), eColorFlag(RL_GREY),
+	QLabel(parent), eColorFlag(RL_GREY),
 	TimerRedLight(), TimerGreenLight(), TimerYellowLight(),
 	bFlagRedLi(false), bFlagGreenLi(false), bFlagYellowLi(false),
 	iUpdateTime(DEFAULT_UPDATE_TIME)

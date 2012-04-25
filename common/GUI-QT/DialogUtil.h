@@ -85,7 +85,7 @@ class DRMEvent : public QCustomEvent
 {
 public:
 	DRMEvent(const int iNewMeTy, const int iNewSt) :
-		QEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
+		QCustomEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
 
 	int iMessType;
 	int iStatus;
@@ -124,9 +124,14 @@ public:
 		Qt::WFlags f = 0);
 };
 
+#if QT_VERSION >= 0x040000
+typedef QMenu MyMenu;
+#else
+typedef QPopupMenu MyMenu;
+#endif
 
 /* Help menu ---------------------------------------------------------------- */
-class CDreamHelpMenu : public QMenu
+class CDreamHelpMenu : public MyMenu
 {
 	Q_OBJECT
 
@@ -143,7 +148,7 @@ public slots:
 
 
 /* Sound card selection menu ------------------------------------------------ */
-class CSoundCardSelMenu : public QMenu
+class CSoundCardSelMenu : public MyMenu
 {
 	Q_OBJECT
 
@@ -221,7 +226,7 @@ class RemoteMenu : public QObject
 
 public:
 	RemoteMenu(QWidget*, CRig&);
-	QMenu* menu(){ return pRemoteMenu; }
+	MyMenu* menu(){ return pRemoteMenu; }
 
 public slots:
 	void OnModRigMenu(int iID);
@@ -233,13 +238,13 @@ signals:
 
 protected:
 #ifdef HAVE_LIBHAMLIB
-	struct Rigmenu {std::string mfr; QMenu* pMenu;};
+	struct Rigmenu {std::string mfr; MyMenu* pMenu;};
 	std::map<int,Rigmenu> rigmenus;
 	std::vector<rig_model_t> specials;
 	CRig&	rig;
 #endif
-	QMenu* pRemoteMenu;
-	QMenu* pRemoteMenuOther;
+	MyMenu* pRemoteMenu;
+	MyMenu* pRemoteMenuOther;
 };
 
 #define OTHER_MENU_ID (666)

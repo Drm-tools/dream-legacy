@@ -63,14 +63,14 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 #if QT_VERSION < 0x040000
         /* Set Menu ***************************************************************/
         /* View menu ------------------------------------------------------------ */
-        Q3PopupMenu* ViewMenu = new Q3PopupMenu(this);
+        QPopupMenu* ViewMenu = new QPopupMenu(this);
         CHECK_PTR(ViewMenu);
         ViewMenu->insertItem(tr("&Tune"), this, SLOT(OnTune()), Qt::CTRL+Qt::Key_T);
         ViewMenu->insertSeparator();
         ViewMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q, 5);
 
         /* Settings menu  ------------------------------------------------------- */
-        pSettingsMenu = new Q3PopupMenu(this);
+        pSettingsMenu = new QPopupMenu(this);
         CHECK_PTR(pSettingsMenu);
         pSettingsMenu->insertItem(tr("&Sound Card Selection"),
                 new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(),
@@ -172,8 +172,11 @@ void FMDialog::OnTune()
 {
 	bool ok;
 	double freq = double(DRMReceiver.GetFrequency())/1000.0;
-	double f = QInputDialog::getDouble(this, tr("Dream FM"),
-					tr("Frequency (MHz):"), freq, 86.0, 110.0, 2, &ok);
+#if QT_VERSION < 0x040000
+	double f = QInputDialog::getDouble(tr("Dream FM"), tr("Frequency (MHz):"), freq, 86.0, 110.0, 2, &ok, this);
+#else
+	double f = QInputDialog::getDouble(this, tr("Dream FM"), tr("Frequency (MHz):"), freq, 86.0, 110.0, 2, &ok);
+#endif
 	if (ok)
 	{
 		DRMReceiver.SetFrequency(int(1000.0*f));

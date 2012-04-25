@@ -1166,20 +1166,20 @@ void StationsDlg::SetStationsView()
 
                 /* Generate new list item with all necessary column entries */
                 vecpListItems[i] = new MyListViewItem(ListViewStations,
-                                                      DRMSchedule.GetItem(i).strName.c_str()     /* name */,
+                                                      DRMSchedule.GetItem(i).strName     /* name */,
                                                       QString().sprintf("%04d-%04d",
                                                               DRMSchedule.GetItem(i).GetStartTimeNum(),
                                                               DRMSchedule.GetItem(i).GetStopTimeNum())   /* time */,
                                                       QString().setNum(DRMSchedule.GetItem(i).iFreq) /* freq. */,
-                                                      DRMSchedule.GetItem(i).strTarget.c_str()   /* target */,
+                                                      DRMSchedule.GetItem(i).strTarget   /* target */,
                                                       strPower                                   /* power */,
-                                                      DRMSchedule.GetItem(i).strCountry.c_str()  /* country */,
-                                                      DRMSchedule.GetItem(i).strSite.c_str()     /* site */,
-                                                      DRMSchedule.GetItem(i).strLanguage.c_str() /* language */);
+                                                      DRMSchedule.GetItem(i).strCountry  /* country */,
+                                                      DRMSchedule.GetItem(i).strSite     /* site */,
+                                                      DRMSchedule.GetItem(i).strLanguage /* language */);
 
                 /* Show list of days */
                 vecpListItems[i]->setText(8,
-                                          DRMSchedule.GetItem(i).strDaysShow.c_str());
+                                          DRMSchedule.GetItem(i).strDaysShow);
 
                 /* Insert this new item in list. The item object is destroyed by
                    the list view control when this is destroyed */

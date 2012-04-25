@@ -962,7 +962,7 @@ void TransmDialog::UpdateMSCProtLevCombo()
 	ComboBoxMSCProtLev->setCurrentItem(1);
 	Parameters.MSCPrLe.iPartB = 1;
 	Parameters.Unlock();
-##else
+#else
 	// TODO
 #endif
 }
@@ -1190,12 +1190,12 @@ void TransmDialog::AddWhatsThisHelp()
 {
 #if QT_VERSION < 0x040000
 	/* Dream Logo */
-	Q3WhatsThis::add(PixmapLabelDreamLogo,
+	QWhatsThis::add(PixmapLabelDreamLogo,
 		tr("<b>Dream Logo:</b> This is the official logo of "
 		"the Dream software."));
 
 	/* Input Level */
-	Q3WhatsThis::add(ProgrInputLevel,
+	QWhatsThis::add(ProgrInputLevel,
 		tr("<b>Input Level:</b> The input level meter shows "
 		"the relative input signal peak level in dB. If the level is too high, "
 		"the meter turns from green to red."));
@@ -1213,10 +1213,10 @@ void TransmDialog::AddWhatsThisHelp()
 		"</i> As robustness mode B, but with severe delay and "
 		"Doppler spread</li></ul>");
 
-	Q3WhatsThis::add(RadioButtonRMA, strRobustnessMode);
-	Q3WhatsThis::add(RadioButtonRMB, strRobustnessMode);
-	Q3WhatsThis::add(RadioButtonRMC, strRobustnessMode);
-	Q3WhatsThis::add(RadioButtonRMD, strRobustnessMode);
+	QWhatsThis::add(RadioButtonRMA, strRobustnessMode);
+	QWhatsThis::add(RadioButtonRMB, strRobustnessMode);
+	QWhatsThis::add(RadioButtonRMC, strRobustnessMode);
+	QWhatsThis::add(RadioButtonRMD, strRobustnessMode);
 
 	/* Bandwidth */
 	const QString strBandwidth =
@@ -1225,12 +1225,12 @@ void TransmDialog::AddWhatsThisHelp()
 		"bandwidth constellations are possible, e.g., DRM robustness mode D "
 		"and C are only defined for the bandwidths 10 kHz and 20 kHz.");
 
-	Q3WhatsThis::add(RadioButtonBandwidth45, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth5, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth9, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth10, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth18, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth20, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth45, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth5, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth9, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth10, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth18, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth20, strBandwidth);
 
 	/* Output intermediate frequency of DRM signal */
 	const QString strOutputIF =
@@ -1241,9 +1241,9 @@ void TransmDialog::AddWhatsThisHelp()
 		"should be chosen that the DRM signal lies entirely inside the "
 		"sound-card bandwidth.");
 
-	Q3WhatsThis::add(TextLabelIF, strOutputIF);
-	Q3WhatsThis::add(LineEditSndCrdIF, strOutputIF);
-	Q3WhatsThis::add(TextLabelIFUnit, strOutputIF);
+	QWhatsThis::add(TextLabelIF, strOutputIF);
+	QWhatsThis::add(LineEditSndCrdIF, strOutputIF);
+	QWhatsThis::add(TextLabelIFUnit, strOutputIF);
 
 	/* Output format */
 	const QString strOutputFormat =
@@ -1263,10 +1263,10 @@ void TransmDialog::AddWhatsThisHelp()
 		"is output on the left channel and the phase is output on the right "
 		"channel.</li></ul>");
 
-	Q3WhatsThis::add(RadioButtonOutReal, strOutputFormat);
-	Q3WhatsThis::add(RadioButtonOutIQPos, strOutputFormat);
-	Q3WhatsThis::add(RadioButtonOutIQNeg, strOutputFormat);
-	Q3WhatsThis::add(RadioButtonOutEP, strOutputFormat);
+	QWhatsThis::add(RadioButtonOutReal, strOutputFormat);
+	QWhatsThis::add(RadioButtonOutIQPos, strOutputFormat);
+	QWhatsThis::add(RadioButtonOutIQNeg, strOutputFormat);
+	QWhatsThis::add(RadioButtonOutEP, strOutputFormat);
 
 	/* MSC interleaver mode */
 	const QString strInterleaver =
@@ -1277,8 +1277,8 @@ void TransmDialog::AddWhatsThisHelp()
 		"the interleaver length the longer the delay until (after a "
 		"re-synchronization) audio can be heard.");
 
-	Q3WhatsThis::add(TextLabelInterleaver, strInterleaver);
-	Q3WhatsThis::add(ComboBoxMSCInterleaver, strInterleaver);
+	QWhatsThis::add(TextLabelInterleaver, strInterleaver);
+	QWhatsThis::add(ComboBoxMSCInterleaver, strInterleaver);
 #else
 	// TODO
 #endif

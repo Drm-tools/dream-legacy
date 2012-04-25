@@ -91,7 +91,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 #else
     /* Set Menu ***************************************************************/
     /* View menu ------------------------------------------------------------ */
-    QPopupMenu* EvalWinMenu = new Q3PopupMenu(this);
+    QPopupMenu* EvalWinMenu = new QPopupMenu(this);
     CHECK_PTR(EvalWinMenu);
     EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
                             SIGNAL(ViewStationsDlg()), Qt::CTRL+Qt::Key_T);
@@ -101,7 +101,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q);
 
     /* Settings menu  ------------------------------------------------------- */
-    QPopupMenu* pSettingsMenu = new Q3PopupMenu(this);
+    QPopupMenu* pSettingsMenu = new QPopupMenu(this);
     CHECK_PTR(pSettingsMenu);
     pSettingsMenu->insertItem(tr("&Sound Card Selection"),
                               new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
@@ -1031,10 +1031,8 @@ void CAMSSDlg::OnTimer()
                 if (iSystemID == 7)
                 {
                     freqEntry += " PI:";
-                    freqEntry +=
-                        QString().setNum((long) Parameters.
-                                         AltFreqSign.vecOtherServices[i].
-                                         iServiceID, 16).toUpper();
+                    freqEntry += asHex(Parameters.AltFreqSign.
+					vecOtherServices[i].iServiceID);
                 }
                 break;
 

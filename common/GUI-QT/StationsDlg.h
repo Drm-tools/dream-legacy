@@ -48,6 +48,7 @@
 # include <qurloperator.h>
 # include <qlistview.h>
 # include "StationsDlgbase.h"
+typedef QNetworkOperation QNetworkReply; // needed to keep moc happy
 #else
 # include <QActionGroup>
 # include <QSignalMapper>

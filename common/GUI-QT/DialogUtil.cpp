@@ -229,20 +229,24 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 
 
 /* Help menu ---------------------------------------------------------------- */
-CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QMenu(parent)
+#if QT_VERSION < 0x040000
+CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
 {
     /* Standard help menu consists of about and what's this help */
-#if QT_VERSION < 0x040000
         insertItem(tr("What's &This"), this, SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
         insertSeparator();
         insertItem(tr("&About..."), this, SLOT(OnHelpAbout()));
+}
 #else
+CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QMenu(parent)
+{
+    /* Standard help menu consists of about and what's this help */
     setTitle("?");
     addAction(tr("What's This"), this , SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
     addSeparator();
     addAction(tr("About..."), this, SLOT(OnHelpAbout()));
-#endif
 }
+#endif
 
 void CDreamHelpMenu::OnHelpWhatsThis()
 {
@@ -277,11 +281,11 @@ QSignalMapper* CSoundCardSelMenu::Init(const QString& text, CSelectionInterface*
 #endif
 
 /* Sound card selection menu ------------------------------------------------ */
+#if QT_VERSION < 0x040000
 CSoundCardSelMenu::CSoundCardSelMenu(
     CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
-    QMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
+    QPopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
 {
-#if QT_VERSION < 0x040000
         pSoundInMenu = new QPopupMenu(parent);
         CHECK_PTR(pSoundInMenu);
         pSoundOutMenu = new QPopupMenu(parent);
@@ -323,12 +327,17 @@ CSoundCardSelMenu::CSoundCardSelMenu(
 
         insertItem(tr("Sound &In"), pSoundInMenu);
         insertItem(tr("Sound &Out"), pSoundOutMenu);
+}
 #else
+CSoundCardSelMenu::CSoundCardSelMenu(
+    CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
+    QMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
+{
     setTitle("Sound Card Selection");
     connect(Init("Sound In", pSoundInIF), SIGNAL(mapped(int)), this, SLOT(OnSoundInDevice(int)));
     connect(Init("Sound Out", pSoundOutIF), SIGNAL(mapped(int)), this, SLOT(OnSoundOutDevice(int)));
-#endif
 }
+#endif
 
 void CSoundCardSelMenu::OnSoundInDevice(int id)
 {
@@ -346,10 +355,10 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 #endif
 {
 #if QT_VERSION < 0x040000
-    pRemoteMenu = new QMenu(parent);
+    pRemoteMenu = new MyMenu(parent);
     CHECK_PTR(pRemoteMenu);
 
-    pRemoteMenuOther = new QMenu(parent);
+    pRemoteMenuOther = new MyMenu(parent);
     CHECK_PTR(pRemoteMenuOther);
 
 #ifdef HAVE_LIBHAMLIB
@@ -379,7 +388,7 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
         if(k == rigmenus.end())
         {
             m.mfr = rig.strManufacturer;
-            m.pMenu = new QMenu(pRemoteMenuOther);
+            m.pMenu = new MyMenu(pRemoteMenuOther);
             CHECK_PTR(m.pMenu);
         }
         else
@@ -491,7 +500,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
     // if an "others" rig was selected add it to the specials list
     for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
     {
-        QMenu* pMenu = i->second.pMenu;
+        MyMenu* pMenu = i->second.pMenu;
         for(size_t j=0; j<pMenu->count(); j++)
         {
             int mID = pMenu->idAt(j);

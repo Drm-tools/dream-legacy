@@ -82,9 +82,9 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
     PixmapLogoJournaline->hide();
 
     /* Set pictures in source factory */
-    Q3MimeSourceFactory::defaultFactory()->setImage("PixmapFhGIIS",
+    QMimeSourceFactory::defaultFactory()->setImage("PixmapFhGIIS",
             PixmapFhGIIS->pixmap()->convertToImage());
-    Q3MimeSourceFactory::defaultFactory()->setImage("PixmapLogoJournaline",
+    QMimeSourceFactory::defaultFactory()->setImage("PixmapLogoJournaline",
             PixmapLogoJournaline->pixmap()->convertToImage());
 
     fhgLogo = "PixmapFhGIIS";
@@ -115,7 +115,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 #if QT_VERSION < 0x040000
     /* Set Menu ***************************************************************/
     /* File menu ------------------------------------------------------------ */
-    pFileMenu = new Q3PopupMenu(this);
+    pFileMenu = new QPopupMenu(this);
     CHECK_PTR(pFileMenu);
     pFileMenu->insertItem(tr("C&lear all"), this, SLOT(OnClearAll()),
                           Qt::CTRL+Qt::Key_X, 0);
@@ -128,7 +128,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 
 
     /* Settings menu  ------------------------------------------------------- */
-    Q3PopupMenu* pSettingsMenu = new Q3PopupMenu(this);
+    QPopupMenu* pSettingsMenu = new QPopupMenu(this);
     CHECK_PTR(pSettingsMenu);
     pSettingsMenu->insertItem(tr("Set &Font..."), this, SLOT(OnSetFont()));
 
@@ -442,7 +442,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 
     /* Decode UTF-8 coding for title */
 #if QT_VERSION < 0x040000
-    strTitle = QString().fromUtf8(Q3CString(News.sTitle.c_str()));
+    strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));
 #else
     strTitle = QString().fromUtf8(News.sTitle.c_str());
 #endif
@@ -456,7 +456,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
             /* Decode UTF-8 coding of this item text */
 #if QT_VERSION < 0x040000
             strCurItem = QString().fromUtf8(
-                             Q3CString(News.vecItem[i].sText.c_str()));
+                             QCString(News.vecItem[i].sText.c_str()));
 #else
             strCurItem = QString().fromUtf8(News.vecItem[i].sText.c_str());
 #endif
