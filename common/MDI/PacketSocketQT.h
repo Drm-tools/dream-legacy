@@ -83,12 +83,13 @@ public:
 
 private:
 	QStringList parseDest(const string & strNewAddr);
-	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int);
+	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int, QHostAddress);
 #if QT_VERSION >= 0x040200
 	QNetworkInterface GetInterface(QHostAddress AddrInterface);
 #endif
 	CPacketSink *pPacketSink;
 
+	uint32_t	sourceAddr;
 	QHostAddress	HostAddrOut;
 	int		iHostPortOut;
 

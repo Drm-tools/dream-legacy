@@ -288,13 +288,12 @@ CPacketSocketQT::GetDestination(string & str)
 _BOOLEAN
 CPacketSocketQT::SetOrigin(const string & strNewAddr)
 {
-	/* syntax
+	/* syntax (unwanted fields can be empty, e.g. <source ip>::<group ip>:<port>
 	   1:  <port>
 	   2:  <group ip>:<port>
 	   3:  <interface ip>:<group ip>:<port>
-	   4:  <interface ip>::<port>
-	   5:  :<group ip>:<port>
-	   6:  - for TCP - no need to separately set origin
+	   4:  <source ip>:<interface ip>:<group ip>:<port>
+	   5: - for TCP - no need to separately set origin
 	 */
 
 	if(strNewAddr == "-")
@@ -303,7 +302,7 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 	}
 
 	int iPort=-1;
-	QHostAddress AddrGroup, AddrInterface;
+	QHostAddress AddrGroup, AddrInterface, AddrSource;
 	QStringList parts = parseDest(strNewAddr);
 	bool ok=true;
 	switch(parts.count())
@@ -322,21 +321,36 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		if(parts[1].length() > 0)
 			ok &= AddrGroup.setAddress(parts[1]);
 		break;
+	case 4:
+		iPort = parts[3].toUInt(&ok);
+		if(parts[0].length() > 0)
+			ok &= AddrSource.setAddress(parts[0]);
+		if(parts[1].length() > 0)
+			ok &= AddrInterface.setAddress(parts[1]);
+		if(parts[2].length() > 0)
+			ok &= AddrGroup.setAddress(parts[2]);
+		break;
 	default:
 		ok = false;
 	}
 
 	if(ok)
 	{
-		return doSetSource(AddrGroup, AddrInterface, iPort);
+		return doSetSource(AddrGroup, AddrInterface, iPort, AddrSource);
 	}
 	return FALSE;
 }
 
 #if QT_VERSION < 0x040000
-_BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrInterface, int iPort)
+_BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrInterface, int iPort, QHostAddress AddrSource)
 {
 	bool udp = SocketDevice.type() == QSocketDevice::Datagram;
+# if QT_VERSION < 0x030000
+		sourceAddr = AddrSource.ip4Addr();
+# else
+		sourceAddr = AddrSource.toIPv4Address();
+# endif
+	AddrSource = source;
 	SOCKET s = SocketDevice.socket();
 	if(udp)
 	{
@@ -387,10 +401,11 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 	return TRUE;
 }
 #else
-_BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrInterface, int iPort)
+_BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrInterface, int iPort, QHostAddress AddrSource)
 {
 	bool udp = true;
 	QUdpSocket* pUdps = dynamic_cast<QUdpSocket*>(pSocket);
+	sourceAddr = AddrSource.toIPv4Address();
 	if(pUdps == NULL)
 		udp = false;
 	if(udp)
@@ -443,7 +458,7 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 }
 #endif
 
-#if QT_VERSION >= 0x040000
+#if QT_VERSION >= 0x040200
 QNetworkInterface 
 CPacketSocketQT::GetInterface(QHostAddress AddrInterface)
 {
@@ -473,24 +488,33 @@ CPacketSocketQT::OnDataReceived()
 
 	/* Read block from network interface */
 #if QT_VERSION < 0x040000
-	const int iNumBytesRead = SocketDevice.readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
-
+	int iNumBytesRead = SocketDevice.readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
+#else
+	int iNumBytesRead = pSocket->read((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
+#endif
 	if(iNumBytesRead > 0)
 	{
 		/* Decode the incoming packet */
 		if(pPacketSink != NULL)
 		{
 			vecbydata.resize(iNumBytesRead);
+#if QT_VERSION < 0x040000
+			QHostAddress peer = SocketDevice.peerAddress();
 # if QT_VERSION < 0x030000
-			uint32_t addr = SocketDevice.peerAddress().ip4Addr();
+			uint32_t addr = peer.ip4Addr();
 # else
-			uint32_t addr = SocketDevice.peerAddress().toIPv4Address();
+			uint32_t addr = peer.toIPv4Address();
 # endif
-			pPacketSink->SendPacket(vecbydata, addr, SocketDevice.peerPort());
+			int port = SocketDevice.peerPort();
+#else
+			QHostAddress peer = pSocket->peerAddress();
+			uint32_t addr = peer.toIPv4Address();
+			int port = pSocket->peerPort();
+#endif
+			if(sourceAddr == 0 || sourceAddr == addr) // optionally filter on source address
+				pPacketSink->SendPacket(vecbydata, addr, port);
 		}
 	}
-#else
-#endif
 }
 
 #if QT_VERSION < 0x040000
