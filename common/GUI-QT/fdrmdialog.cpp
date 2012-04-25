@@ -818,10 +818,6 @@ void FDRMDialog::hideEvent(QHideEvent*)
 
 #if QT_VERSION < 0x040000
 	pMultiMediaDlg->SaveSettings(Settings);
-#else
-	pBWSDlg->SaveSettings(Settings);
-	pJLDlg->SaveSettings(Settings);
-	pSlideShowDlg->SaveSettings(Settings);
 #endif
     pLiveScheduleDlg->SaveSettings(Settings);
 
