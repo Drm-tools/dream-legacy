@@ -152,7 +152,7 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	{
 		udp = false;
 		parts[0] = first.right(1);
-		qDebug("tcp: %s", first);
+		//qDebug("tcp: %s", first);
 	}
 
 	switch(parts.count())
@@ -357,6 +357,7 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 		}
 		else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
 		{
+			pSocketDevice->setAddressReusable(true);
 			struct ip_mreq mreq;
 			/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
 			bool ok = pSocketDevice->bind(QHostAddress(UINT32(0)), iPort);
@@ -410,7 +411,7 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 			struct ip_mreq mreq;
 			mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
 			mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
-			int n = setsockopt(pUdps->socketDescriptor(), IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,	sizeof(mreq));
+			int n = setsockopt(udpSocket->socketDescriptor(), IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,	sizeof(mreq));
 			if(n == SOCKET_ERROR)
 				ok = false;
 #else
