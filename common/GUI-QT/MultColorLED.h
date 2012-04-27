@@ -75,10 +75,10 @@ protected:
 
 	int			iUpdateTime;
 
-	QPixmap			BitmCubeGreen;
-	QPixmap			BitmCubeYellow;
-	QPixmap			BitmCubeRed;
-	QPixmap			BitmCubeGrey;
+	QPixmap			green;
+	QPixmap			yellow;
+	QPixmap			red;
+	QPixmap			grey;
 
 	void			UpdateColor();
 

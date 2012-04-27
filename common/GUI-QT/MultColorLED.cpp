@@ -38,28 +38,14 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) 
 	QLabel(parent), eColorFlag(RL_GREY),
 	TimerRedLight(), TimerGreenLight(), TimerYellowLight(),
 	bFlagRedLi(false), bFlagGreenLi(false), bFlagYellowLi(false),
-	iUpdateTime(DEFAULT_UPDATE_TIME)
+	iUpdateTime(DEFAULT_UPDATE_TIME),
+	green(13,13),yellow(13,13),red(13,13),grey(13,13)
 {
-#if QT_VERSION < 0x040000
-	/* Define size of the bitmaps */
-	const int iXSize = 13;
-	const int iYSize = 13;
+	green.fill(QColor(0, 255, 0));
+	red.fill(QColor(255, 0, 0));
+	grey.fill(QColor(192, 192, 192));
+	yellow.fill(QColor(255, 255, 0));
 
-	/* Create bitmaps */
-	BitmCubeGreen.resize(iXSize, iYSize);
-	BitmCubeGreen.fill(QColor(0, 255, 0));
-	BitmCubeRed.resize(iXSize, iYSize);
-	BitmCubeRed.fill(QColor(255, 0, 0));
-	BitmCubeGrey.resize(iXSize, iYSize);
-	BitmCubeGrey.fill(QColor(192, 192, 192));
-	BitmCubeYellow.resize(iXSize, iYSize);
-	BitmCubeYellow.fill(QColor(255, 255, 0));
-#else
-	BitmCubeGreen.fill(QColor(0, 255, 0));
-	BitmCubeRed.fill(QColor(255, 0, 0));
-	BitmCubeGrey.fill(QColor(192, 192, 192));
-	BitmCubeYellow.fill(QColor(255, 255, 0));
-#endif
 	/* Set modified style */
 	setFrameShape(QFrame::Panel);
 	setFrameShadow(QFrame::Sunken);
@@ -68,7 +54,7 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) 
 	Reset();
 
 	/* Set init-bitmap */
-	setPixmap(BitmCubeGrey);
+	setPixmap(grey);
 
 
 	/* Connect timer events to the desired slots */
@@ -124,7 +110,7 @@ void CMultColorLED::UpdateColor()
 	{
 		if (eColorFlag != RL_RED)
 		{
-			setPixmap(BitmCubeRed);
+			setPixmap(red);
 			eColorFlag = RL_RED;
 		}
 		return;
@@ -134,7 +120,7 @@ void CMultColorLED::UpdateColor()
 	{
 		if (eColorFlag != RL_YELLOW)
 		{
-			setPixmap(BitmCubeYellow);
+			setPixmap(yellow);
 			eColorFlag = RL_YELLOW;
 		}
 		return;
@@ -144,7 +130,7 @@ void CMultColorLED::UpdateColor()
 	{
 		if (eColorFlag != RL_GREEN)
 		{
-			setPixmap(BitmCubeGreen);
+			setPixmap(green);
 			eColorFlag = RL_GREEN;
 		}
 		return;
@@ -153,7 +139,7 @@ void CMultColorLED::UpdateColor()
 	/* If no color is active, set control to grey light */
 	if (eColorFlag != RL_GREY)
 	{
-		setPixmap(BitmCubeGrey);
+		setPixmap(grey);
 		eColorFlag = RL_GREY;
 	}
 }

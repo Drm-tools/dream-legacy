@@ -36,14 +36,15 @@
 #if QT_VERSION < 0x040000
 # include <qsocketdevice.h>
 #else
-# include <QAbstractSocket>
+# include <QUdpSocket>
+# include <QTcpSocket>
 # include <QHostAddress>
-#  if QT_VERSION >= 0x040200
-# include <QNetworkInterface>
-#  endif
-#  if QT_VERSION >= 0x040800
-#   include <QNetworkAddressEntry>
-#  endif
+# if QT_VERSION >= 0x040200
+#   include <QNetworkInterface>
+# endif
+# if QT_VERSION >= 0x040800
+#  include <QNetworkAddressEntry>
+# endif
 #endif
 #include <qdatetime.h>
 
@@ -93,7 +94,8 @@ private:
 #if QT_VERSION < 0x040000
 	QSocketDevice*	 pSocketDevice;
 #else
-	QAbstractSocket* pSocket;
+	QUdpSocket* udpSocket;
+	QTcpSocket* tcpSocket;
 #endif
 	vector<_BYTE>	writeBuf;
 	bool udp;

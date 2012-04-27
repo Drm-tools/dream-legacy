@@ -63,7 +63,7 @@ CPacketSocketQT::CPacketSocketQT():
 #if QT_VERSION < 0x040000
 	pSocketDevice(NULL),
 #else
-	pSocket(NULL),
+	udpSocket(NULL), tcpSocket(NULL),
 #endif
 	writeBuf(),udp(true)
 {
@@ -116,11 +116,10 @@ CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, ui
 		// TODO
 	}
 #else
-	QUdpSocket* s = dynamic_cast<QUdpSocket*>(pSocket);
-	if(s != NULL)
-		bytes_written = s->writeDatagram((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
-	else
-		bytes_written = pSocket->write((char*)&vecbydata[0], vecbydata.size());
+	if(udpSocket != NULL)
+		bytes_written = udpSocket->writeDatagram((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
+	else if(tcpSocket != NULL)
+		bytes_written = tcpSocket->write((char*)&vecbydata[0], vecbydata.size());
 #endif
 }
 
@@ -145,7 +144,7 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	 */
 	int ttl = 127;
 	_BOOLEAN bAddressOK = TRUE;
-	QHostAddress AddrInterface;
+	QHostAddress AddrInterface(QHostAddress::Any);
 	QStringList parts = parseDest(strNewAddr);
 	QString first = parts[0].toLower();
 	if(first.startsWith("t"))
@@ -210,14 +209,8 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 #else
 	if(udp)
 	{
-		QUdpSocket* udpSocket;
-		if(pSocket == NULL)
-		{
+		if(udpSocket == NULL)
 			udpSocket = new QUdpSocket();
-			pSocket = udpSocket;
-		}
-		else
-			udpSocket = dynamic_cast<QUdpSocket*>(pSocket);
 
 # if QT_VERSION < 0x040800
 		const SOCKET s = udpSocket->socketDescriptor();
@@ -238,10 +231,10 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	}
 	else
 	{
-		if(pSocket == NULL)
-			pSocket = new QTcpSocket();
-		pSocket->connectToHost(HostAddrOut, iHostPortOut);
-		bAddressOK = pSocket->waitForConnected(5000);
+		if(tcpSocket == NULL)
+			tcpSocket = new QTcpSocket();
+		tcpSocket->connectToHost(HostAddrOut, iHostPortOut);
+		bAddressOK = tcpSocket->waitForConnected(5000);
 	}
 #endif
 	return bAddressOK;
@@ -279,8 +272,8 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		if(pSocketDevice == NULL)
 			pSocketDevice = new QSocketDevice(QSocketDevice::Stream);
 #else
-		if(pSocket == NULL)
-			pSocket = new QTcpSocket();
+		if(tcpSocket == NULL)
+			tcpSocket = new QTcpSocket();
 #endif
 		return TRUE;
 	}
@@ -289,12 +282,13 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		if(pSocketDevice == NULL)
 			pSocketDevice = new QSocketDevice(QSocketDevice::DataGram);
 #else
-		if(pSocket == NULL)
-			pSocket = new QUdpSocket();
+		if(udpSocket == NULL)
+			udpSocket = new QUdpSocket();
 #endif
 
 	int iPort=-1;
-	QHostAddress AddrGroup, AddrInterface, AddrSource;
+	QHostAddress AddrGroup(QHostAddress::Any), 
+		AddrInterface(QHostAddress::Any), AddrSource(QHostAddress::Any);
 	QStringList parts = parseDest(strNewAddr);
 	bool ok=true;
 	switch(parts.count())
@@ -391,8 +385,10 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 {
 	if(udp)
 	{
-		QUdpSocket* udpSocket = dynamic_cast<QUdpSocket*>(pSocket);
-		sourceAddr = AddrSource.toIPv4Address();
+		if(AddrSource == QHostAddress(QHostAddress::Any))
+			sourceAddr = 0;
+		else
+			sourceAddr = AddrSource.toIPv4Address();
 		/* Multicast ? */
 		uint32_t gp = AddrGroup.toIPv4Address();
 		if(gp == 0)
@@ -415,7 +411,10 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 			if(n == SOCKET_ERROR)
 				ok = false;
 #else
-			ok = udpSocket->joinMulticastGroup(AddrGroup);
+			if(AddrInterface == QHostAddress(QHostAddress::Any))
+				ok = udpSocket->joinMulticastGroup(AddrGroup);
+			else
+				ok = udpSocket->joinMulticastGroup(AddrGroup, GetInterface(AddrInterface));
 #endif
 			if(!ok)
 			{
@@ -437,17 +436,14 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 QNetworkInterface 
 CPacketSocketQT::GetInterface(QHostAddress AddrInterface)
 {
-	QList<QNetworkInterface> list = QNetworkInterface::allInterfaces ();
-	QList<QNetworkInterface>::const_iterator ifIt;
-	for( ifIt = list.begin(); ifIt != list.end(); ++ifIt )
-	{
-		QList<QNetworkAddressEntry> addresses = ifIt->addressEntries();
-		QList<QNetworkAddressEntry>::const_iterator i;
-		for(i = addresses.begin(); i!=addresses.end(); ++i)
-		{
-			if(i->ip() == AddrInterface)
-			{
-				return *ifIt;
+	QList<QNetworkInterface> l = QNetworkInterface::allInterfaces () ;
+	for(int i=0; i<l.size(); i++) {
+		QList<QHostAddress> h = l[i].allAddresses();
+		QString s;
+		for(int j=0; j<h.size(); j++) {
+			s += h[j].toString() + " ";
+			if(h[j].toIPv4Address() == AddrInterface.toIPv4Address()) {
+				return l[j];
 			}
 		}
 	}
@@ -472,7 +468,7 @@ CPacketSocketQT::pollStream()
 #if QT_VERSION < 0x040000
 	int iNumBytesRead = SocketDevice.readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
 #else
-	int iNumBytesRead = pSocket->read((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
+	int iNumBytesRead = tcpSocket->read((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
 #endif
 	if(iNumBytesRead > 0)
 	{
@@ -489,9 +485,9 @@ CPacketSocketQT::pollStream()
 # endif
 			int port = SocketDevice.peerPort();
 #else
-			QHostAddress peer = pSocket->peerAddress();
+			QHostAddress peer = tcpSocket->peerAddress();
 			uint32_t addr = peer.toIPv4Address();
-			int port = pSocket->peerPort();
+			int port = tcpSocket->peerPort();
 #endif
 			if(sourceAddr == 0 || sourceAddr == addr) // optionally filter on source address
 				pPacketSink->SendPacket(vecbydata, addr, port);
@@ -528,7 +524,6 @@ CPacketSocketQT::pollDatagram()
 void
 CPacketSocketQT::pollDatagram()
 {
-	QUdpSocket *udpSocket = dynamic_cast<QUdpSocket*>(pSocket);
     vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
      while (udpSocket->hasPendingDatagrams()) {
          vecbydata.resize(udpSocket->pendingDatagramSize());
@@ -538,7 +533,9 @@ CPacketSocketQT::pollDatagram()
          udpSocket->readDatagram((char*)&vecbydata[0], vecbydata.size(), &sender, &senderPort);
 
          uint32_t addr = sender.toIPv4Address();
-		 if(sourceAddr == 0 || sourceAddr == addr) // optionally filter on source address
+		 if(sourceAddr == 0)
+	         pPacketSink->SendPacket(vecbydata, addr, senderPort);
+		 else if(sourceAddr == addr) // optionally filter on source address
 	         pPacketSink->SendPacket(vecbydata, addr, senderPort);
      }
 }
