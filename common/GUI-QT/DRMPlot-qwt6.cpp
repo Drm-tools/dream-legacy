@@ -1152,10 +1152,6 @@ CDRMPlot::CDRMPlot(QwtPlot* pplot) :
         plot = new QwtPlot(NULL);
 
     chart = new InpPSD(pDRMRec, plot);
-
-    /* Connections */
-    connect(plot, SIGNAL(MouseReleased(const QMouseEvent&)),
-            this, SLOT(OnClicked(const QMouseEvent&)));
 }
 
 void CDRMPlot::OnTimerChart()
