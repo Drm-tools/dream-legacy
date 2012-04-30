@@ -53,6 +53,19 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 		return;
 	}
 
+	if (TagPacketDecoderMDI.TagItemDecoderLoFrCnt.IsReady()) {
+		uint32_t dlfc = TagPacketDecoderMDI.TagItemDecoderLoFrCnt.dlfc;
+		if(dlfc == last_dlfc)
+			return; // duplicate packet - might be a network thing, not an error but don't process again.
+		if(dlfc < last_dlfc) {
+			if( (last_dlfc - dlfc) < 10 )
+				return; // recent packet - could be out of order or duplicate, not interested
+		}
+		// if we get here, dlfc is newer, or much older, than last_dlfc, assume its OK
+		// this includes the case where last_dlfc has not been initialised yet.
+		last_dlfc = dlfc;
+	}
+
 	ReceiverParam.Lock();
 
 	ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);

@@ -58,7 +58,7 @@ protected:
 	void InitTagItemDecoders(void);
 private:
 	CVector<CTagItemDecoder *> vecpTagItemDecoders;
-	int iSeqNumber;
+	uint16_t iSeqNumber;
 };
 
 #endif

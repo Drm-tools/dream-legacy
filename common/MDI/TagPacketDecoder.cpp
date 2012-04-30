@@ -107,8 +107,6 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	const int iCurSeqNum = (int) vecbiAFPkt.Separate(16);
 	(void)iCurSeqNum;
 	iSeqNumber++;
-	if (iSeqNumber > 0xFFFF)
-		iSeqNumber = 0;
 	if(iSeqNumber!=iCurSeqNum)
 	{
 		if(iSeqNumber!=-1)

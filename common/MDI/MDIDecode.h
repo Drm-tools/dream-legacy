@@ -48,6 +48,7 @@ protected:
 
 	CTagPacketDecoderMDI TagPacketDecoderMDI;
 	int iFramesSinceSDC;
+	uint32_t last_dlfc;
 };
 
 #endif
