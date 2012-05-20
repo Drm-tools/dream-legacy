@@ -105,7 +105,7 @@ void CMultColorLED::UpdateColor()
 {
 	/* Red light has highest priority, then comes yellow and at the end, we
 	   decide to set green light. Allways check the current color of the
-	   control before setting the color to prevent flicking */
+	   control before setting the color to prevent flickering */
 	if (bFlagRedLi)
 	{
 		if (eColorFlag != RL_RED)
@@ -154,7 +154,7 @@ void CMultColorLED::SetLight(int iNewStatus)
 #if QT_VERSION < 0x040000
 		TimerGreenLight.changeInterval(iUpdateTime);
 #else
-		TimerGreenLight.setInterval(iUpdateTime);
+		TimerGreenLight.start(iUpdateTime);
 #endif
 		break;
 
@@ -164,7 +164,7 @@ void CMultColorLED::SetLight(int iNewStatus)
 #if QT_VERSION < 0x040000
 		TimerYellowLight.changeInterval(iUpdateTime);
 #else
-		TimerYellowLight.setInterval(iUpdateTime);
+		TimerYellowLight.start(iUpdateTime);
 #endif
 		break;
 
@@ -174,7 +174,7 @@ void CMultColorLED::SetLight(int iNewStatus)
 #if QT_VERSION < 0x040000
 		TimerRedLight.changeInterval(iUpdateTime);
 #else
-		TimerRedLight.setInterval(iUpdateTime);
+		TimerRedLight.start(iUpdateTime);
 #endif
 		break;
 	}

@@ -223,8 +223,7 @@ void AnalogDemDlg::showEvent(QShowEvent*)
         MainPlot->SetRecObj(&DRMReceiver);
         MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
         MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
-        connect(MainPlot, SIGNAL(xAxisValSet(double)),
-                this, SLOT(OnChartxAxisValSet(double)));
+        connect(MainPlot, SIGNAL(xAxisValSet(double)), this, SLOT(OnChartxAxisValSet(double)));
     }
     OnTimer();
     OnTimerPLLPhaseDial();

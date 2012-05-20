@@ -361,6 +361,8 @@ protected:
 
 public slots:
 	void OnTimerChart();
+signals:
+	void xAxisValSet(double);
 };
 
 

@@ -377,8 +377,7 @@ void FDRMDialog::OnTimer()
 
         /* Input level meter */
         ProgrInputLevel->setValue(Parameters.GetIFSignalLevel());
-
-        SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
+	    SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
         SetStatus(CLED_SDC, Parameters.ReceiveStatus.SDC.GetStatus());
         SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
 
@@ -1152,7 +1151,7 @@ QString FDRMDialog::GetTypeString(const CService& service)
 
 void FDRMDialog::SetDisplayColor(const QColor newColor)
 {
-    /* Collect pointer to the desired controls in a vector */
+    /* Collect pointers to the desired controls in a vector */
     vector<QWidget*> vecpWidgets;
     vecpWidgets.push_back(TextTextMessage);
     vecpWidgets.push_back(LabelBitrate);
