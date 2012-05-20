@@ -37,6 +37,7 @@
 #include <assert.h>
 #include <cctype>
 #include <cstring>
+#include <fstream>
 #ifdef HAVE_LIBZ
 #include <zlib.h>
 #else
@@ -614,8 +615,7 @@ CMOTDABDec::GetNextObject(CMOTObject & NewMOTObject)
 	}
 	else
 	{
-		fprintf(stderr, "GetObject called when queue empty\n");
-		fflush(stderr);
+		//cerr << "GetObject called when queue empty" << endl;
 	}
 }
 
@@ -633,7 +633,14 @@ CMOTDABDec::DeliverIfReady(TTransportID TransportID)
 				o.strName = string(o.strName.c_str()) + ".gz";
 		}
 		//cerr << o << endl;;
+#ifdef USE_QT_GUI
 		qiNewObjects.push(TransportID);
+#else
+		ofstream file;
+		file.open(o.strName.c_str());
+		file.write((char*)&o.Body.vecData[0], o.Body.vecData.Size());
+		file.close();		
+#endif
 	}
 }
 

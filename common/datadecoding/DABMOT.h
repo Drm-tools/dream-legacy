@@ -577,7 +577,7 @@ class CMOTDABDec
 
   protected:
 
-	void ProcessDirectory (CBitReassembler &MOTDir);
+    void ProcessDirectory (CBitReassembler &MOTDir);
 
     void DeliverIfReady (TTransportID TransportID);
 

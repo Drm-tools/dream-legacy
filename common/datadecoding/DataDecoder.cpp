@@ -287,7 +287,7 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 		&& (iEPGPacketID >= 0)
 		&& MOTObject[iEPGPacketID].NewObjectAvailable())
 	{
-		cerr << "EPG object" << endl;
+		//cerr << "EPG object" << endl;
 		CMOTObject NewObj;
 		MOTObject[iEPGPacketID].GetNextObject(NewObj);
 		string fileName;
