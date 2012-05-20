@@ -252,15 +252,15 @@ void MultimediaDlg::OnTimer()
             break;
 
         case CRC_ERROR:
-            LEDStatus->SetLight(2); /* RED */
+            LEDStatus->SetLight(CMultColorLED::RL_RED);
             break;
 
         case DATA_ERROR:
-            LEDStatus->SetLight(1); /* YELLOW */
+            LEDStatus->SetLight(CMultColorLED::RL_YELLOW);
             break;
 
         case RX_OK:
-            LEDStatus->SetLight(0); /* GREEN */
+            LEDStatus->SetLight(CMultColorLED::RL_GREEN);
             break;
         }
 
@@ -611,19 +611,6 @@ void MultimediaDlg::hideEvent(QHideEvent*)
     /* Deactivate real-time timer so that it does not get new pictures */
     Timer.stop();
 
-}
-
-void MultimediaDlg::SetStatus(int MessID, int iMessPara)
-{
-    switch(MessID)
-    {
-    case MS_MOT_OBJ_STAT:
-        LEDStatus->SetLight(iMessPara);
-        break;
-    case MS_RESET_ALL:
-        LEDStatus->Reset();
-        break;
-    }
 }
 
 void MultimediaDlg::OnButtonStepBack()

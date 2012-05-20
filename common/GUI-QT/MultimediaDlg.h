@@ -126,8 +126,6 @@ public:
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
 
-	void SetStatus(int MessID, int iMessPara);
-
 protected:
 
 	CParameter&				Parameters;
