@@ -205,10 +205,14 @@ public:
 	int GetStationNumber() {return StationsTable.size();}
 	CStationsItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	StationState CheckState(const int iPos);
+	bool CheckFilter(const int iPos);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
-	void UpdateStringListForFilter(const CStationsItem StationsItem);
+	void UpdateStringListForFilter(const CStationsItem& StationsItem);
+	void SetTargetFilter(QString s) {targetFilter = s;}
+	void SetLanguageFilter(QString s) {languageFilter = s;}
+	void SetCountryFilter(QString s) {countryFilter = s;}
 
 	QStringList			ListTargets;
 	QStringList			ListCountries;
@@ -219,10 +223,11 @@ protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);
 
 	vector<CStationsItem>	StationsTable;
-	ESchedMode				eSchedMode;
+	ESchedMode		eSchedMode;
 
-	/* Minutes for stations preview in seconds if zero then no active */
-	int						iSecondsPreview;
+	/* Minutes for stations preview in seconds if zero then only show active */
+	int iSecondsPreview;
+	QString countryFilter, targetFilter, languageFilter;
 };
 
 
@@ -265,13 +270,11 @@ protected:
 	void			showEvent(QShowEvent* pEvent);
 	void			hideEvent(QHideEvent* pEvent);
 	void			AddWhatsThisHelp();
-	void			SetUTCTimeLabel();
 	void			EnableSMeter();
 	void			DisableSMeter();
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
 	_BOOLEAN		showAll();
-	_BOOLEAN 		CheckFilter(const int iPos);
 	int			currentSortColumn();
 	_BOOLEAN		bCurrentSortAscending;
 #if QT_VERSION < 0x030000
@@ -320,7 +323,7 @@ public slots:
 	void OnSMeterAvailable();
 	void OnSigStr(double);
 	void OnTimerList();
-	void OnTimerUTCLabel() {SetUTCTimeLabel();}
+	void OnTimerUTCLabel();
 #if QT_VERSION < 0x040000
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
@@ -331,9 +334,10 @@ public slots:
 	void OnShowPreviewMenu(int iID);
 	void OnFreqCntNewValue(double dVal);
 	void OnHeaderClicked(int c);
-	void FilterChanged(const QString&);
 	void on_actionGetUpdate_triggered();
 	void on_ListViewStations_itemSelectionChanged();
-
+	void on_ComboBoxFilterTarget(const QString&);
+	void on_ComboBoxFilterCountry(const QString&);
+	void on_ComboBoxFilterLanguage(const QString&);
 };
 #endif

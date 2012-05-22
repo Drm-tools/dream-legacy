@@ -68,7 +68,7 @@ QString MyListViewItem::key(int column, bool ascending) const
 }
 #endif
 
-void CDRMSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
+void CDRMSchedule::UpdateStringListForFilter(const CStationsItem& StationsItem)
 {
     QStringList result;
 
@@ -262,6 +262,18 @@ CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
     }
 }
 
+bool CDRMSchedule::CheckFilter(const int iPos)
+{
+    const CStationsItem& station = StationsTable[iPos];
+    if(targetFilter != "" && targetFilter != station.strTarget)
+        return false;
+    if(countryFilter != "" && countryFilter != station.strCountry)
+        return false;
+    if(languageFilter != "" && languageFilter != station.strLanguage)
+        return false;
+    return true;
+}
+
 _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 {
     /* Calculate time in UTC */
@@ -425,7 +437,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     QwtCounterFrequency->setValue(DRMReceiver.GetFrequency());
 
     /* Init UTC time shown with a label control */
-    SetUTCTimeLabel();
+    OnTimerUTCLabel();
 
 #if QT_VERSION >= 0x040000
 
@@ -559,12 +571,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
             this, SLOT(OnFreqCntNewValue(double)));
 
-    connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)),
-            this, SLOT(FilterChanged(const QString&)));
-    connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)),
-            this, SLOT(FilterChanged(const QString&)));
-    connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)),
-            this, SLOT(FilterChanged(const QString&)));
+    connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterTarget(const QString&)));
+    connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterCountry(const QString&)));
+    connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterLanguage(const QString&)));
 }
 
 #if QT_VERSION < 0x040000
@@ -692,7 +701,7 @@ StationsDlg::~StationsDlg()
 {
 }
 
-void StationsDlg::SetUTCTimeLabel()
+void StationsDlg::OnTimerUTCLabel()
 {
     /* Get current UTC time */
     time_t ltime;
@@ -717,14 +726,13 @@ void StationsDlg::OnShowStationsMenu(int iID)
         ClearStationsView();
     }
 
-    /* Update list view */
-    SetStationsView();
-
     /* Taking care of checks in the menu */
 #if QT_VERSION < 0x040000
     pViewMenu->setItemChecked(0, 0 == iID);
     pViewMenu->setItemChecked(1, 1 == iID);
 #endif
+    /* Update list view */
+    SetStationsView();
 }
 
 void StationsDlg::OnShowPreviewMenu(int iID)
@@ -803,6 +811,24 @@ void StationsDlg::AddUpdateDateTime()
     actionGetUpdate->setEnabled(b);
     actionGetUpdate->setText(tr("&Get Update") + s + "...");
 #endif
+}
+
+void StationsDlg::on_ComboBoxFilterTarget(const QString& s)
+{
+    DRMSchedule.SetTargetFilter(s);
+    SetStationsView();
+}
+
+void StationsDlg::on_ComboBoxFilterCountry(const QString& s)
+{
+    DRMSchedule.SetCountryFilter(s);
+    SetStationsView();
+}
+
+void StationsDlg::on_ComboBoxFilterLanguage(const QString& s)
+{
+    DRMSchedule.SetLanguageFilter(s);
+    SetStationsView();
 }
 
 void StationsDlg::on_actionGetUpdate_triggered()
@@ -1125,6 +1151,8 @@ void StationsDlg::SetStationsView()
 {
     TimerList.stop();
     ListItemsMutex.lock();
+
+    bool bShowAll = showAll();
 #if QT_VERSION < 0x040000
     /* Stop the timer and disable the list */
 
@@ -1163,9 +1191,9 @@ void StationsDlg::SetStationsView()
             break;
         }
 
-	if(showAll() || ((CheckFilter(i) == FALSE) && (iState != CDRMSchedule::IS_INACTIVE)))
-        {
-            ListViewStations->insertItem(item);
+	if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
+	{
+	    ListViewStations->insertItem(item);
         }
     }
 
@@ -1191,33 +1219,32 @@ void StationsDlg::SetStationsView()
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
 	QTreeWidgetItem* item = DRMSchedule.GetItem(i).item; //ListViewStations->topLevelItem(i);
 
-        if (!(((showAll() == FALSE) &&
-                (iState == CDRMSchedule::IS_INACTIVE))
-                || (CheckFilter(i) == FALSE)))
+        switch (iState)
         {
+        case CDRMSchedule::IS_ACTIVE:
+	    item->setIcon(0, greenCube);
+            break;
+        case CDRMSchedule::IS_PREVIEW:
+	    item->setIcon(0, orangeCube);
+            break;
+        case CDRMSchedule::IS_SOON_INACTIVE:
+	    item->setIcon(0, pinkCube);
+            break;
+        case CDRMSchedule::IS_INACTIVE:
+	    item->setIcon(0, redCube);
+            break;
+        default:
+	    item->setIcon(0, redCube);
+            break;
+        }
+
+	if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
+	{
 	    item->setHidden(false);
-            switch (iState)
-            {
-            case CDRMSchedule::IS_ACTIVE:
-		    item->setIcon(0, greenCube);
-                break;
-            case CDRMSchedule::IS_PREVIEW:
-		    item->setIcon(0, orangeCube);
-                break;
-            case CDRMSchedule::IS_SOON_INACTIVE:
-		    item->setIcon(0, pinkCube);
-                break;
-            case CDRMSchedule::IS_INACTIVE:
-		    item->setIcon(0, redCube);
-                break;
-            default:
-		    item->setIcon(0, redCube);
-                break;
-            }
         }
 	else
 	{
-		item->setHidden(true);
+	    item->setHidden(true);
 	}
     }
     ListViewStations->setSortingEnabled(true);
@@ -1405,38 +1432,6 @@ void StationsDlg::AddWhatsThisHelp()
 #endif
 }
 
-void StationsDlg::FilterChanged(const QString&)
-{
-    /* Update list view */
-    SetStationsView();
-}
-
-_BOOLEAN StationsDlg::CheckFilter(const int iPos)
-{
-    _BOOLEAN bCheck = TRUE;
-    QString sFilter = "";
-
-    sFilter = ComboBoxFilterTarget->currentText();
-
-    if ((sFilter != "") &&
-            (DRMSchedule.GetItem(iPos).strTarget != sFilter))
-        bCheck = FALSE;
-
-    sFilter = ComboBoxFilterCountry->currentText();
-
-    if ((sFilter != "") &&
-            (DRMSchedule.GetItem(iPos).strCountry != sFilter))
-        bCheck = FALSE;
-
-    sFilter = ComboBoxFilterLanguage->currentText();
-
-    if ((sFilter != "") &&
-            (DRMSchedule.GetItem(iPos).strLanguage != sFilter))
-        bCheck = FALSE;
-
-    return bCheck;
-}
-
 int StationsDlg::currentSortColumn()
 {
 #if QT_VERSION < 0x030000
@@ -1449,7 +1444,7 @@ int StationsDlg::currentSortColumn()
 _BOOLEAN StationsDlg::showAll()
 {
 #if QT_VERSION < 0x040000
-	return pViewMenu->isItemChecked(0);
+	return pViewMenu->isItemChecked(1);
 #else
 	return actionShowAllStations->isChecked();
 #endif
