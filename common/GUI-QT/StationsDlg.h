@@ -134,8 +134,14 @@ public:
 
 	bool operator< ( const QTreeWidgetItem & rhs) const
 	{
+		// bug 29 - sort frequency and power numerically
 		int col = treeWidget()->sortColumn();
-		return text( col ).toLower() < rhs.text( col ).toLower();
+		if (col == 2) // integer frequency
+			return text( col ).toInt() < rhs.text( col ).toInt();
+		else if (col == 4) // real power
+			return text( col ).toDouble() < rhs.text( col ).toDouble();
+		else
+			return text( col ).toLower() < rhs.text( col ).toLower();
 	}
 };
 #endif

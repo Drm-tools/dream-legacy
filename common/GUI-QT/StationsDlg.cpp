@@ -34,7 +34,6 @@
 # include <qheader.h>
 # include <qftp.h>
 # include <qwhatsthis.h>
-# define Q3WhatsThis QWhatsThis
 # ifdef HAVE_LIBHAMLIB
 #  include "Rig.h"
 # endif
@@ -537,10 +536,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 #endif
     /* Connections ---------------------------------------------------------- */
 
-    connect(&TimerList, SIGNAL(timeout()),
-            this, SLOT(OnTimerList()));
-    connect(&TimerUTCLabel, SIGNAL(timeout()),
-            this, SLOT(OnTimerUTCLabel()));
+    connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
+    connect(&TimerUTCLabel, SIGNAL(timeout()), this, SLOT(OnTimerUTCLabel()));
 
     TimerList.stop();
     TimerUTCLabel.stop();
@@ -553,6 +550,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     connect(ListViewStations->header(), SIGNAL(clicked(int)),
             this, SLOT(OnHeaderClicked(int)));
 #else
+// TODO - which bits are needed?
 #endif
 
 
