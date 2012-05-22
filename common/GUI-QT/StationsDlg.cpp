@@ -147,8 +147,8 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
             bReadOK = FALSE;
         else
         {
-            StationsItem.SetStartTimeNum(iStartTime);
-            StationsItem.SetStopTimeNum(iStopTime);
+            StationsItem.SetStartTime(iStartTime);
+            StationsItem.SetStopTime(iStopTime);
         }
 
         /* Days */
@@ -390,14 +390,16 @@ void CStationsItem::SetDaysFlagString(const QString& strNewDaysFlags)
 StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
                          QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
     CStationsDlgBase(parent, name, modal, f),
-    DRMReceiver(NDRMR),rig(nrig),
+    DRMReceiver(NDRMR),
     Settings(NSettings),
-    bReInitOnFrequencyChange(FALSE)
 #if QT_VERSION < 0x040000
-    , vecpListItems(0)
+    vecpListItems(0),
 #else
-,greenCube(":/icons/greenCube.png"),redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":/icons/pinkCube.png")
+    greenCube(":/icons/greenCube.png"),redCube(":/icons/redCube.png"),
+    orangeCube(":/icons/organgeCube.png"),pinkCube(":/icons/pinkCube.png"),
 #endif
+    bReInitOnFrequencyChange(FALSE),
+    rig(nrig)
 {
     setupUi(this);
     /* Set help text for the controls */
@@ -1052,7 +1054,7 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
     ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
     ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
 
-    int i;
+    size_t i;
     // delete all previous list items
     for (i = 0; i < vecpListItems.size(); i++)
     {
@@ -1061,14 +1063,19 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
     }
     // fill the vector just once, then add and remove items from the View
     vecpListItems.resize( DRMSchedule.GetStationNumber());
-    for (i = 0; i < DRMSchedule.GetStationNumber(); i++)
+#else
+    ComboBoxFilterTarget->addItems(DRMSchedule.ListTargets);
+    ComboBoxFilterCountry->addItems(DRMSchedule.ListCountries);
+    ComboBoxFilterLanguage->addItems(DRMSchedule.ListLanguages);
+#endif
+    for (i = 0; int(i) < DRMSchedule.GetStationNumber(); i++)
     {
-	const CStationsItem& item = DRMSchedule.GetItem(i);
+	const CStationsItem& station = DRMSchedule.GetItem(i);
 
         /* Get power of the station. We have to do a special treatment
 	 * here, because we want to avoid having a "0" in the list when
 	 * a "?" was in the schedule-ini-file */
-         const _REAL rPower = item.rPower;
+         const _REAL rPower = station.rPower;
 
          QString strPower;
          if (rPower == (_REAL) 0.0)
@@ -1076,52 +1083,30 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
          else
              strPower.setNum(rPower);
 
-         /* Generate new list item with all necessary column entries */
-         vecpListItems[i] = new MyListViewItem(
-             ListViewStations,
-             item.strName     /* name */,
-             QString().sprintf("%04d-%04d", item.GetStartTimeNum(), item.GetStopTimeNum())   /* time */,
-             QString().setNum(item.iFreq) /* freq. */,
-             item.strTarget   /* target */,
-             strPower                                   /* power */,
-             item.strCountry  /* country */,
-             item.strSite     /* site */,
-             item.strLanguage /* language */
-         );
-
-         /* list of days */
-         vecpListItems[i]->setText(8, item.strDaysShow);
-    }
+         /* Generate new list station with all necessary column entries */
+#if QT_VERSION < 0x040000
+	MyListViewItem* item = new MyListViewItem(ListViewStations);
 #else
-    ComboBoxFilterTarget->addItems(DRMSchedule.ListTargets);
-    ComboBoxFilterCountry->addItems(DRMSchedule.ListCountries);
-    ComboBoxFilterLanguage->addItems(DRMSchedule.ListLanguages);
-    // fill the view just once, then change the state
-    for (int i = 0; i < DRMSchedule.GetStationNumber(); i++)
-    {
-	    CStationsItem& station = DRMSchedule.GetItem(i);
-            const _REAL rPower = station.rPower;
-
-            QString strPower;
-            if (rPower == (_REAL) 0.0)
-                strPower = "?";
-            else
-                strPower.setNum(rPower);
-            QTreeWidgetItem *item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
-            item->setText(0, station.strName);
-            item->setText(1, QString().sprintf("%04d-%04d",
-                                               station.GetStartTimeNum(),
-                                               station.GetStopTimeNum()));
-            item->setText(2, QString().setNum(station.iFreq) /* freq. */);
-            item->setText(3, station.strTarget   /* target */);
-            item->setText(4, strPower                                   /* power */);
-            item->setText(5, station.strCountry  /* country */);
-            item->setText(6, station.strSite     /* site */);
-            item->setText(7, station.strLanguage /* language */);
-            item->setText(8, station.strDaysShow);
-	    station.item = item;
-    }
+        QTreeWidgetItem *item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
 #endif
+        item->setText(0, station.strName);
+        item->setText(1, QString().sprintf("%04d-%04d",
+                                               station.StartTime(),
+                                               station.StopTime()));
+        item->setText(2, QString().setNum(station.iFreq) /* freq. */);
+        item->setText(3, station.strTarget   /* target */);
+        item->setText(4, strPower                                   /* power */);
+        item->setText(5, station.strCountry  /* country */);
+        item->setText(6, station.strSite     /* site */);
+        item->setText(7, station.strLanguage /* language */);
+        item->setText(8, station.strDaysShow);
+#if QT_VERSION < 0x040000
+        vecpListItems[i] = item;
+#else
+	station.item = item;
+#endif
+    }
+
     /* Update list view */
     SetStationsView();
 
@@ -1152,7 +1137,7 @@ void StationsDlg::SetStationsView()
     ListViewStations->setUpdatesEnabled(FALSE);
     ListViewStations->setEnabled(FALSE);
     ListViewStations->clear();
-    bListHastChanged = TRUE; // TODO optimise if not changed
+    bool bListHastChanged = true; // TODO optimise if not changed
 
     /* Add new item for each visible station in list view */
     for (i = 0; i < iNumStations; i++)
