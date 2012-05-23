@@ -574,6 +574,13 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterTarget(const QString&)));
     connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterCountry(const QString&)));
     connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterLanguage(const QString&)));
+	okMessage = tr("Update successful.");
+	badMessage = 
+        tr("Update failed. The following things may caused the "
+        "failure:\n"
+        "\t- the internet connection was not set up properly\n"
+        "\t- the server www.drm-dx.de is currently not available\n"
+        "\t- the file 'DRMSchedule.ini' could not be written"); 
 }
 
 #if QT_VERSION < 0x040000
@@ -687,13 +694,6 @@ void StationsDlg::setupUi(QObject*)
     /* Now tell the layout about the menu */
     CStationsDlgBaseLayout->setMenuBar(pMenu);
 
-	QString okMessage = tr("Update successful.");
-	QString badMessage = 
-        tr("Update failed. The following things may caused the "
-        "failure:\n"
-        "\t- the internet connection was not set up properly\n"
-        "\t- the server www.drm-dx.de is currently not available\n"
-        "\t- the file 'DRMSchedule.ini' could not be written"); 
 }
 #endif
 
