@@ -47,8 +47,9 @@
 FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f):
 	FMDialogBase(parent, name, modal, f),
-	DRMReceiver(NDRMR), Settings(NSettings), eReceiverMode(RM_NONE),
-	alarmBrush(QColor(255, 0, 0))
+	DRMReceiver(NDRMR), Settings(NSettings),
+	alarmBrush(QColor(255, 0, 0)),
+	eReceiverMode(RM_NONE)
 {
 	/* recover window size and position */
 	CWinGeom s;

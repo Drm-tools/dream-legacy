@@ -48,8 +48,8 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f):
     CEPGDlgbase(parent, name, modal, f),
 #if QT_VERSION < 0x040000
-    BitmCubeGreen(),
     date(QDate::currentDate()),
+    BitmCubeGreen(),
 #else
     greenCube(":/icons/greenCube.png"),
 #endif

@@ -33,8 +33,9 @@
 #include <iostream>
 
 CDataDecoder::CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
-	Journaline(*new CJournaline()),iOldJournalineServiceID (0),
-	Experiment(*new CExperiment())
+	Journaline(*new CJournaline()),
+	Experiment(*new CExperiment()),
+	iOldJournalineServiceID (0)
 {
 		for(size_t i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
 			eAppType[i] = AT_NOT_SUP;

@@ -72,89 +72,94 @@
 class CEPGDlgbase : public QDialog, public Ui_CEPGDlgbase
 {
 public:
-	CEPGDlgbase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
-		QDialog(parent,f){setupUi(this);}
-	virtual ~CEPGDlgbase() {}
+    CEPGDlgbase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
+        QDialog(parent,f) {
+        setupUi(this);
+    }
+    virtual ~CEPGDlgbase() {}
 };
 #endif
 class EPGDlg : public CEPGDlgbase
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
 
-	EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WFlags f = 0);
-	virtual ~EPGDlg();
-	/* dummy assignment operator to help MSVC8 */
-	EPGDlg& operator=(const EPGDlg&)
-	{ throw "should not happen"; return *this;}
+    EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+           bool modal = FALSE, Qt::WFlags f = 0);
+    virtual ~EPGDlg();
+    /* dummy assignment operator to help MSVC8 */
+    EPGDlg& operator=(const EPGDlg&)
+    {
+        throw "should not happen";
+        return *this;
+    }
 
     void select();
 
 protected:
 
-	virtual	void showEvent(QShowEvent *e);
-	virtual void hideEvent(QHideEvent* pEvent);
+    virtual	void showEvent(QShowEvent *e);
+    virtual void hideEvent(QHideEvent* pEvent);
 #if QT_VERSION < 0x040000
-	virtual void setActive(QListViewItem*);
+    virtual void setActive(QListViewItem*);
 #else
-	virtual void setActive(QTreeWidgetItem*);
+    virtual void setActive(QTreeWidgetItem*);
 #endif
 
-	virtual QString getFileName(const QDate& date, uint32_t sid, bool bAdvanced);
-	virtual QString getFileName_etsi(const QDate& date, uint32_t sid, bool bAdvanced);
-	virtual QDomDocument* getFile (const QString&);
-	virtual QDomDocument* getFile (const QDate& date, uint32_t sid, bool bAdvanced);
+    virtual QString getFileName(const QDate& date, uint32_t sid, bool bAdvanced);
+    virtual QString getFileName_etsi(const QDate& date, uint32_t sid, bool bAdvanced);
+    virtual QDomDocument* getFile (const QString&);
+    virtual QDomDocument* getFile (const QDate& date, uint32_t sid, bool bAdvanced);
 
-    class MyListViewItem : public 
+    class MyListViewItem : public
 #if QT_VERSION < 0x040000
-		QListViewItem
+        QListViewItem
 #else
-		QTreeWidgetItem
+        QTreeWidgetItem
 #endif
     {
-    	public:
+    public:
 
 #if QT_VERSION < 0x040000
-    	MyListViewItem(QListView * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
-		QListViewItem(parent,a,b,c,d,e),start(s),duration(dr){}
+        MyListViewItem(QListView * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
+            QListViewItem(parent,a,b,c,d,e),start(s),duration(dr) {}
 #else
-    	MyListViewItem(QTreeWidget * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
-		QTreeWidgetItem(parent, QStringList() << a << b << c << d << e),start(s),duration(dr)
-		{
-		}
+        MyListViewItem(QTreeWidget * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
+            QTreeWidgetItem(parent, QStringList() << a << b << c << d << e),start(s),duration(dr)
+        {
+        }
 #endif
 
-	_BOOLEAN IsActive();
+        _BOOLEAN IsActive();
 
-	time_t start;
-	int duration;
+        time_t start;
+        int duration;
     };
 
     bool do_updates;
     EPG epg;
-	CDRMReceiver&	DRMReceiver;
-	CSettings&		Settings;
-	QTimer			Timer;
-	map<QString,uint32_t> sids;
+    CDRMReceiver&	DRMReceiver;
+    CSettings&		Settings;
+    QTimer		Timer;
+    map<QString,uint32_t> sids;
 #if QT_VERSION < 0x040000
     void setDate();
     QDate date;
-	QListViewItem*	next;
-	QPixmap			BitmCubeGreen;
+    QPixmap		BitmCubeGreen;
+    QListViewItem*	next;
 #else
-	QTreeWidgetItem* next;
-	QIcon			greenCube;
+    QIcon		greenCube;
+    QTreeWidgetItem*	next;
 #endif
 
 signals:
-	void NowNext(QString);
+    void NowNext(QString);
 
 public slots:
     void selectChannel(const QString&);
-	void OnTimer();
-	void sendNowNext(QString);
+    void OnTimer();
+    void sendNowNext(QString);
 #if QT_VERSION < 0x040000
     void nextDay();
     void previousDay();

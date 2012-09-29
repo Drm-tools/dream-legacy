@@ -340,14 +340,14 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
                                  bool modal, Qt::WFlags f):
     CLiveScheduleDlgBase(parent, name, modal, f),
     DRMReceiver(NDRMR),
+#if QT_VERSION >= 0x040000
+smallGreenCube(":/icons/smallGreenCube.png"),greenCube(":/icons/greenCube.png"),
+redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":/icons/pinkCube.png"),
+#endif
     vecpListItems(),
     strCurrentSavePath("."),
     iColStationID(0),
     iWidthColStationID(0)
-#if QT_VERSION >= 0x040000
-,smallGreenCube(":/icons/smallGreenCube.png"),greenCube(":/icons/greenCube.png"),
-redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":/icons/pinkCube.png")
-#endif
 {
     setupUi(this);
     /* Set help text for the controls */
