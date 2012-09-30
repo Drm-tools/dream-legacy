@@ -261,6 +261,7 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 
 #if QT_VERSION < 0x040000
 
+	int i;
 	/* Language */
 	for (i = 0; i < LEN_TABLE_LANGUAGE_CODE; i++)
 		ComboBoxLanguage->insertItem(strTableLanguageCode[i].c_str(), i);

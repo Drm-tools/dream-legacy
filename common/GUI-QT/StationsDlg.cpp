@@ -510,7 +510,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 # ifdef HAVE_LIBHAMLIB
     RigDlg *pRigDlg = new RigDlg(Settings, rig, this);
     connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
-    connect(actionEnable_S_Meter, SIGNAL(triggered()), this, SLOT(OnSMeterTriggered()));
+    connect(actionEnable_S_Meter, SIGNAL(triggered()), this, SLOT(OnSMeterMenu(int)));
 # endif
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 #endif
@@ -672,8 +672,6 @@ void StationsDlg::setupUi(QObject*)
     /* Enable s-meter */
     const int iSMeterMenuID = pRemoteMenu->menu()->insertItem(tr("Enable S-Meter"),
                               this, SLOT(OnSMeterMenu(int)), 0, SMETER_MENU_ID);
-
-    connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
 
     /* Update menu ---------------------------------------------------------- */
     pUpdateMenu = new QPopupMenu(this);
@@ -1324,16 +1322,9 @@ void StationsDlg::on_ListViewStations_itemSelectionChanged()
 #endif
 }
 
-void StationsDlg::OnSMeterAvailable()
-{
-    /* If model is changed, update s-meter because new rig might have support
-       for it. */
-    EnableSMeter();
-}
-
-#if QT_VERSION < 0x040000
 void StationsDlg::OnSMeterMenu(int iID)
 {
+#if QT_VERSION < 0x040000
     if (pRemoteMenu->menu()->isItemChecked(iID))
     {
         pRemoteMenu->menu()->setItemChecked(iID, FALSE);
@@ -1344,10 +1335,8 @@ void StationsDlg::OnSMeterMenu(int iID)
         pRemoteMenu->menu()->setItemChecked(iID, TRUE);
         EnableSMeter();
     }
-}
 #else
-void StationsDlg::OnSMeterTriggered()
-{
+    (void)iID;
     if(actionEnable_S_Meter->isChecked())
     {
         EnableSMeter();
@@ -1356,8 +1345,8 @@ void StationsDlg::OnSMeterTriggered()
     {
         DisableSMeter();
     }
-}
 #endif
+}
 
 void StationsDlg::EnableSMeter()
 {
