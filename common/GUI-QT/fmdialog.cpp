@@ -28,6 +28,7 @@
 
 #include "fmdialog.h"
 #include "DialogUtil.h"
+#include "Rig.h"
 #include <qmessagebox.h>
 #include <qinputdialog.h>
 #include <qwt_thermo.h>
