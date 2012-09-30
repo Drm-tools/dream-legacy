@@ -33,9 +33,9 @@
 #include <QFontDialog>
 
 JLViewer::JLViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent,
-		const char* name, Qt::WFlags f):
-		QMainWindow(parent, f), Ui_JLViewer(), Timer(),
-		receiver(rec), settings(s), decoderSet(false)
+                   const char* name, Qt::WFlags f):
+    QMainWindow(parent, f), Ui_JLViewer(), Timer(),
+    receiver(rec), settings(s), decoderSet(false)
 {
     (void)name;
     setupUi(this);
@@ -43,23 +43,23 @@ JLViewer::JLViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent,
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
     textBrowser->setDocument(&document);
 
-	connect(actionClear_All, SIGNAL(triggered()), SLOT(OnClearAll()));
-	connect(actionSave, SIGNAL(triggered()), SLOT(OnSave()));
-	connect(actionSave_All, SIGNAL(triggered()), SLOT(OnSaveAll()));
-	connect(actionClose, SIGNAL(triggered()), SLOT(close()));
-	connect(actionSet_Font, SIGNAL(triggered()), SLOT(OnSetFont()));
+    connect(actionClear_All, SIGNAL(triggered()), SLOT(OnClearAll()));
+    connect(actionSave, SIGNAL(triggered()), SLOT(OnSave()));
+    connect(actionSave_All, SIGNAL(triggered()), SLOT(OnSaveAll()));
+    connect(actionClose, SIGNAL(triggered()), SLOT(close()));
+    connect(actionSet_Font, SIGNAL(triggered()), SLOT(OnSetFont()));
 
-	/* Update time for color LED */
-	LEDStatus->SetUpdateTime(1000);
+    /* Update time for color LED */
+    LEDStatus->SetUpdateTime(1000);
 
-	/* Connect controls */
-	connect(ButtonStepBack, SIGNAL(clicked()), this, SLOT(OnButtonStepBack()));
-	connect(textBrowser, SIGNAL(backwardAvailable(bool)), ButtonStepBack, SLOT(setEnabled(bool)));
-	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
+    /* Connect controls */
+    connect(ButtonStepBack, SIGNAL(clicked()), this, SLOT(OnButtonStepBack()));
+    connect(textBrowser, SIGNAL(backwardAvailable(bool)), ButtonStepBack, SLOT(setEnabled(bool)));
+    connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
     OnClearAll();
 
-	Timer.stop();
+    Timer.stop();
 }
 
 JLViewer::~JLViewer()
@@ -68,29 +68,29 @@ JLViewer::~JLViewer()
 
 void JLViewer::showEvent(QShowEvent*)
 {
-	/* Get window geometry data and apply it */
-	CWinGeom g;
-	settings.Get("Journaline", g);
-	const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
+    /* Get window geometry data and apply it */
+    CWinGeom g;
+    settings.Get("Journaline", g);
+    const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
 
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
+    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+        setGeometry(WinGeom);
 
-	strCurrentSavePath = settings.Get("Journaline", "storagepath", strCurrentSavePath);
+    strCurrentSavePath = settings.Get("Journaline", "storagepath", strCurrentSavePath);
 
-	/* Store the default font */
-	QFont fontDefault = textBrowser->font();
+    /* Store the default font */
+    QFont fontDefault = textBrowser->font();
 
-	/* Retrieve the font setting saved into the .ini file */
-	string strFontFamily = settings.Get("Journaline", "fontfamily");
-	if (strFontFamily != "")
-	{
-		QFont fontTextBrowser = QFont(QString(strFontFamily.c_str()),
-        settings.Get("Journaline", "fontpointsize", 0),
-        settings.Get("Journaline", "fontweight", 0),
-        settings.Get("Journaline", "fontitalic", 0));
+    /* Retrieve the font setting saved into the .ini file */
+    string strFontFamily = settings.Get("Journaline", "fontfamily");
+    if (strFontFamily != "")
+    {
+        QFont fontTextBrowser = QFont(QString(strFontFamily.c_str()),
+                                      settings.Get("Journaline", "fontpointsize", 0),
+                                      settings.Get("Journaline", "fontweight", 0),
+                                      settings.Get("Journaline", "fontitalic", 0));
         textBrowser->setFont(fontTextBrowser);
-	}
+    }
 
     CParameter& Parameters = *receiver.GetParameters();
     Parameters.Lock();
@@ -100,19 +100,19 @@ void JLViewer::showEvent(QShowEvent*)
     /* Get current data service */
     int shortID = Parameters.GetCurSelDataService();
     CService service = Parameters.Service[shortID];
-	Parameters.Unlock();
+    Parameters.Unlock();
 
     CDataDecoder* dec = receiver.GetDataDecoder();
-	CJournaline *decoder = (CJournaline*)dec->getApplication(service.DataParam.iPacketID);
-	if(decoder)
-	{
+    CJournaline *decoder = (CJournaline*)dec->getApplication(service.DataParam.iPacketID);
+    if(decoder)
+    {
         textBrowser->setDecoder(decoder);
         decoderSet = true;
-	}
-	textBrowser->setSource(QUrl("0"));
+    }
+    textBrowser->setSource(QUrl("0"));
 
-	/* Add the service description into the dialog caption */
-	QString strTitle = tr("Journaline");
+    /* Add the service description into the dialog caption */
+    QString strTitle = tr("Journaline");
 
     if (service.IsActive())
     {
@@ -130,63 +130,63 @@ void JLViewer::showEvent(QShowEvent*)
                 strLabel += " ";
 
             strServiceID = "- ID:" +
-                QString().setNum(long(service.iServiceID), 16).toUpper();
+                           QString().setNum(long(service.iServiceID), 16).toUpper();
         }
 
         /* add the description on the title of the dialog */
         if (strLabel != "" || strServiceID != "")
             strTitle += " [" + strLabel + strServiceID + "]";
     }
-	setWindowTitle(strTitle);
+    setWindowTitle(strTitle);
 
-	/* Update window */
-	OnTimer();
+    /* Update window */
+    OnTimer();
 
-	/* Activate real-time timer when window is shown */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
+    /* Activate real-time timer when window is shown */
+    Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 void JLViewer::hideEvent(QHideEvent*)
 {
-	/* Deactivate real-time timer so that it does not get new pictures */
-	Timer.stop();
+    /* Deactivate real-time timer so that it does not get new pictures */
+    Timer.stop();
 
-	/* Save window geometry data */
-	QRect WinGeom = geometry();
+    /* Save window geometry data */
+    QRect WinGeom = geometry();
 
-	CWinGeom c;
-	c.iXPos = WinGeom.x();
-	c.iYPos = WinGeom.y();
-	c.iHSize = WinGeom.height();
-	c.iWSize = WinGeom.width();
-	settings.Put("Journaline", c);
+    CWinGeom c;
+    c.iXPos = WinGeom.x();
+    c.iYPos = WinGeom.y();
+    c.iHSize = WinGeom.height();
+    c.iWSize = WinGeom.width();
+    settings.Put("Journaline", c);
 
-	/* Store save path */
-	settings.Put("Journaline","storagepath", strCurrentSavePath);
+    /* Store save path */
+    settings.Put("Journaline","storagepath", strCurrentSavePath);
 
     QFont fontTextBrowser = textBrowser->currentFont();
-	/* Store current textBrowser font */
-	settings.Put("Journaline","fontfamily", fontTextBrowser.family().toStdString());
-	settings.Put("Journaline","fontpointsize", fontTextBrowser.pointSize());
-	settings.Put("Journaline","fontweight", fontTextBrowser.weight());
-	settings.Put("Journaline","fontitalic", fontTextBrowser.italic());
+    /* Store current textBrowser font */
+    settings.Put("Journaline","fontfamily", fontTextBrowser.family().toStdString());
+    settings.Put("Journaline","fontpointsize", fontTextBrowser.pointSize());
+    settings.Put("Journaline","fontweight", fontTextBrowser.weight());
+    settings.Put("Journaline","fontitalic", fontTextBrowser.italic());
 }
 
 void JLViewer::OnTimer()
 {
     CParameter& Parameters = *receiver.GetParameters();
-	Parameters.Lock();
-	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
+    Parameters.Lock();
+    ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
 
     /* Get current data service */
     int shortID = Parameters.GetCurSelDataService();
     CService service = Parameters.Service[shortID];
-	Parameters.Unlock();
+    Parameters.Unlock();
 
     if(!decoderSet)
     {
         CDataDecoder* dec = receiver.GetDataDecoder();
-		CJournaline *decoder = (CJournaline*)dec->getApplication(service.DataParam.iPacketID);
+        CJournaline *decoder = (CJournaline*)dec->getApplication(service.DataParam.iPacketID);
         if(decoder)
         {
             textBrowser->setDecoder(decoder);
@@ -194,24 +194,24 @@ void JLViewer::OnTimer()
         }
     }
 
-	switch(status)
-	{
-	case NOT_PRESENT:
-		LEDStatus->Reset();
-		break;
+    switch(status)
+    {
+    case NOT_PRESENT:
+        LEDStatus->Reset();
+        break;
 
-	case CRC_ERROR:
-		LEDStatus->SetLight(CMultColorLED::RL_RED);
-		break;
+    case CRC_ERROR:
+        LEDStatus->SetLight(CMultColorLED::RL_RED);
+        break;
 
-	case DATA_ERROR:
-		LEDStatus->SetLight(CMultColorLED::RL_YELLOW);
-		break;
+    case DATA_ERROR:
+        LEDStatus->SetLight(CMultColorLED::RL_YELLOW);
+        break;
 
-	case RX_OK:
-		LEDStatus->SetLight(CMultColorLED::RL_GREEN);
-		break;
-	}
+    case RX_OK:
+        LEDStatus->SetLight(CMultColorLED::RL_GREEN);
+        break;
+    }
 
     if(textBrowser->changed())
     {
@@ -245,20 +245,20 @@ void JLViewer::OnClearAll()
 
 void JLViewer::OnSetFont()
 {
-	bool bok;
+    bool bok;
 
-	/* Open the font dialog */
-	QFont newFont = QFontDialog::getFont(&bok, textBrowser->currentFont(), this);
+    /* Open the font dialog */
+    QFont newFont = QFontDialog::getFont(&bok, textBrowser->currentFont(), this);
 
-	if (bok == true)
-	{
-		/* Store the current text and then reset it */
-		QString strOldText = textBrowser->toHtml();
-		textBrowser->setText("<br>");
+    if (bok == true)
+    {
+        /* Store the current text and then reset it */
+        QString strOldText = textBrowser->toHtml();
+        textBrowser->setText("<br>");
 
-		textBrowser->setFont(newFont);
+        textBrowser->setFont(newFont);
 
-		/* Restore the text to refresh it with the new font */
-		textBrowser->setText(strOldText);
-	}
+        /* Restore the text to refresh it with the new font */
+        textBrowser->setText(strOldText);
+    }
 }

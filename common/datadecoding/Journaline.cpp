@@ -141,7 +141,7 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 	NML::RawNewsObject_t rno;
 	unsigned long elen = 0;
 	unsigned long len = 0;
-	if (NEWS_SVC_DEC_get_news_object(newsdec, iObjID, &elen, &len, rno.nml))
+	if(newsdec && NEWS_SVC_DEC_get_news_object(newsdec, iObjID, &elen, &len, rno.nml))
 	{
 		rno.nml_len = static_cast<unsigned short>(len);
 		rno.extended_header_len = static_cast<unsigned short>(elen);

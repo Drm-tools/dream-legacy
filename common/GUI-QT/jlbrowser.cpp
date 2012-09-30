@@ -31,71 +31,71 @@
 #include <iostream>
 
 JLBrowser::JLBrowser(QWidget * parent)
-: QTextBrowser(parent),decoder(NULL),strFhGIISText(),strJournalineHeadText(),
-    total(0),ready(0)
+    : QTextBrowser(parent),decoder(NULL),strFhGIISText(),strJournalineHeadText(),
+      total(0),ready(0)
 {
 
-	/* Set FhG IIS text */
-	strFhGIISText =
-		"<table><tr><td><img src=\":/icons/fhgiis.bmp\"></td>"
-		"<td><font face=\"Courier\" size=\"-1\">Features NewsService "
-		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
-		"Germany. For more information visit http://www.iis.fhg.de/dab"
-		"</font></td></tr></table>";
+    /* Set FhG IIS text */
+    strFhGIISText =
+        "<table><tr><td><img src=\":/icons/fhgiis.bmp\"></td>"
+        "<td><font face=\"Courier\" size=\"-1\">Features NewsService "
+        "Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
+        "Germany. For more information visit http://www.iis.fhg.de/dab"
+        "</font></td></tr></table>";
 
-	/* Set Journaline headline text */
-	strJournalineHeadText =
-		"<table><tr><td><img src=\":/icons/LogoJournaline.png\"></td>"
-		"<td valign=\"middle\"><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
-		"</h2></td></tr></table>";
+    /* Set Journaline headline text */
+    strJournalineHeadText =
+        "<table><tr><td><img src=\":/icons/LogoJournaline.png\"></td>"
+        "<td valign=\"middle\"><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
+        "</h2></td></tr></table>";
 }
 
 bool JLBrowser::changed()
 {
-	if(decoder==NULL)
-	{
+    if(decoder==NULL)
+    {
         return false;
-	}
+    }
 
     int JourID = source().toString().toInt();
 
-	CNews News;
-	decoder->GetNews(JourID, News);
+    CNews News;
+    decoder->GetNews(JourID, News);
 
     int new_total=News.vecItem.Size();
     int new_ready=0;
     bool dirty = false;
 
-	for (int i = 0; i < new_total; i++)
-	{
-		switch(News.vecItem[i].iLink)
-		{
+    for (int i = 0; i < new_total; i++)
+    {
+        switch(News.vecItem[i].iLink)
+        {
         case JOURNALINE_IS_NO_LINK: /* Only text, no link */
         case JOURNALINE_LINK_NOT_ACTIVE:
-			break;
+            break;
         default:
             new_ready++;
-		}
-	}
-	if(new_total != total)
-	{
-	    total = new_total;
-	    dirty = true;
-	}
-	if(new_ready != ready)
-	{
-	    ready = new_ready;
-	    dirty = true;
-	}
-	return dirty;
+        }
+    }
+    if(new_total != total)
+    {
+        total = new_total;
+        dirty = true;
+    }
+    if(new_ready != ready)
+    {
+        ready = new_ready;
+        dirty = true;
+    }
+    return dirty;
 }
 
 QVariant JLBrowser::loadResource( int, const QUrl & name )
 {
-	QString strItems, strTitle;
+    QString strItems, strTitle;
 
-	if(decoder)
-	{
+    if(decoder)
+    {
         /* Get news from actual Journaline decoder */
         int JourID = name.toString().toInt();
 
@@ -128,20 +128,24 @@ QVariant JLBrowser::loadResource( int, const QUrl & name )
                 QString strLinkStr = QString("%1").arg(News.vecItem[i].iLink);
                 /* Un-ordered list item with link */
                 strItems += QString("<li><a href=\"") + strLinkStr +
-                    QString("\">") + strCurItem + QString("</a></li>");
+                            QString("\">") + strCurItem + QString("</a></li>");
             }
         }
-	}
+    }
 
-	return
-		strJournalineHeadText +
-		"<table>"
-		"<tr><td><hr></td></tr>" /* horizontial line */
-		"<tr><td><stylebody><b><center>" + strTitle + "</center></b></stylebody></td></tr>"
-		"<tr><td><stylebody><ul type=\"square\">" + strItems +
-		"</ul></stylebody></td></tr>"
-		"<tr><td><hr></td></tr>" /* horizontial line */
-		"</table>"
-		+ strFhGIISText;
+    return
+        strJournalineHeadText +
+        "<table>"
+        "<tr><td><hr></td></tr>" /* horizontial line */
+        "<tr><td><stylebody><b><center>" + strTitle + "</center></b></stylebody></td></tr>"
+        "<tr><td><stylebody><ul type=\"square\">" + strItems +
+        "</ul></stylebody></td></tr>"
+        "<tr><td><hr></td></tr>" /* horizontial line */
+        "</table>"
+        + strFhGIISText;
 }
 
+void JLBrowser::setDecoder(CJournaline* d)
+{
+    decoder = d;
+}
