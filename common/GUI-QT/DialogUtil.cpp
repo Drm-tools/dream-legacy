@@ -361,7 +361,6 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
     :rigmenus(),specials(),rig(nrig)
 #endif
 {
-#if QT_VERSION < 0x040000
     pRemoteMenu = new MyMenu(parent);
     CHECK_PTR(pRemoteMenu);
 
@@ -377,8 +376,14 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
     rigmenus.clear();
     specials.clear();
     /* Add menu entry "none" */
+#if QT_VERSION < 0x040000
     pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, RIG_MODEL_NONE);
     pRemoteMenu->setItemChecked(RIG_MODEL_NONE, TRUE);
+#else
+    QAction* actionNoRig = pRemoteMenu->addAction(tr("None"), this, SLOT(OnRemoteMenu(int)));
+    actionNoRig->setData(RIG_MODEL_NONE);
+    actionNoRig->setChecked(true);
+#endif
     specials.push_back(RIG_MODEL_NONE);
 
     rig_model_t currentRig = rig.GetHamlibModelID();
@@ -408,7 +413,12 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
         QString strMenuText =
             "[" + QString().setNum(iModelID) + "] " + rig.strModelName.c_str()
             + " (" + rig_strstatus(rig.eRigStatus) + ")";
+#if QT_VERSION < 0x040000
         m.pMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iModelID);
+#else
+	QAction* actionRig = m.pMenu->addAction(strMenuText, this, SLOT(OnRemoteMenu(int)));
+	actionNoRig->setData(iModelID);
+#endif
         rigmenus[backend] = m;
 
         if (rig.bIsSpecRig || (currentRig == iModelID))
@@ -420,13 +430,23 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
                 rig.strManufacturer.c_str() + " " +
                 rig.strModelName.c_str();
 
+#if QT_VERSION < 0x040000
             pRemoteMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iModelID);
+#else
+	    actionRig = m.pMenu->addAction(strMenuText, this, SLOT(OnRemoteMenu(int)));
+	    actionRig->setData(iModelID);
+#endif
 
             /* Check for checking */
             if (currentRig == iModelID)
             {
+#if QT_VERSION < 0x040000
                 pRemoteMenu->setItemChecked(RIG_MODEL_NONE, FALSE);
                 pRemoteMenu->setItemChecked(iModelID, TRUE);
+#else
+		actionNoRig->setChecked(false);
+		actionRig->setChecked(true);
+#endif
             }
 
             specials.push_back(iModelID);
@@ -435,14 +455,26 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 
     for (map<int,Rigmenu>::iterator j=rigmenus.begin(); j!=rigmenus.end(); j++)
     {
+#if QT_VERSION < 0x040000
         pRemoteMenuOther->insertItem(j->second.mfr.c_str(), j->second.pMenu);
+#else
+	//pRemoteMenuOther->addAction(j->second.mfr.c_str(), j->second.pMenu);
+#endif
     }
 
     /* Add "other" menu */
+#if QT_VERSION < 0x040000
     pRemoteMenu->insertItem(tr("Other"), pRemoteMenuOther, OTHER_MENU_ID);
+#else
+    //pRemoteMenu->addAction(tr("Other"), pRemoteMenuOther);
+#endif
 
     /* Separator */
+#if QT_VERSION < 0x040000
     pRemoteMenu->insertSeparator();
+#else
+    pRemoteMenu->addSeparator();
+#endif
 
     /* COM port selection --------------------------------------------------- */
     /* Toggle action for com port selection menu entries */
@@ -456,30 +488,47 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
         QString text = p->second.c_str();
         QString menuText = p->first.c_str();
         QAction* pacMenu = new QAction(agCOMPortSel);
+#if QT_VERSION < 0x040000
         pacMenu->setText(text);
         pacMenu->setMenuText(menuText);
         pacMenu->setToggleAction(true);
         if(strPort == p->second)
             pacMenu->setOn(TRUE);
+#else
+        pacMenu->setData(text);
+        pacMenu->setText(menuText);
+        pacMenu->setCheckable(true);
+        if(strPort == p->second)
+            pacMenu->setChecked(true);
+#endif
     }
 
     /* Action group */
     connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
+#if QT_VERSION < 0x040000
     agCOMPortSel->addTo(pRemoteMenu);
+#else
+    pRemoteMenu->addActions(agCOMPortSel->actions());
+#endif
     /* Separator */
+#if QT_VERSION < 0x040000
     pRemoteMenu->insertSeparator();
+#else
+    pRemoteMenu->addSeparator();
+#endif
 
     /* Enable special settings for rigs */
-    const int iModRigMenuID = pRemoteMenu->insertItem(tr("With DRM "
-                              "Modification"), this, SLOT(OnModRigMenu(int)), 0);
-
+#if QT_VERSION < 0x040000
+    const int iModRigMenuID = pRemoteMenu->insertItem(
+	tr("With DRM Modification"), this, SLOT(OnModRigMenu(int)), 0);
     /* Set check */
     pRemoteMenu->setItemChecked(iModRigMenuID, rig.GetEnableModRigSettings());
-
-#endif
 #else
-    // TODO QT4
-    (void)parent;
+    QAction* modRigAction = pRemoteMenu->addAction(
+	tr("With DRM Modification"), this, SLOT(OnModRigMenu(int)));
+    modRigAction->setChecked(rig.GetEnableModRigSettings());
+#endif
+
 #endif
 }
 

@@ -508,10 +508,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 
     //connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
 # ifdef HAVE_LIBHAMLIB
-#  if QT_VERSION < 0x040000
     RigDlg *pRigDlg = new RigDlg(Settings, rig, this);
     connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
-#  endif
+    connect(actionEnable_S_Meter, SIGNAL(triggered()), this, SLOT(OnSMeterTriggered()));
 # endif
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 #endif
@@ -552,6 +551,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 
     connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
     connect(&TimerUTCLabel, SIGNAL(timeout()), this, SLOT(OnTimerUTCLabel()));
+
 
     TimerList.stop();
     TimerUTCLabel.stop();
@@ -981,7 +981,7 @@ void StationsDlg::showEvent(QShowEvent*)
 #if QT_VERSION < 0x040000
     if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, b);
 #else
-//TODO
+    // TODO QT4
 #endif
     /* add last update information on menu item */
     AddUpdateDateTime();
@@ -1331,26 +1331,33 @@ void StationsDlg::OnSMeterAvailable()
     EnableSMeter();
 }
 
+#if QT_VERSION < 0x040000
 void StationsDlg::OnSMeterMenu(int iID)
 {
-#if QT_VERSION < 0x040000
     if (pRemoteMenu->menu()->isItemChecked(iID))
     {
         pRemoteMenu->menu()->setItemChecked(iID, FALSE);
         DisableSMeter();
-        Settings.Put("Hamlib", "ensmeter", 0);
     }
     else
     {
         pRemoteMenu->menu()->setItemChecked(iID, TRUE);
         EnableSMeter();
-        Settings.Put("Hamlib", "ensmeter", 1);
     }
-#else
-    // TODO QT4
-    (void)iID;
-#endif
 }
+#else
+void StationsDlg::OnSMeterTriggered()
+{
+    if(actionEnable_S_Meter->isChecked())
+    {
+        EnableSMeter();
+    }
+    else
+    {
+        DisableSMeter();
+    }
+}
+#endif
 
 void StationsDlg::EnableSMeter()
 {
@@ -1360,6 +1367,7 @@ void StationsDlg::EnableSMeter()
 #ifdef HAVE_LIBHAMLIB
     rig.subscribe();
 #endif
+    Settings.Put("Hamlib", "ensmeter", 1);
 }
 
 void StationsDlg::DisableSMeter()
@@ -1368,6 +1376,7 @@ void StationsDlg::DisableSMeter()
 #ifdef HAVE_LIBHAMLIB
     rig.unsubscribe();
 #endif
+    Settings.Put("Hamlib", "ensmeter", 0);
 }
 
 void StationsDlg::OnSigStr(double rCurSigStr)
@@ -1426,7 +1435,7 @@ void StationsDlg::AddWhatsThisHelp()
     QWhatsThis::add(TextLabelSMeter, strSMeter);
     QWhatsThis::add(ProgrSigStrength, strSMeter);
 #else
-	ListViewStations->setWhatsThis(strList);
+    ListViewStations->setWhatsThis(strList);
     QwtCounterFrequency->setWhatsThis(strCounter);
     TextLabelUTCTime->setWhatsThis(strTime);
     TextLabelSMeter->setWhatsThis(strSMeter);

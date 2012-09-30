@@ -319,7 +319,6 @@ protected:
 	QString		okMessage, badMessage;
 
 public slots:
-	void OnSMeterMenu(int iID);
 	void OnSMeterAvailable();
 	void OnSigStr(double);
 	void OnTimerList();
@@ -327,8 +326,10 @@ public slots:
 #if QT_VERSION < 0x040000
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
+	void OnSMeterMenu(int iID);
 #else
 	void OnUrlFinished(QNetworkReply*);
+	void OnSMeterTriggered();
 #endif
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);

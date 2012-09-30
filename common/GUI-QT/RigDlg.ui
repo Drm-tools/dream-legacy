@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>396</width>
-    <height>382</height>
+    <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -44,7 +44,7 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Connected Rigs</string>
+        <string>Connected Rig</string>
        </property>
       </widget>
      </item>
@@ -84,13 +84,6 @@
        <widget class="QProgressBar" name="sMeter">
         <property name="value">
          <number>24</number>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="enableSMeter">
-        <property name="text">
-         <string>Enable</string>
         </property>
        </widget>
       </item>
