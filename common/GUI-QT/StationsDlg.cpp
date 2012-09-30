@@ -510,7 +510,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 # ifdef HAVE_LIBHAMLIB
     RigDlg *pRigDlg = new RigDlg(Settings, rig, this);
     connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
-    connect(actionEnable_S_Meter, SIGNAL(triggered()), this, SLOT(OnSMeterMenu(int)));
+    connect(actionEnable_S_Meter, SIGNAL(triggered()), this, SLOT(OnSMeterMenu()));
 # endif
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 #endif
@@ -1337,6 +1337,12 @@ void StationsDlg::OnSMeterMenu(int iID)
     }
 #else
     (void)iID;
+#endif
+}
+
+void StationsDlg::OnSMeterMenu()
+{
+#if QT_VERSION >= 0x040000
     if(actionEnable_S_Meter->isChecked())
     {
         EnableSMeter();

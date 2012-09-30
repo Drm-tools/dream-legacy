@@ -322,9 +322,10 @@ public slots:
 	void OnSigStr(double);
 	void OnTimerList();
 	void OnTimerUTCLabel();
-	void OnListItemClicked(QListViewItem* item);
 	void OnSMeterMenu(int iID);
+	void OnSMeterMenu();
 #if QT_VERSION < 0x040000
+	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 #else
 	void OnUrlFinished(QNetworkReply*);
