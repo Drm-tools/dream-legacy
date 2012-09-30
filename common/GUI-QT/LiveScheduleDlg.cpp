@@ -617,7 +617,7 @@ LiveScheduleDlg::OnCheckFreeze()
 int LiveScheduleDlg::currentSortColumn()
 {
 #if QT_VERSION < 0x030000
-	return iSortColumn;
+	return iCurrentSortColumn;
 #else
 	return ListViewStations->sortColumn();
 #endif
