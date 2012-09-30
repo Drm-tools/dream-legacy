@@ -119,11 +119,13 @@ RigDlg::on_rigTypes_itemSelectionChanged()
 void
 RigDlg::on_modified_stateChanged(int state)
 {
+    (void)state;
 }
 
 void
 RigDlg::on_enableSMeter_stateChanged(int state)
 {
+    (void)state;
 }
 
 void
@@ -155,6 +157,7 @@ RigDlg::on_buttonBox_rejected()
 void
 RigDlg::on_comboBoxPort_currentIndexChanged(int index)
 {
+    (void)index;
 }
 
 void RigDlg::OnTimerRig()

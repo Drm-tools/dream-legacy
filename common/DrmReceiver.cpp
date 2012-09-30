@@ -558,10 +558,12 @@ void CDRMReceiver::DemodulateFM(_BOOLEAN& bEnoughData)
 
 void CDRMReceiver::DecodeFM(_BOOLEAN& bEnoughData)
 {
+	(void)bEnoughData;
 }
 
 void CDRMReceiver::UtilizeFM(_BOOLEAN& bEnoughData)
 {
+	(void)bEnoughData;
 }
 
 void
@@ -1606,6 +1608,7 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
 void CConvertAudio::InitInternal(CParameter& Parameter)
 {
+    (void)Parameter;
     iInputBlockSize = Parameter.CellMappingTable.iSymbolBlockSize;
     iOutputBlockSize = 2*iInputBlockSize;
     iMaxOutputBlockSize = 2 * int((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */);
@@ -1613,6 +1616,7 @@ void CConvertAudio::InitInternal(CParameter& Parameter)
 
 void CConvertAudio::ProcessDataInternal(CParameter& Parameter)
 {
+    (void)Parameter;
     for (int i = 0; i < this->iInputBlockSize; i++)
     {
         (*this->pvecOutputData)[2*i] = _SAMPLE((*this->pvecInputData)[i]);

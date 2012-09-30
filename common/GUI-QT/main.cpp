@@ -320,12 +320,12 @@ DebugError(const char *pchErDescr, const char *pchPar1Descr,
 		   const double dPar1, const char *pchPar2Descr, const double dPar2)
 {
 	FILE *pFile = fopen("test/DebugError.dat", "a");
-	fprintf(pFile, pchErDescr);
+	fprintf(pFile, "%s", pchErDescr);
 	fprintf(pFile, " ### ");
-	fprintf(pFile, pchPar1Descr);
+	fprintf(pFile, "%s", pchPar1Descr);
 	fprintf(pFile, ": ");
 	fprintf(pFile, "%e ### ", dPar1);
-	fprintf(pFile, pchPar2Descr);
+	fprintf(pFile, "%s", pchPar2Descr);
 	fprintf(pFile, ": ");
 	fprintf(pFile, "%e\n", dPar2);
 	fclose(pFile);

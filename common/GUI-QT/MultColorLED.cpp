@@ -41,6 +41,8 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) 
 	iUpdateTime(DEFAULT_UPDATE_TIME),
 	green(13,13),yellow(13,13),red(13,13),grey(13,13)
 {
+	(void)name;
+	(void)f;
 	green.fill(QColor(0, 255, 0));
 	red.fill(QColor(255, 0, 0));
 	grey.fill(QColor(192, 192, 192));
@@ -176,6 +178,9 @@ void CMultColorLED::SetLight(ELightColor color)
 #else
 		TimerRedLight.start(iUpdateTime);
 #endif
+		break;
+	case RL_GREY:
+		// TODO
 		break;
 	}
 

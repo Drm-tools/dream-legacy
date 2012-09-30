@@ -42,19 +42,20 @@
 #endif
 #include <set>
 
-static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now);
-
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f):
     CEPGDlgbase(parent, name, modal, f),
+    do_updates(false),
+    epg(*NDRMR.GetParameters()),
+    DRMReceiver(NDRMR),
+    Settings(NSettings),Timer(),sids(),
 #if QT_VERSION < 0x040000
     date(QDate::currentDate()),
     BitmCubeGreen(),
 #else
     greenCube(":/icons/greenCube.png"),
 #endif
-    do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
-    Settings(NSettings),Timer(),sids(),next(NULL)
+    next(NULL)
 {
     /* recover window size and position */
     CWinGeom s;
@@ -156,6 +157,8 @@ void EPGDlg::sendNowNext(QString s)
     a.setAddress(addr.c_str());
     sock.writeBlock(s.utf8(), s.length(), a, port);
 #else
+    // TODO QT4
+    (void)s;
 #endif
 }
 
@@ -556,22 +559,4 @@ _BOOLEAN EPGDlg::MyListViewItem::IsActive()
     if(now>=(start+duration))
         return false;
     return true;
-}
-
-static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now)
-{
-#if QT_VERSION < 0x040000
-    QStringList sl = QStringList::split(":", start);
-    QStringList dl = QStringList::split(":", duration);
-#else
-    QStringList sl = start.split(":");
-    QStringList dl = duration.split(":");
-#endif
-    int s = 60*sl[0].toInt()+sl[1].toInt();
-    int e = s + 60*dl[0].toInt()+dl[1].toInt();
-    int n = 60*now.tm_hour+now.tm_min;
-    if ((s <= n) && (n < e))
-        return TRUE;
-    else
-        return FALSE;
 }

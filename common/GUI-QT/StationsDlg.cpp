@@ -1347,6 +1347,8 @@ void StationsDlg::OnSMeterMenu(int iID)
         Settings.Put("Hamlib", "ensmeter", 1);
     }
 #else
+    // TODO QT4
+    (void)iID;
 #endif
 }
 

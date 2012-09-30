@@ -52,6 +52,9 @@ CShmSoundIn::~CShmSoundIn()
 void
 CShmSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
+    // TODO decide if we should use the parameters
+    (void)iNewBufferSize;
+    (void)bNewBlocking;
     shmid = shm_open(shm_path.c_str(), O_RDWR, 0666);
     if (shmid == -1)
     {
@@ -81,6 +84,7 @@ CShmSoundIn::Enumerate(vector < string > &choices)
 void
 CShmSoundIn::SetDev(int iNewDevice)
 {
+    (void)iNewDevice;
 }
 
 int

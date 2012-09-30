@@ -111,7 +111,7 @@ class AnalogDemDlgBase : public QMainWindow, public Ui_AMMainWindow
 public:
 	AnalogDemDlgBase(QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0):
-		QMainWindow(parent,f){setupUi(this);}
+		QMainWindow(parent,f){(void)name;setupUi(this);}
 	virtual ~AnalogDemDlgBase() {}
 };
 #endif

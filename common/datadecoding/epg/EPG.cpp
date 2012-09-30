@@ -1580,7 +1580,7 @@ int EPG::parseDuration (const QString& duration)
         int yy=0,mo=0,dd=0,hh=0,mi=0,ss=0;
         int d=0;
         bool date=true;
-        for (size_t i=1; i<duration.length(); i++)
+        for (size_t i=1; i<(size_t)duration.length(); i++)
         {
             switch (duration[int(i)].unicode())
             {

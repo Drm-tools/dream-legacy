@@ -37,6 +37,7 @@ JLViewer::JLViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent,
 		QMainWindow(parent, f), Ui_JLViewer(), Timer(),
 		receiver(rec), settings(s), decoderSet(false)
 {
+    (void)name;
     setupUi(this);
 
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));

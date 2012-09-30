@@ -478,14 +478,15 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
 
 #endif
 #else
-//TODO
+    // TODO QT4
+    (void)parent;
 #endif
 }
 
 void RemoteMenu::OnModRigMenu(int iID)
 {
 #if QT_VERSION < 0x040000
-#ifdef HAVE_LIBHAMLIB
+# ifdef HAVE_LIBHAMLIB
     if (pRemoteMenu->isItemChecked(iID))
     {
         pRemoteMenu->setItemChecked(iID, FALSE);
@@ -496,7 +497,10 @@ void RemoteMenu::OnModRigMenu(int iID)
         pRemoteMenu->setItemChecked(iID, TRUE);
         rig.SetEnableModRigSettings(TRUE);
     }
-#endif
+# endif
+#else
+    // TODO QT4
+    (void)iID;
 #endif
 }
 
@@ -550,7 +554,8 @@ void RemoteMenu::OnRemoteMenu(int iID)
     }
 #endif
 #else
-	//TODO
+    // TODO QT4
+    (void)iID;
 #endif
 }
 

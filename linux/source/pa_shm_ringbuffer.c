@@ -1,5 +1,5 @@
 /*
- * $Id: pa_shm_ringbuffer.c,v 1.3 2009/12/23 14:37:22 jcable Exp $
+ * $Id: pa_shm_ringbuffer.c,v 1.4 2012/09/30 10:33:58 jcable Exp $
  * Portable Audio I/O Library
  * Ring Buffer utility.
  *
@@ -118,6 +118,7 @@
  */
 long PaUtil_InitializeShmRingBuffer( PaUtilShmRingBuffer *rbuf, long numBytes, void *dataPtr )
 {
+    (void)dataPtr;
     if ( ((numBytes-1) & numBytes) != 0) return -1; /* Not Power of two. */
     rbuf->bufferSize = numBytes;
     //rbuf->buffer = (char *)dataPtr;

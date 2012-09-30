@@ -118,7 +118,7 @@ CPacketSourceFile::SetOrigin(const string& origin)
     if ( pF != NULL)
     {
         char c;
-        size_t n = fread(&c, sizeof(c), 1, (FILE *) pF);
+        (void)fread(&c, sizeof(c), 1, (FILE *) pF);
         fseek ( (FILE *) pF , 0 , SEEK_SET );
         if(c=='A') eFileType = af;
         if(c=='P') eFileType = pf;

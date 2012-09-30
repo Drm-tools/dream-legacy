@@ -109,7 +109,7 @@ class MultimediaDlgBase : public QMainWindow, public Ui_MultimediaDlgBase
 public:
 	MultimediaDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QMainWindow(parent,name,f){setupUi(this);}
+		QMainWindow(parent,name,f){(void)name;(void)modal;setupUi(this);}
 	virtual ~MultimediaDlgBase() {}
 };
 #endif

@@ -241,7 +241,7 @@ class CStationsDlgBase : public QMainWindow, public Ui_StationsDlgbase
 public:
 	CStationsDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QMainWindow(parent,f){}
+		QMainWindow(parent,f){(void)name;(void)modal;}
 	virtual ~CStationsDlgBase() {}
 };
 #endif

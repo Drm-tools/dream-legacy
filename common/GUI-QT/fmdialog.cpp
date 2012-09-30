@@ -51,6 +51,7 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	alarmBrush(QColor(255, 0, 0)),
 	eReceiverMode(RM_NONE)
 {
+	(void)rig; // TODO
 	/* recover window size and position */
 	CWinGeom s;
 	Settings.Get("FM Dialog", s);
@@ -403,6 +404,7 @@ void FMDialog::UpdateDisplay()
 	/* Service selector ------------------------------------------------- */
 	/* Enable only so many number of channel switches as present in the stream */
 	const int iNumServices = Parameters.GetTotNumServices();
+	(void)iNumServices; // probably irrelevant for FM
 
 	QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
 
@@ -413,10 +415,6 @@ void FMDialog::UpdateDisplay()
 		if (Parameters.Service[0].eAudDataFlag
 				== CService::SF_AUDIO) m_StaticService[0] += tr(" + AFS");
 	}
-
-	/* set data service to be decoded to EPG until user selects something else */
-	int iEPGServiceID=-1;
-
 	Parameters.Unlock();
 }
 

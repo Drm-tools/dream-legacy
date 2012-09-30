@@ -50,8 +50,6 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	Settings(NSettings), bIsStarted(FALSE),
 	vecstrTextMessage(1) /* 1 for new text */, iIDCurrentText(0)
 {
-	int i;
-
 	/* recover window size and position */
 	CWinGeom s;
 	Settings.Get("Transmit Dialog", s);
@@ -733,7 +731,8 @@ _BOOLEAN TransmDialog::GetMessageText(const int iID)
 		bTextIsNotEmpty = FALSE;
 
 #else
-		// TODO
+	// TODO
+	(void)iID;
 #endif
 
 	return bTextIsNotEmpty;
@@ -755,6 +754,7 @@ void TransmDialog::OnPushButtonAddText()
 			MultiLineEditTextMessage->setEdited(FALSE);
 #else
 			// TODO
+			(void)iNewID;
 #endif
 		}
 	}
@@ -877,6 +877,7 @@ void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 	Parameters.Unlock();
 #else
 	// TODO
+	(void)strLabel;
 #endif
 }
 

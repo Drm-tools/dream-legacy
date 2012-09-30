@@ -96,6 +96,7 @@ epgFilename (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
 string
 epgFilename_etsi (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
 {
+    (void)type;
     string name;
     ostringstream s (name);
     s << "w" << setfill ('0') << setw (4) << date.year;
@@ -111,6 +112,7 @@ epgFilename_etsi (const CDateAndTime & date, uint32_t sid, int type, bool advanc
 string
 epgFilename_dab (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
 {
+    (void)type;
     string name;
     ostringstream s (name);
     s << "w" << setfill ('0') << setw (4) << date.year;

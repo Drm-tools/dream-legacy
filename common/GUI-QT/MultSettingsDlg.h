@@ -53,7 +53,7 @@ class CMultSettingsDlgBase : public QDialog, public Ui_CMultSettingsDlgBase
 public:
 	CMultSettingsDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,f){setupUi(this);}
+		QDialog(parent,f){(void)name;(void)modal;setupUi(this);}
 	virtual ~CMultSettingsDlgBase() {}
 };
 #endif

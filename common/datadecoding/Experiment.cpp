@@ -66,4 +66,6 @@ void CExperiment::dg_cb(const DAB_DATAGROUP_DECODER_msc_datagroup_header_t*,
 	cerr << "experimental dab data group length " << len << " bytes" << endl;
 	CExperiment* This = reinterpret_cast<CExperiment*>(data);
 	cerr << (char*)buf;
+	// TODO
+	(void)This;
 }

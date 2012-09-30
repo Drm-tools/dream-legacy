@@ -116,6 +116,7 @@ CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, ui
         // TODO
     }
 #else
+    (void)addr; (void)port;
     if(udpSocket != NULL)
         bytes_written = udpSocket->writeDatagram((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
     else if(tcpSocket != NULL)

@@ -55,7 +55,7 @@
 /// @file       NML.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.cpp,v 1.8 2011/02/14 19:39:50 stoeppsi Exp $
+/// $Id: NML.cpp,v 1.9 2012/09/30 10:33:58 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -818,7 +818,8 @@ bool RemoveNMLEscapeSequences::Convert(std::string & dest,
       break;
     case 0x1A: // data section begin -> read over next bytes
     case 0x1B: // data section continuation -> read over next bytes
-      i += src[++i] + 1;
+      ++i;
+      i += src[i] + 1;
       break;
     case 0x1C: // extended code begin -> ignore next byte
     case 0x1D: // extended code end -> ignore next byte
@@ -871,7 +872,8 @@ bool NMLEscapeSequences2HTML::Convert(std::string & dest,
       break;
     case 0x1A: // data section begin -> read over next bytes
     case 0x1B: // data section continuation -> read over next bytes
-      i += static_cast<unsigned char>(src[++i]) + 1;
+      ++i;
+      i += static_cast<unsigned char>(src[i]) + 1;
       break;
     case 0x1C: // extended code begin -> ignore next byte
     case 0x1D: // extended code end -> ignore next byte
