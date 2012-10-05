@@ -843,7 +843,7 @@ void StationsDlg::on_actionGetUpdate_triggered()
         /* Try to download the current schedule. Copy the file to the
            current working directory (which is "QDir().absFilePath(NULL)") */
 #if QT_VERSION < 0x040000
-        UrlUpdateSchedule.copy(QString(url),
+        UrlUpdateSchedule.copy(QString(url.c_str()),
                                QString(QDir().absFilePath(NULL)));
 #else
 		manager->get(QNetworkRequest(QUrl(url.c_str())));
