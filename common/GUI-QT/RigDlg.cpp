@@ -31,16 +31,15 @@
 
 #include "RigDlg.h"
 #include <QTreeWidgetItem>
+#include <QMessageBox>
 
 /* Implementation *************************************************************/
 
 RigDlg::RigDlg(
-    CSettings& NSettings,
     CRig& nrig,
     QWidget* parent, Qt::WFlags f) :
     QDialog(parent, f), Ui_RigDlg(),
-    Settings(NSettings),
-    TimerRig(),rig(nrig),rigmap()
+    rig(nrig),rigmap()
 {
 
     map<rig_model_t,CHamlib::SDrRigCaps> r;
@@ -52,7 +51,7 @@ RigDlg::RigDlg(
     rigTypes->setSortingEnabled(false);
     for(map<rig_model_t,CHamlib::SDrRigCaps>::const_iterator i=r.begin(); i!=r.end(); i++)
     {
-	rig_model_t model_num = i->first;
+		rig_model_t model_num = i->first;
         CHamlib::SDrRigCaps rc =  i->second;
         QTreeWidgetItem* mfr, *model;
         if(rc.strManufacturer=="" || rc.strModelName=="")
@@ -71,9 +70,8 @@ RigDlg::RigDlg(
         }
         model = new QTreeWidgetItem(mfr);
         model->setText(0,rc.strModelName.c_str());
-	model->setData(0, Qt::UserRole, model_num);
-	rigmap[model_num] = rc.strModelName;
-
+		model->setData(0, Qt::UserRole, model_num);
+		rigmap[model_num] = rc.strModelName;
     }
     rigTypes->setSortingEnabled(false);
     rigTypes->sortItems(9, Qt::AscendingOrder);
@@ -89,43 +87,54 @@ void RigDlg::showEvent(QShowEvent*)
     map<string,string> ports;
     rig.GetPortList(ports);
     comboBoxPort->clear();
+	string port = rig.GetComPort();
+	int index=0;
     for(map<string,string>::const_iterator i=ports.begin(); i!=ports.end(); i++)
     {
-	comboBoxPort->addItem(i->first.c_str(), i->second.c_str());	
+		comboBoxPort->addItem(i->first.c_str(), i->second.c_str());
+		if(i->second.compare(port)==0)
+			index = comboBoxPort->count();
     }
+	comboBoxPort->setCurrentIndex(index);
 
     prev_rig_model = rig.GetHamlibModelID();
     map<rig_model_t,string>::const_iterator m = rigmap.find(prev_rig_model);
     if(m!=rigmap.end())
     {
-	QList<QTreeWidgetItem *> l = rigTypes->findItems(m->second.c_str(), Qt::MatchExactly);
-	if(l.size()>0)
-		rigTypes->setCurrentItem(l.front());
+		QString name(m->second.c_str());
+		QList<QTreeWidgetItem *> l = rigTypes->findItems(name, Qt::MatchExactly);
+		if(l.size()>0) {
+			rigTypes->setCurrentItem(l.front());
+			selectedRigType->setText(name);
+		}
     }
 
     prev_port = rig.GetComPort();
     comboBoxPort->setCurrentIndex(comboBoxPort->findText(prev_port.c_str()));
+
+	connect(&rig, SIGNAL(sigstr(double)), this, SLOT(onSigstr(double)));
 }
 
 void RigDlg::hideEvent(QHideEvent*)
 {
+	disconnect(&rig, SIGNAL(sigstr(double)), this, SLOT(onSigstr(double)));
 }
 
 void
 RigDlg::on_rigTypes_itemSelectionChanged()
 {
+	QList<QTreeWidgetItem*> l = rigTypes->selectedItems();
+	if(l.count()==1) {
+		const QTreeWidgetItem* item = l.first();
+		selectedRigType->setText(item->text(0));
+		rig.SetHamlibModelID(item->data(0, Qt::UserRole).toInt());
+	}
 }
 
 void
 RigDlg::on_modified_stateChanged(int state)
 {
-    (void)state;
-}
-
-void
-RigDlg::on_enableSMeter_stateChanged(int state)
-{
-    (void)state;
+	rig.SetEnableModRigSettings(state?false:true);
 }
 
 void
@@ -143,6 +152,7 @@ RigDlg::on_buttonBox_accepted()
 	rig.SetHamlibModelID(rigTypes->currentItem()->data(0, Qt::UserRole).toInt());
 	rig.unsubscribe();
 	close();
+	QMessageBox::information(this, "Dream", QString("accepted prev=%1 cur=%2").arg(prev_rig_model).arg(rig.GetHamlibModelID()));
 }
 
 void
@@ -157,15 +167,11 @@ RigDlg::on_buttonBox_rejected()
 void
 RigDlg::on_comboBoxPort_currentIndexChanged(int index)
 {
-    (void)index;
-}
-
-void RigDlg::OnTimerRig()
-{
+	rig.SetComPort(comboBoxPort->itemData(index).toString().toStdString());
 }
 
 void
-RigDlg::on_rig_sigstr(double r)
+RigDlg::onSigstr(double r)
 {
 	sMeter->setValue(int(100*r));
 }

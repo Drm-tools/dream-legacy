@@ -1,11 +1,12 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2006
+ * British Broadcasting Corporation
+ * Copyright (c) 2012
  *
  * Author(s):
- *	Julian Cable, Andrea Russo
+ *	Volker Fischer, Julian Cable
  *
  * Description:
+ *
  *
  ******************************************************************************
  *
@@ -25,47 +26,47 @@
  *
 \******************************************************************************/
 
-#ifndef __RIGDLG_H
-#define __RIGDLG_H
+#ifndef __LOGGING_H
+#define __LOGGING_H
 
-#include "../util/Utilities.h"
-#include "Rig.h"
-#include "ui_RigDlg.h"
-#include <QDialog>
-#include <QTimer>
-#include <set>
-#include <map>
+#include <qtimer.h>
+#include <qstring.h>
+#include <qlabel.h>
 
-/* Definitions ****************************************************************/
+#include "../GlobalDefinitions.h"
+#include "../ReceptLog.h"
 
 /* Classes ********************************************************************/
+class CSettings;
 
-class RigDlg : public QDialog, public Ui_RigDlg
+class CLogging: public QObject
 {
 	Q_OBJECT
 
 public:
-
-    RigDlg(CRig&, QWidget* parent = 0, Qt::WFlags f = 0);
-    virtual ~RigDlg();
+	CLogging(CParameter&, CSettings&);
+	virtual ~CLogging() {}
+	void SaveSettings(CSettings&);
 
 protected:
-    void		showEvent(QShowEvent* pEvent);
-    void		hideEvent(QHideEvent* pEvent);
+	QTimer			TimerLogFileLong;
+	QTimer			TimerLogFileShort;
+	QTimer			TimerLogFileStart;
 
-    CRig&		rig;
-    rig_model_t		prev_rig_model;
-    string		prev_port;
-    map<rig_model_t,string> rigmap;
+	CShortLog		shortLog;
+	CLongLog		longLog;
+	int				iLogDelay;
+	_BOOLEAN		running;
 
+signals:
+	void subscribeRig();
+	void unsubscribeRig();
 public slots:
-    void		on_rigTypes_itemSelectionChanged(); 
-    void		on_modified_stateChanged(int);
-    void		on_testRig_clicked();
-    void		on_buttonBox_accepted();
-    void		on_buttonBox_rejected();
-    void		on_comboBoxPort_currentIndexChanged(int);
-    void		onSigstr(double);
+	void start();
+	void stop();
+	void OnTimerLogFileStart();
+	void OnTimerLogFileShort();
+	void OnTimerLogFileLong();
 };
 
 #endif

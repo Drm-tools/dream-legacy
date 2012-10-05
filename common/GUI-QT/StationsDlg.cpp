@@ -412,6 +412,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 #endif
     bReInitOnFrequencyChange(FALSE)
 {
+#if QT_VERSION < 0x040000
+    pRemoteMenu = new RemoteMenu(this, rig);
+#endif
     setupUi(this);
     /* Set help text for the controls */
     AddWhatsThisHelp();
@@ -507,7 +510,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     //connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
 # ifdef HAVE_LIBHAMLIB
-    RigDlg *pRigDlg = new RigDlg(Settings, rig, this);
+    RigDlg *pRigDlg = new RigDlg(rig, this);
     connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
     connect(actionEnable_S_Meter, SIGNAL(triggered()), this, SLOT(OnSMeterMenu()));
 # endif
@@ -661,7 +664,6 @@ void StationsDlg::setupUi(QObject*)
 
 
     /* Remote menu  --------------------------------------------------------- */
-    pRemoteMenu = new RemoteMenu(this, rig);
     /* Separator */
     pRemoteMenu->menu()->insertSeparator();
 
@@ -971,7 +973,8 @@ void StationsDlg::showEvent(QShowEvent*)
     TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 
     /* S-meter settings */
-    if(Settings.Get("Hamlib", "ensmeter", int(0)))
+	int smeter = Settings.Get("Hamlib", "ensmeter", int(0));
+    if(smeter!=0)
     {
         EnableSMeter();
     }
@@ -980,7 +983,9 @@ void StationsDlg::showEvent(QShowEvent*)
         DisableSMeter();
     }
 #if QT_VERSION < 0x040000
-    if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, b);
+    if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, smeter);
+#else
+	actionEnable_S_Meter->setChecked(smeter!=0);
 #endif
     /* add last update information on menu item */
     AddUpdateDateTime();
@@ -1360,7 +1365,6 @@ void StationsDlg::EnableSMeter()
     ProgrSigStrength->setEnabled(TRUE);
     TextLabelSMeter->setEnabled(TRUE);
     ProgrSigStrength->show();
-	qDebug("StationsDlg::EnableSMeter");
     emit subscribeRig();
     Settings.Put("Hamlib", "ensmeter", 1);
 }
@@ -1368,7 +1372,6 @@ void StationsDlg::EnableSMeter()
 void StationsDlg::DisableSMeter()
 {
     ProgrSigStrength->hide();
-	qDebug("StationsDlg::DisableSMeter");
     emit unsubscribeRig();
     Settings.Put("Hamlib", "ensmeter", 0);
 }
