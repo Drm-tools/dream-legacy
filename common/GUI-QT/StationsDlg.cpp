@@ -34,7 +34,11 @@
 # include <qheader.h>
 # include <qdir.h>
 # include <qftp.h>
-# include <qhttp.h>
+# if QT_VERSION	< 0x030000
+# // include "qt2/qhttp.h" TODO
+# else
+#  include <qhttp.h>
+# endif
 # include <qwhatsthis.h>
 # ifdef HAVE_LIBHAMLIB
 #  include "Rig.h"
@@ -543,7 +547,11 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 #if QT_VERSION < 0x040000
     /* Register the network protocols (ftp,http). This is needed for the DRMSchedule
        download */
+#if QT_VERSION < 0x030000
+	// TODO
+#else
     QNetworkProtocol::registerNetworkProtocol("http", new QNetworkProtocolFactory<QHttp>);
+#endif
     QNetworkProtocol::registerNetworkProtocol("ftp", new QNetworkProtocolFactory<QFtp>);
 #else
 	manager = new QNetworkAccessManager(this);
