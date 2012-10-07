@@ -872,7 +872,6 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
             {
 		string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
 		QString f = QUrl(url.c_str()).fileName();
-qDebug("%s", f.latin1());
 		QDir d;
 		d.remove(DRMSCHEDULE_INI_FILE_NAME);
 		d.rename(f, DRMSCHEDULE_INI_FILE_NAME);
