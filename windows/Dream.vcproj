@@ -363,14 +363,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\GPSData.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\common\GPSReceiver.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\common\chanest\IdealChannelEstimation.cpp"
 				>
 			</File>
@@ -998,36 +990,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\GPSData.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\GPSReceiver.h"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Moc&apos;ing ..\common\GPSReceiver.h..."
-						CommandLine="$(QTDIR)\bin\moc.exe ..\common\GPSReceiver.h -o moc\moc_GPSReceiver.cpp&#x0D;&#x0A;"
-						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
-						Outputs="moc\moc_GPSReceiver.cpp"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Moc&apos;ing ..\common\GPSReceiver.h..."
-						CommandLine="$(QTDIR)\bin\moc.exe ..\common\GPSReceiver.h -o moc\moc_GPSReceiver.cpp&#x0D;&#x0A;"
-						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
-						Outputs="moc\moc_GPSReceiver.cpp"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\common\chanest\IdealChannelEstimation.h"
 				>
 			</File>
@@ -1642,10 +1604,6 @@
 			</File>
 			<File
 				RelativePath="moc\moc_GeneralSettingsDlgbase.cpp"
-				>
-			</File>
-			<File
-				RelativePath="moc\moc_GPSReceiver.cpp"
 				>
 			</File>
 			<File

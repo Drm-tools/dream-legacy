@@ -196,10 +196,6 @@ SOURCE=.\moc\moc_GeneralSettingsDlgbase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\moc\moc_GPSReceiver.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\moc\moc_LiveScheduleDlg.cpp
 # End Source File
 # Begin Source File
@@ -750,14 +746,6 @@ SOURCE=..\common\DrmSimulation.cpp
 # Begin Source File
 
 SOURCE=..\common\DrmTransmitter.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\GPSData.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\GPSReceiver.cpp
 # End Source File
 # Begin Source File
 
@@ -1318,14 +1306,6 @@ SOURCE=..\common\DrmTransmitter.h
 # Begin Source File
 
 SOURCE=..\common\GlobalDefinitions.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\GPSData.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\GPSReceiver.h
 # End Source File
 # Begin Source File
 
