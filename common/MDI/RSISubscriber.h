@@ -66,6 +66,9 @@ public:
 	/* from CPacketSink interface */
 	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
+	/* from CPacketSource, but we really want it for RSCI control */
+	virtual void poll()=0;
+
 protected:
 	CPacketSink *pPacketSink;
 	char cProfile;
@@ -90,6 +93,7 @@ public:
 	_BOOLEAN SetOrigin(const string& str);
 	_BOOLEAN SetDestination(const string& str);
 	_BOOLEAN GetDestination(string& addr);
+	void poll();
 
 private:
 	CPacketSocket* pSocket;
@@ -107,6 +111,7 @@ public:
 	_BOOLEAN SetDestination(const string& strFName);
 	void StartRecording();
 	void StopRecording();
+	void poll() {} // Do Nothing
 
 	_BOOLEAN GetDestination(string& addr);
 private:

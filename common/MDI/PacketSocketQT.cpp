@@ -504,6 +504,10 @@ CPacketSocketQT::pollDatagram()
 {
     vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
     /* Read block from network interface */
+if(pSocketDevice==NULL){
+cerr << "PacketSocketQT datagram socket is null" << endl;
+return;
+}
     int iNumBytesRead = pSocketDevice->readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
     if(iNumBytesRead > 0)
     {

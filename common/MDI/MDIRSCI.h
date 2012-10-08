@@ -110,6 +110,7 @@ public:
 	virtual ~CDownstreamDI();
 
 	void GenDIPacket();
+	void poll();
 
 	void SendLockedFrame(CParameter& Parameter,
 						CSingleBuffer<_BINARY>& FACData,

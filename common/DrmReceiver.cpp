@@ -337,6 +337,11 @@ CDRMReceiver::Run()
             break;
         }
     }
+    // check for RSCI commands
+    if (downstreamRSCI.GetInEnabled())
+    {
+        downstreamRSCI.poll();
+    }
 
     /* Play and/or save the audio */
     if (iAudioStreamID != STREAM_ID_NOT_USED || (eReceiverMode == RM_AM) || (eReceiverMode == RM_FM))
@@ -1481,7 +1486,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
         string origin = s.Get("command", ss.str());
         if (str == "")
         {
-// TODO allow control without status
+	    // allow control without status
+	    if(origin != "")
+		    downstreamRSCI.AddSubscriber("", origin, ' ');
         }
         else
         {

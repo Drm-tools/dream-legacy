@@ -376,7 +376,6 @@ void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 	// TODO
 }
 
-/* allow multiple destinations, allow destinations to send cpro instructions back */
 _BOOLEAN
 CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile)
 {
@@ -399,20 +398,36 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
 	}
 
 	// Delegate
-	_BOOLEAN bOK = subs->SetDestination(dest);
+	_BOOLEAN bOK = TRUE;
+	if (dest != "")
+	{
+		bOK &= subs->SetDestination(dest);
+		if (bOK)
+		{
+			bMDIOutEnabled = TRUE;
+			subs->SetProfile(profile);
+		}
+	}
 	if (origin != "")
+	{
 		bOK &= subs->SetOrigin(origin);
+		if (bOK)
+		{
+			bMDIInEnabled = TRUE;
+		}
+	}
 	if (bOK)
 	{
-		subs->SetProfile(profile);
 		subs->SetReceiver(pDrmReceiver);
-		bMDIInEnabled = TRUE;
-		bMDIOutEnabled = TRUE;
 		RSISubscribers.push_back(subs);
 		return TRUE;
 	}
 	else
+	{
+		bMDIInEnabled = FALSE;
+		bMDIOutEnabled = FALSE;
 		delete subs;
+	}
 	return FALSE;
 }
 
@@ -505,6 +520,14 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 	cerr << "this shouldn't get called CDownstreamDI::SendPacket" << endl;
 }
 
+void CDownstreamDI::poll()
+{
+	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
+			i!=RSISubscribers.end(); i++)
+		(*i)->poll();
+}
+
+/* allow multiple destinations, allow destinations to send cpro instructions back */
 /******************************************************************************\
 * DI receive status, send control                                             *
 \******************************************************************************/

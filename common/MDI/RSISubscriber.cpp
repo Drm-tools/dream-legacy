@@ -81,10 +81,6 @@ void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 		}
 		else
 			pPacketSink->SendPacket(packet);
-
-		/* if subscriber is a socket, poll for incoming packets */
-		CPacketSocket* pSocket = dynamic_cast<CPacketSocket*>(pPacketSink);
-		if(pSocket!=NULL) pSocket->poll();
 	}
 }
 
@@ -118,15 +114,16 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 
 _BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 {
+	if(pSocket==NULL)
+	{
+		return FALSE;
+	}
 	string d = dest;
 	if(d[0] == 'P' || d[0] == 'p')
 	{
 		SetPFTFragmentSize(800);
 		d.erase(0, 1);
 	}
-	delete pSocket;
-	pSocket = new CPacketSocketQT();
-	pPacketSink = pSocket;
 	_BOOLEAN bOk = pSocket->SetDestination(d);
 	if(bOk)
 		pSocket->SetPacketSink(this);
@@ -143,17 +140,26 @@ _BOOLEAN CRSISubscriberSocket::GetDestination(string& str)
 
 _BOOLEAN CRSISubscriberSocket::SetOrigin(const string& str)
 {
-	if(pSocket)
+	if(pSocket==NULL)
 	{
-		// Delegate to socket
-		_BOOLEAN bOK = pSocket->SetOrigin(str);
-
-		if (bOK)
-			// Connect socket to the MDI decoder
-			pSocket->SetPacketSink(this);
+		return FALSE;
+	}
+	// Delegate to socket
+	_BOOLEAN bOK = pSocket->SetOrigin(str);
+	if (bOK)
+	{
+		// Connect socket to the MDI decoder
+		pSocket->SetPacketSink(this);
 		return bOK;
 	}
 	return FALSE;
+}
+
+/* poll for incoming packets */
+void CRSISubscriberSocket::poll()
+{
+	if(pSocket!=NULL)
+		pSocket->poll();
 }
 
 CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(NULL), pPacketSinkFile(NULL)
