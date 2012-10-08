@@ -35,7 +35,9 @@
 # include <qdir.h>
 # include <qftp.h>
 # if QT_VERSION	< 0x030000
-# // include "qt2/qhttp.h" TODO
+#  ifdef _WIN32
+#   include <windows.h>
+#  endif
 # else
 #  include <qhttp.h>
 # endif
@@ -583,7 +585,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
         tr("Update failed. The following things may caused the "
         "failure:\n"
         "\t- the internet connection was not set up properly\n"
-        "\t- the server www.drm-dx.de is currently not available\n"
+        "\t- the server is currently not available\n"
         "\t- the file 'DRMSchedule.ini' could not be written"); 
 }
 
@@ -836,6 +838,37 @@ void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 }
 
 
+void StationsDlg::downloadUsingOS(const string& url)
+{
+#if QT_VERSION < 0x030000
+#  ifdef _WIN32
+	string script =
+"strFileURL = \""+url+"\"\n"
++"strHDLocation = \"DRMSchedule.ini\"\n"
++"Set objXMLHTTP = CreateObject(\"MSXML2.XMLHTTP\")\n"
++"objXMLHTTP.open "GET", strFileURL, false\n"
++"objXMLHTTP.send()\n"
++"If objXMLHTTP.Status = 200 Then\n"
++"Set objADOStream = CreateObject("ADODB.Stream")\n"
++"objADOStream.Open\n"
++"objADOStream.Type = 1 'adTypeBinary\n"
++"objADOStream.Write objXMLHTTP.ResponseBody\n"
++"objADOStream.Position = 0    'Set the stream position to the start\n"
++"Set objFSO = Createobject("Scripting.FileSystemObject")\n"
++"If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile strHDLocation\n"
++"Set objFSO = Nothing\n"
++"objADOStream.SaveToFile strHDLocation\n"
++"objADOStream.Close\n"
++"Set objADOStream = Nothing\n"
++"End if\n"
++"Set objXMLHTTP = Nothing\n";
+// TODO - write the script to a file and execute
+# else
+// TODO use wget
+# endif
+#endif
+}
+
 void StationsDlg::on_actionGetUpdate_triggered()
 {
 	string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
@@ -851,9 +884,19 @@ void StationsDlg::on_actionGetUpdate_triggered()
         /* Try to download the current schedule. Copy the file to the
            current working directory (which is "QDir().absFilePath(NULL)") */
 #if QT_VERSION < 0x040000
+# if QT_VERSION < 0x030000
+	if(url.find("ftp")==string::npos) {
+	    UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
+	}
+	else
+	{
+	    downloadUsingOS(url);
+	}
+# else
         UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
+# endif
 #else
-		manager->get(QNetworkRequest(QUrl(url.c_str())));
+	manager->get(QNetworkRequest(QUrl(url.c_str())));
 #endif
     }
 }

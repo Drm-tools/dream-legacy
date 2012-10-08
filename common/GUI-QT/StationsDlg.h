@@ -322,6 +322,7 @@ public slots:
 	void OnTimerUTCLabel();
 	void OnSMeterMenu(int iID);
 	void OnSMeterMenu();
+	void downloadUsingOS(const std::string&);// qt2 only really
 #if QT_VERSION < 0x040000
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
