@@ -79,6 +79,11 @@ CSettings::Get(const string & section, const string & key, const bool def) const
 	return GetIniSetting(section, key, def?"1":"0")=="1";
 }
 
+void CSettings::Put(const string& section, const string& key, const bool value)
+{
+	PutIniSetting(section, key, value?"1":"0");
+}
+
 int
 CSettings::Get(const string & section, const string & key, const int def) const
 {

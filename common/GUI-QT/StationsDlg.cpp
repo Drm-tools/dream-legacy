@@ -963,6 +963,11 @@ void StationsDlg::hideEvent(QHideEvent*)
     TimerList.stop();
     TimerUTCLabel.stop();
     DisableSMeter();
+#if QT_VERSION < 0x040000
+    Settings.Put("Hamlib", "ensmeter", (pRemoteMenu==NULL)?false:pRemoteMenu->menu()->itemChecked(SMETER_MENU_ID));
+#else
+    Settings.Put("Hamlib", "ensmeter", actionEnable_S_Meter->isChecked());
+#endif
 
     /* Set window geometry data in DRMReceiver module */
     QRect WinGeom = geometry();
@@ -1422,14 +1427,12 @@ void StationsDlg::EnableSMeter()
     TextLabelSMeter->setEnabled(TRUE);
     ProgrSigStrength->show();
     emit subscribeRig();
-    Settings.Put("Hamlib", "ensmeter", true);
 }
 
 void StationsDlg::DisableSMeter()
 {
     ProgrSigStrength->hide();
     emit unsubscribeRig();
-    Settings.Put("Hamlib", "ensmeter", false);
 }
 
 void StationsDlg::OnSigStr(double rCurSigStr)
