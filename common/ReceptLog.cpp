@@ -60,10 +60,10 @@ CReceptLog::Update()
 {
     if (!bLogActivated)
         return;
-	int iCurrentFrequency = Parameters.GetFrequency();
+    int iCurrentFrequency = Parameters.GetFrequency();
     if (iCurrentFrequency != iFrequency)
     {
-    	// Frequency has changed
+        // Frequency has changed
         if (bLogActivated)
         {
             writeTrailer();
@@ -152,7 +152,7 @@ CShortLog::writeHeader()
 
     /* Beginning of new table (similar to DW DRM log file) */
     File << endl << ">>>>" << endl << "Dream" << endl
-    << "Software Version " << dream_version_major << "." << dream_version_minor << endl;
+         << "Software Version " << dream_version_major << "." << dream_version_minor << endl;
 
     time_t now;
     (void) time(&now);
@@ -219,16 +219,8 @@ CShortLog::writeHeader()
         File << "      RXL";
     File << endl;
 
-	iCount = 0; // start count each time a new header is put
+    iCount = 0; // start count each time a new header is put
 }
-
-/*
-MINUTE  SNR     SYNC    AUDIO     TYPE
-  0000   21      148  1437/10        0
-  coordinates are again decimal, I think we agreed to degrees and minutes, if I start/ stop logfiles without restarting Dream each time, then the minutes in the log do not start at 0, see attachment.
-  Simone
-
-*/
 
 void
 CShortLog::writeParameters()
@@ -263,10 +255,10 @@ CShortLog::writeParameters()
     try
     {
         File << "  " << fixed << setw(4) << setfill('0') << count
-        << setfill(' ') << setw(5) << iAverageSNR
-        << setw(9) << iNumCRCOkFAC
-        << setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
-        << setfill(' ') << "      0";
+             << setfill(' ') << setw(5) << iAverageSNR
+             << setw(9) << iNumCRCOkFAC
+             << setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
+             << setfill(' ') << "      0";
         if (bRxlEnabled)
         {
             File << setw(10) << setprecision(2) << iRXL;
@@ -319,7 +311,7 @@ CLongLog::writeHeader()
         return; /* allow updates when file closed */
 
     File <<
-    "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY";
+         "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY";
     if (bRxlEnabled)
         File << ",     RXL";
     if (bPositionEnabled)
@@ -418,18 +410,18 @@ CLongLog::writeParameters()
         time_t now;
         (void) time(&now);
         File << fixed << setprecision(2)
-        << setw(5) << iFrequency << '/' << setw(1) << cRobMode
-        << iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH << "         ,"
-        << " " << strdate(now) << ", "
-        << strtime(now) << ".0" << ","
-        << setw(7) << rSNR << ","
-        << setw(5) << iFrameSyncStatus << ","
-        << setw(4) << iFACStatus << ","
-        << setw(4) << iAudioStatus << ","
-        << setw(6) << iNumCRCMSC << ","
-        << setw(8) << iNumCRCOkMSC << ","
-        << "  " << setw(6) << rDoppler << ','
-        << setw(6) << rDelay;
+             << setw(5) << iFrequency << '/' << setw(1) << cRobMode
+             << iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH << "         ,"
+             << " " << strdate(now) << ", "
+             << strtime(now) << ".0" << ","
+             << setw(7) << rSNR << ","
+             << setw(5) << iFrameSyncStatus << ","
+             << setw(4) << iFACStatus << ","
+             << setw(4) << iAudioStatus << ","
+             << setw(6) << iNumCRCMSC << ","
+             << setw(8) << iNumCRCOkMSC << ","
+             << "  " << setw(6) << rDoppler << ','
+             << setw(6) << rDelay;
 
         if (bRxlEnabled)
             File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent()+S9_DBUV;
@@ -471,8 +463,8 @@ string CReceptLog::strdate(time_t t)
     today = gmtime(&t);		/* Always UTC */
 
     s << setfill('0')
-    << setw(4) << today->tm_year + 1900 << "-"
-    << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
+      << setw(4) << today->tm_year + 1900 << "-"
+      << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
     return s.str();
 }
 
@@ -484,7 +476,7 @@ string CReceptLog::strtime(time_t t)
     today = gmtime(&t);		/* Always UTC */
 
     s << setfill('0')
-    << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
+      << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
     return s.str();
 }
 

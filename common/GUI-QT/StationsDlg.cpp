@@ -964,7 +964,7 @@ void StationsDlg::hideEvent(QHideEvent*)
     TimerUTCLabel.stop();
     DisableSMeter();
 #if QT_VERSION < 0x040000
-    Settings.Put("Hamlib", "ensmeter", (pRemoteMenu==NULL)?false:pRemoteMenu->menu()->itemChecked(SMETER_MENU_ID));
+    Settings.Put("Hamlib", "ensmeter", (pRemoteMenu==NULL)?false:pRemoteMenu->menu()->isItemChecked(SMETER_MENU_ID));
 #else
     Settings.Put("Hamlib", "ensmeter", actionEnable_S_Meter->isChecked());
 #endif
