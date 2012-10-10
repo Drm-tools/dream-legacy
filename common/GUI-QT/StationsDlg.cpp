@@ -478,7 +478,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     connect(actionShowAllStations, SIGNAL(triggered()), showMapper, SLOT(map()));
     connect(actionShowOnlyActiveStations, SIGNAL(triggered()), showMapper, SLOT(map()));
     connect(showMapper, SIGNAL(mapped(int)), this, SLOT(OnShowStationsMenu(int)));
-    if(Settings.Get("Stations Dialog", "showall", 1))
+    if(Settings.Get("Stations Dialog", "showall", true))
         actionShowAllStations->setChecked(true);
     else
         actionShowOnlyActiveStations->setChecked(true);
@@ -722,6 +722,7 @@ void StationsDlg::OnTimerUTCLabel()
 
 void StationsDlg::OnShowStationsMenu(int iID)
 {
+#if QT_VERSION < 0x040000
     /* Show only active stations if ID is 0, else show all */
     if (iID == 0)
     {
@@ -730,9 +731,10 @@ void StationsDlg::OnShowStationsMenu(int iID)
     }
 
     /* Taking care of checks in the menu */
-#if QT_VERSION < 0x040000
     pViewMenu->setItemChecked(0, 0 == iID);
     pViewMenu->setItemChecked(1, 1 == iID);
+#else
+    (void)iID;
 #endif
     /* Update list view */
     SetStationsView();
@@ -818,21 +820,18 @@ void StationsDlg::AddUpdateDateTime()
 
 void StationsDlg::on_ComboBoxFilterTarget_activated(const QString& s)
 {
-    //qDebug("on_ComboBoxFilterTarget_activated %s", s.toUtf8().constData());
     DRMSchedule.SetTargetFilter(s);
     SetStationsView();
 }
 
 void StationsDlg::on_ComboBoxFilterCountry_activated(const QString& s)
 {
-    //qDebug("on_ComboBoxFilterCountry_activated %s", s.toUtf8().constData());
     DRMSchedule.SetCountryFilter(s);
     SetStationsView();
 }
 
 void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 {
-    //qDebug("on_ComboBoxFilterLanguage_activated %s", s.toUtf8().constData());
     DRMSchedule.SetLanguageFilter(s);
     SetStationsView();
 }
@@ -1299,7 +1298,6 @@ void StationsDlg::SetStationsView()
 	    item->setIcon(0, redCube);
             break;
         }
-
 	if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
 	{
 	    item->setHidden(false);
@@ -1311,7 +1309,7 @@ void StationsDlg::SetStationsView()
     }
     ListViewStations->setSortingEnabled(true);
     ListViewStations->sortItems(ListViewStations->sortColumn(), bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
-        ListViewStations->setFocus();
+    ListViewStations->setFocus();
 #endif
     ListItemsMutex.unlock();
     TimerList.start(GUI_TIMER_LIST_VIEW_STAT);
