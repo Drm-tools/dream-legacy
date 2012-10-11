@@ -13,6 +13,7 @@ CONFIG += qt warn_on debug thread
 INCLUDEPATH += common/GUI-QT
 INCLUDEPATH += libs
 LIBS += -L$$PWD/libs
+macx:QMAKE_LFLAGS += -F$$PWD/libs
 contains(QT_VERSION, ^4\\..*) {
     message("Qt 4")
     QT += network xml
