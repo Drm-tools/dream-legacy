@@ -1084,24 +1084,24 @@ void StationsDlg::showEvent(QShowEvent*)
 #endif
 	}
     }
-    if(targetFilter!="") {
+    if(countryFilter!="") {
 	for(int i=0; i<ComboBoxFilterCountry->count(); i++) {
 #if QT_VERSION < 0x040000
-	    if(ComboBoxFilterCountry->text(i) == targetFilter)
+	    if(ComboBoxFilterCountry->text(i) == countryFilter)
 		ComboBoxFilterCountry->setCurrentItem(i);
 #else
-	    if(ComboBoxFilterCountry->itemText(i) == targetFilter)
+	    if(ComboBoxFilterCountry->itemText(i) == countryFilter)
 		ComboBoxFilterCountry->setCurrentIndex(i);
 #endif
 	}
     }
-    if(targetFilter!="") {
+    if(languageFilter!="") {
 	for(int i=0; i<ComboBoxFilterLanguage->count(); i++) {
 #if QT_VERSION < 0x040000
-	    if(ComboBoxFilterLanguage->text(i) == targetFilter)
+	    if(ComboBoxFilterLanguage->text(i) == languageFilter)
 		ComboBoxFilterLanguage->setCurrentItem(i);
 #else
-	    if(ComboBoxFilterLanguage->itemText(i) == targetFilter)
+	    if(ComboBoxFilterLanguage->itemText(i) == languageFilter)
 		ComboBoxFilterLanguage->setCurrentIndex(i);
 #endif
 	}
