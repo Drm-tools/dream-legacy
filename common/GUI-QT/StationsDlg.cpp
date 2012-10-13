@@ -842,7 +842,16 @@ void StationsDlg::httpConnected()
 #if QT_VERSION < 0x040000
 void StationsDlg::httpDisconnected()
 {
-//    QMessageBox::information(this, "Dream", "http disconnected", QMessageBox::Ok);
+    disconnect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
+    disconnect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
+    disconnect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
+    disconnect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead()));
+    httpSocket->close();
+    schedFile->close();
+    /* Notify the user that update was successful */
+    QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
+    /* Read updated ini-file */
+    LoadSchedule(CDRMSchedule::SM_DRM);
 }
 #endif
 
@@ -853,24 +862,13 @@ void StationsDlg::httpRead()
     if(httpHeader) {
 	do {
 	    httpSocket->readLine(buf, sizeof(buf));
+qDebug("header %s", buf);
 	} while(strcmp(buf, "\r\n")!=0);
 	httpHeader=false;
     }
     while(httpSocket->bytesAvailable()>0) {
         int n = httpSocket->readBlock(buf, sizeof(buf));
         schedFile->writeBlock(buf, n);
-    }
-    if(httpSocket->atEnd()) {
-        disconnect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
-        disconnect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
-        disconnect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
-        disconnect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead()));
-        httpSocket->close();
-        schedFile->close();
-        /* Notify the user that update was successful */
-        QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
-        /* Read updated ini-file */
-        LoadSchedule(CDRMSchedule::SM_DRM);
     }
 }
 #endif
