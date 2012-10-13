@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Dream</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="res/icons.qrc">
+    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
@@ -7007,7 +7011,7 @@
      <x>0</x>
      <y>0</y>
      <width>484</width>
-     <height>18</height>
+     <height>17</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_View">
@@ -7152,7 +7156,7 @@
   </action>
  </widget>
  <customwidgets>
-   <customwidget>
+  <customwidget>
    <class>QwtThermo</class>
    <extends>QWidget</extends>
    <header location="global">qwt_thermo.h</header>
@@ -7163,6 +7167,8 @@
    <header location="global">MultColorLED.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="res/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

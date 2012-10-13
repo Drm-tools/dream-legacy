@@ -12,7 +12,7 @@ TARGET = dream
 CONFIG += qt warn_on debug thread
 INCLUDEPATH += common/GUI-QT
 INCLUDEPATH += libs
-LIBS += -L$$PWD/libs
+#LIBS += -L$$PWD/libs
 macx:QMAKE_LFLAGS += -F$$PWD/libs
 contains(QT_VERSION, ^4\\..*) {
     message("Qt 4")
@@ -98,7 +98,7 @@ count(QT_VERSION, 0) {
               exists(/usr/lib/libqwt.so.4) {
 	        message("with qwt4")
                 INCLUDEPATH += /usr/include/qwt
-                LIBS += -lqwt
+                LIBS += /usr/lib/libqwt.so.4
               }
               else {
                 error("no usable qwt version found")
