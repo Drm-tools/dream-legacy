@@ -563,6 +563,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
             this, SLOT(OnUrlFinished(QNetworkOperation*)));
     connect(ListViewStations->header(), SIGNAL(clicked(int)),
             this, SLOT(OnHeaderClicked(int)));
+    connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterTarget_activated(const QString&)));
+    connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterCountry_activated(const QString&)));
+    connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterLanguage_activated(const QString&)));
 #endif
 
     connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
@@ -808,18 +811,21 @@ void StationsDlg::AddUpdateDateTime()
 
 void StationsDlg::on_ComboBoxFilterTarget_activated(const QString& s)
 {
+    targetFilter = s;
     DRMSchedule.SetTargetFilter(s);
     SetStationsView();
 }
 
 void StationsDlg::on_ComboBoxFilterCountry_activated(const QString& s)
 {
+    countryFilter=s;
     DRMSchedule.SetCountryFilter(s);
     SetStationsView();
 }
 
 void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 {
+    languageFilter=s;
     DRMSchedule.SetLanguageFilter(s);
     SetStationsView();
 }
@@ -827,10 +833,9 @@ void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 #if QT_VERSION < 0x040000
 void StationsDlg::httpConnected()
 {
-    char buf[1000];
-    int n = sprintf(buf,"GET %s HTTP/1.0\n\n", qurl->path().utf8().data());
-    qDebug("GET is %s", buf);
-    httpSocket->writeBlock(buf, n);
+    QCString s = QString("GET %1 HTTP/1.0\n\n").arg(qurl->encodedPathAndQuery()).utf8();
+    httpSocket->writeBlock(s.data(), s.length());
+    httpHeader=true;
 }
 #endif
 
@@ -844,6 +849,17 @@ void StationsDlg::httpDisconnected()
 #if QT_VERSION < 0x040000
 void StationsDlg::httpRead()
 {
+    char buf[4000];
+    if(httpHeader) {
+	do {
+	    httpSocket->readLine(buf, sizeof(buf));
+	} while(strcmp(buf, "\r\n")!=0);
+	httpHeader=false;
+    }
+    while(httpSocket->bytesAvailable()>0) {
+        int n = httpSocket->readBlock(buf, sizeof(buf));
+        schedFile->writeBlock(buf, n);
+    }
     if(httpSocket->atEnd()) {
         disconnect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
         disconnect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
@@ -855,24 +871,6 @@ void StationsDlg::httpRead()
         QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
         /* Read updated ini-file */
         LoadSchedule(CDRMSchedule::SM_DRM);
-    }
-    else {
-        char buf[8000];
-        /* TODO skip header
-        	while(Recv(s,buf,1)==1){
-        		if((c = buf[0])=='\n'){
-        			if(sol)
-        				break;  // last byte of header
-        			sol = 1;
-        		}else if(c!='\r'){
-        			sol = 0;
-        		}
-        	}
-        */
-        while(httpSocket->bytesAvailable()>0) {
-            int n = httpSocket->readBlock(buf, sizeof(buf));
-            schedFile->writeBlock(buf, n);
-        }
     }
 }
 #endif
@@ -902,12 +900,10 @@ void StationsDlg::on_actionGetUpdate_triggered()
 #if QT_VERSION < 0x040000
 //# if QT_VERSION < 0x030000
         if(url.find("ftp")!=string::npos) {
-            qDebug("fetching %s using ftp", url.c_str());
             UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
         }
         else
         {
-            qDebug("fetching %s using QSocket", url.c_str());
             schedFile = new QFile(DRMSCHEDULE_INI_FILE_NAME);
             if(schedFile->open(IO_WriteOnly)) {
                 httpSocket = new QSocket(this);
@@ -919,7 +915,6 @@ void StationsDlg::on_actionGetUpdate_triggered()
                 int port = qurl->port();
                 if(port == -1)
                     port = 80;
-                qDebug("host %s port %d", qurl->host().utf8().data(), port);
                 httpSocket->connectToHost(qurl->host().utf8().data(), port);
         }
         else {
@@ -1079,6 +1074,25 @@ void StationsDlg::showEvent(QShowEvent*)
 #endif
     /* add last update information on menu item */
     AddUpdateDateTime();
+
+    if(targetFilter!="") {
+	for(int i=0; i<ComboBoxFilterTarget->count(); i++) {
+	    if(ComboBoxFilterTarget->text(i) == targetFilter)
+		ComboBoxFilterTarget->setCurrentItem(i);
+	}
+    }
+    if(targetFilter!="") {
+	for(int i=0; i<ComboBoxFilterCountry->count(); i++) {
+	    if(ComboBoxFilterCountry->text(i) == targetFilter)
+		ComboBoxFilterCountry->setCurrentItem(i);
+	}
+    }
+    if(targetFilter!="") {
+	for(int i=0; i<ComboBoxFilterLanguage->count(); i++) {
+	    if(ComboBoxFilterLanguage->text(i) == targetFilter)
+		ComboBoxFilterLanguage->setCurrentItem(i);
+	}
+    }
 }
 
 void StationsDlg::OnTimerList()

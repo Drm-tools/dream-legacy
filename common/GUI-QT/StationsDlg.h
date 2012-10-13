@@ -216,7 +216,6 @@ public:
 	QStringList			ListCountries;
 	QStringList			ListLanguages;
 
-
 protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);
 
@@ -298,6 +297,7 @@ protected:
 	QFile *schedFile;
 	QUrl *qurl;
 	QSocket *httpSocket;
+	bool httpHeader;
 #else
 	QIcon			greenCube;
 	QIcon			redCube;
@@ -317,6 +317,7 @@ protected:
 
 	RemoteMenu*		pRemoteMenu;
 	QString		okMessage, badMessage;
+	QString		languageFilter,targetFilter,countryFilter;
 
 signals:
 	void subscribeRig();
