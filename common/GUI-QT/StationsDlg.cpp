@@ -1105,9 +1105,9 @@ void StationsDlg::showEvent(QShowEvent*)
 	    if(ComboBoxFilterLanguage->itemText(i) == languageFilter)
 		ComboBoxFilterLanguage->setCurrentIndex(i);
 #endif
-#endif
 	}
     }
+#endif
 }
 
 void StationsDlg::OnTimerList()
