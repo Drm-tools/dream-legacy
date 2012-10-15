@@ -1232,14 +1232,32 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
         else
             strPower.setNum(rPower);
 
+	QString strTimes = QString().sprintf("%04d-%04d", station.StartTime(), station.StopTime());
+
         /* Generate new list station with all necessary column entries */
 #if QT_VERSION < 0x040000
-        MyListViewItem* item = new MyListViewItem(ListViewStations);
+        MyListViewItem* item = new MyListViewItem(ListViewStations,
+						      station.strName     /* name */,
+						      strTimes            /* time */,
+                                                      QString().setNum(station.iFreq) /* freq. */,
+                                                      station.strTarget   /* target */,
+                                                      strPower            /* power */,
+                                                      station.strCountry  /* country */,
+                                                      station.strSite     /* site */,
+                                                      station.strLanguage /* language */);
+	/* Show list of days */
+	item->setText(8, station.strDaysShow);
+
+	/* Insert this new item in list. The item object is destroyed by
+                   the list view control when this is destroyed 
+	TODO remove this if crash fixed ListViewStations->insertItem(vecpListItems[i]);
+	*/
+
+        vecpListItems[i] = item;
 #else
         QTreeWidgetItem* item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
-#endif
         item->setText(0, station.strName);
-        item->setText(1, QString().sprintf("%04d-%04d", station.StartTime(), station.StopTime())); /* time */
+        item->setText(1, strTimes) /* time */
         item->setText(2, QString().setNum(station.iFreq) /* freq. */);
         item->setText(3, station.strTarget   /* target */);
         item->setText(4, strPower            /* power */);
@@ -1247,9 +1265,6 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
         item->setText(6, station.strSite     /* site */);
         item->setText(7, station.strLanguage /* language */);
         item->setText(8, station.strDaysShow);
-#if QT_VERSION < 0x040000
-        vecpListItems[i] = item;
-#else
         DRMSchedule.GetItem(i).item = item;
 #endif
     }
@@ -1295,9 +1310,10 @@ void StationsDlg::SetStationsView()
     {
 
         MyListViewItem* item = vecpListItems[i];
-
+qDebug("MyListViewItem %d", item);
         /* Check, if station is currently transmitting. If yes, set special pixmap */
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
+qDebug("got here 1");
         switch (iState)
         {
         case CDRMSchedule::IS_ACTIVE:
@@ -1316,11 +1332,14 @@ void StationsDlg::SetStationsView()
             item->setPixmap(0, BitmCubeRed);
             break;
         }
+qDebug("got here 2");
 
         if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
         {
+qDebug("got here 3");
             ListViewStations->insertItem(item);
         }
+qDebug("got here 4");
     }
 
     /* Sort the list if items have changed */

@@ -112,7 +112,11 @@ class MyListViewItem : public QListViewItem
 public:
 	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
 	   Settings.h! */
-	MyListViewItem(QListView* parent): QListViewItem(parent) {}
+	MyListViewItem(QListView* parent, QString s1, QString s2 = QString::null,
+		QString s3 = QString::null, QString s4 = QString::null,
+		QString s5 = QString::null, QString s6 = QString::null,
+		QString s7 = QString::null, QString s8 = QString::null) :
+		QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
 
 	/* Custom "key()" function for correct sorting behaviour */
 	virtual QString key(int column, bool ascending) const;
