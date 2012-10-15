@@ -1314,6 +1314,12 @@ qDebug("MyListViewItem %d", item);
         /* Check, if station is currently transmitting. If yes, set special pixmap */
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
 qDebug("got here 1");
+        if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
+        {
+qDebug("got here 2");
+            ListViewStations->insertItem(item);
+        }
+qDebug("got here 3");
         switch (iState)
         {
         case CDRMSchedule::IS_ACTIVE:
@@ -1331,13 +1337,6 @@ qDebug("got here 1");
         default:
             item->setPixmap(0, BitmCubeRed);
             break;
-        }
-qDebug("got here 2");
-
-        if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
-        {
-qDebug("got here 3");
-            ListViewStations->insertItem(item);
         }
 qDebug("got here 4");
     }
