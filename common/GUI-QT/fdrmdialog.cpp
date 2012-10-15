@@ -195,12 +195,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectAudioService(int)));
     connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectDataService(int)));
 #else
-	pBWSDlg = new BWSViewer(DRMReceiver, Settings);
-	pJLDlg = new JLViewer(DRMReceiver, Settings);
-	pSlideShowDlg = new SlideShowViewer(DRMReceiver, Settings);
+    pBWSDlg = new BWSViewer(DRMReceiver, Settings);
+    pJLDlg = new JLViewer(DRMReceiver, Settings);
+    pSlideShowDlg = new SlideShowViewer(DRMReceiver, Settings);
 
-
-	/* Stations window */
+    /* Stations window */
     pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this);
 
     /* Live Schedule window */
@@ -226,13 +225,13 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pMultSettingsDlg = new MultSettingsDlg(Parameters, Settings, this);
 
     connect(action_Evaluation_Dialog, SIGNAL(triggered()), pSysEvalDlg, SLOT(show()));
-    connect(action_Multimedia_Dialog, SIGNAL(triggered()), pBWSDlg, SLOT(show()));
-    connect(action_Multimedia_Dialog, SIGNAL(triggered()), pJLDlg, SLOT(show()));
-    connect(action_Multimedia_Dialog, SIGNAL(triggered()), pSlideShowDlg, SLOT(show()));
     connect(action_Stations_Dialog, SIGNAL(triggered()), this, SLOT(OnViewStationsDlg()));
     connect(action_Live_Schedule_Dialog, SIGNAL(triggered()), pLiveScheduleDlg, SLOT(show()));
     connect(action_Programme_Guide_Dialog, SIGNAL(triggered()), pEPGDlg, SLOT(show()));
     connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
+
+    action_Multimedia_Dialog->setEnabled(false); // and don't connect slots until app type decoded
+    action_Programme_Guide_Dialog->setEnabled(false);
 
     menu_Settings->addMenu( new CSoundCardSelMenu(
 		DRMReceiver.GetSoundInInterface(),
@@ -887,36 +886,58 @@ void FDRMDialog::OnSelectDataService(int shortId)
 
     int iAppIdent = Parameters.Service[shortId].DataParam.iUserAppIdent;
 
+#if QT_VERSION < 0x040000
     switch(iAppIdent)
     {
     case DAB_AT_EPG:
         pDlg = pEPGDlg;
         Parameters.SetCurSelDataService(shortId);
         break;
-#if QT_VERSION < 0x040000
     case DAB_AT_BROADCASTWEBSITE:
     case DAB_AT_JOURNALINE:
     case DAB_AT_MOTSLIDESHOW:
         pDlg = pMultiMediaDlg;
         Parameters.SetCurSelDataService(shortId);
         break;
+    default:
+	;
+    }
 #else
+    switch(iAppIdent)
+    {
+    case DAB_AT_EPG:
+        pDlg = pEPGDlg;
+        Parameters.SetCurSelDataService(shortId);
+	action_Programme_Guide_Dialog->setEnabled(true);
+        break;
     case DAB_AT_BROADCASTWEBSITE:
         pDlg = pBWSDlg;
+	connect(action_Multimedia_Dialog, SIGNAL(triggered()), pBWSDlg, SLOT(show()));
+	disconnect(action_Multimedia_Dialog, SIGNAL(triggered()), pJLDlg, SLOT(show()));
+	disconnect(action_Multimedia_Dialog, SIGNAL(triggered()), pSlideShowDlg, SLOT(show()));
         Parameters.SetCurSelDataService(shortId);
+	action_Multimedia_Dialog->setEnabled(true);
         break;
     case DAB_AT_JOURNALINE:
         pDlg = pJLDlg;
+	connect(action_Multimedia_Dialog, SIGNAL(triggered()), pJLDlg, SLOT(show()));
+	disconnect(action_Multimedia_Dialog, SIGNAL(triggered()), pSlideShowDlg, SLOT(show()));
+	disconnect(action_Multimedia_Dialog, SIGNAL(triggered()), pBWSDlg, SLOT(show()));
         Parameters.SetCurSelDataService(shortId);
+	action_Multimedia_Dialog->setEnabled(true);
         break;
     case DAB_AT_MOTSLIDESHOW:
         pDlg = pSlideShowDlg;
+	connect(action_Multimedia_Dialog, SIGNAL(triggered()), pSlideShowDlg, SLOT(show()));
+	disconnect(action_Multimedia_Dialog, SIGNAL(triggered()), pJLDlg, SLOT(show()));
+	disconnect(action_Multimedia_Dialog, SIGNAL(triggered()), pBWSDlg, SLOT(show()));
         Parameters.SetCurSelDataService(shortId);
+	action_Multimedia_Dialog->setEnabled(true);
         break;
-#endif
     default:
-        ;
+	action_Multimedia_Dialog->setEnabled(false);
     }
+#endif
 
     CService::ETyOServ eAudDataFlag = Parameters.Service[shortId].eAudDataFlag;
 
