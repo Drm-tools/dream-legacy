@@ -860,11 +860,11 @@ void StationsDlg::httpRead()
 {
     char buf[4000];
     if(httpHeader) {
-	do {
-	    httpSocket->readLine(buf, sizeof(buf));
-qDebug("header %s", buf);
-	} while(strcmp(buf, "\r\n")!=0);
-	httpHeader=false;
+        do {
+            httpSocket->readLine(buf, sizeof(buf));
+            qDebug("header %s", buf);
+        } while(strcmp(buf, "\r\n")!=0);
+        httpHeader=false;
     }
     while(httpSocket->bytesAvailable()>0) {
         int n = httpSocket->readBlock(buf, sizeof(buf));
@@ -914,9 +914,9 @@ void StationsDlg::on_actionGetUpdate_triggered()
                 if(port == -1)
                     port = 80;
                 httpSocket->connectToHost(qurl->host().utf8().data(), port);
-        }
-        else {
-            QMessageBox::information(this, "Dream", "can't open schedule file for writing", QMessageBox::Ok);
+            }
+            else {
+                QMessageBox::information(this, "Dream", "can't open schedule file for writing", QMessageBox::Ok);
             }
         }
 //# else
@@ -1075,37 +1075,37 @@ void StationsDlg::showEvent(QShowEvent*)
 
 #if QT_VERSION >= 0x030000
     if(targetFilter!="") {
-	for(int i=0; i<ComboBoxFilterTarget->count(); i++) {
+        for(int i=0; i<ComboBoxFilterTarget->count(); i++) {
 #if QT_VERSION < 0x040000
-	    if(ComboBoxFilterTarget->text(i) == targetFilter)
-		ComboBoxFilterTarget->setCurrentItem(i);
+            if(ComboBoxFilterTarget->text(i) == targetFilter)
+                ComboBoxFilterTarget->setCurrentItem(i);
 #else
-	    if(ComboBoxFilterTarget->itemText(i) == targetFilter)
-		ComboBoxFilterTarget->setCurrentIndex(i);
+            if(ComboBoxFilterTarget->itemText(i) == targetFilter)
+                ComboBoxFilterTarget->setCurrentIndex(i);
 #endif
-	}
+        }
     }
     if(countryFilter!="") {
-	for(int i=0; i<ComboBoxFilterCountry->count(); i++) {
+        for(int i=0; i<ComboBoxFilterCountry->count(); i++) {
 #if QT_VERSION < 0x040000
-	    if(ComboBoxFilterCountry->text(i) == countryFilter)
-		ComboBoxFilterCountry->setCurrentItem(i);
+            if(ComboBoxFilterCountry->text(i) == countryFilter)
+                ComboBoxFilterCountry->setCurrentItem(i);
 #else
-	    if(ComboBoxFilterCountry->itemText(i) == countryFilter)
-		ComboBoxFilterCountry->setCurrentIndex(i);
+            if(ComboBoxFilterCountry->itemText(i) == countryFilter)
+                ComboBoxFilterCountry->setCurrentIndex(i);
 #endif
-	}
+        }
     }
     if(languageFilter!="") {
-	for(int i=0; i<ComboBoxFilterLanguage->count(); i++) {
+        for(int i=0; i<ComboBoxFilterLanguage->count(); i++) {
 #if QT_VERSION < 0x040000
-	    if(ComboBoxFilterLanguage->text(i) == languageFilter)
-		ComboBoxFilterLanguage->setCurrentItem(i);
+            if(ComboBoxFilterLanguage->text(i) == languageFilter)
+                ComboBoxFilterLanguage->setCurrentItem(i);
 #else
-	    if(ComboBoxFilterLanguage->itemText(i) == languageFilter)
-		ComboBoxFilterLanguage->setCurrentIndex(i);
+            if(ComboBoxFilterLanguage->itemText(i) == languageFilter)
+                ComboBoxFilterLanguage->setCurrentIndex(i);
 #endif
-	}
+        }
     }
 #endif
 }
@@ -1232,26 +1232,26 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
         else
             strPower.setNum(rPower);
 
-	QString strTimes = QString().sprintf("%04d-%04d", station.StartTime(), station.StopTime());
+        QString strTimes = QString().sprintf("%04d-%04d", station.StartTime(), station.StopTime());
 
         /* Generate new list station with all necessary column entries */
 #if QT_VERSION < 0x040000
         MyListViewItem* item = new MyListViewItem(ListViewStations,
-						      station.strName     /* name */,
-						      strTimes            /* time */,
-                                                      QString().setNum(station.iFreq) /* freq. */,
-                                                      station.strTarget   /* target */,
-                                                      strPower            /* power */,
-                                                      station.strCountry  /* country */,
-                                                      station.strSite     /* site */,
-                                                      station.strLanguage /* language */);
-	/* Show list of days */
-	item->setText(8, station.strDaysShow);
+                station.strName     /* name */,
+                strTimes            /* time */,
+                QString().setNum(station.iFreq) /* freq. */,
+                station.strTarget   /* target */,
+                strPower            /* power */,
+                station.strCountry  /* country */,
+                station.strSite     /* site */,
+                station.strLanguage /* language */);
+        /* Show list of days */
+        item->setText(8, station.strDaysShow);
 
-	/* Insert this new item in list. The item object is destroyed by
-                   the list view control when this is destroyed 
-	TODO remove this if crash fixed ListViewStations->insertItem(vecpListItems[i]);
-	*/
+        /* Insert this new item in list. The item object is destroyed by
+                       the list view control when this is destroyed
+        TODO remove this if crash fixed ListViewStations->insertItem(vecpListItems[i]);
+        */
 
         vecpListItems[i] = item;
 #else
@@ -1310,35 +1310,35 @@ void StationsDlg::SetStationsView()
     {
 
         MyListViewItem* item = vecpListItems[i];
-qDebug("MyListViewItem %d", item);
         /* Check, if station is currently transmitting. If yes, set special pixmap */
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
-qDebug("got here 1");
+        qDebug("got here 1");
         if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
         {
-qDebug("got here 2");
+            qDebug("got here 2");
             ListViewStations->insertItem(item);
+            qDebug("got here 3");
+            switch (iState)
+            {
+            case CDRMSchedule::IS_ACTIVE:
+                item->setPixmap(0, BitmCubeGreen);
+                break;
+            case CDRMSchedule::IS_PREVIEW:
+                item->setPixmap(0, BitmCubeOrange);
+                break;
+            case CDRMSchedule::IS_SOON_INACTIVE:
+                item->setPixmap(0, BitmCubePink);
+                break;
+            case CDRMSchedule::IS_INACTIVE:
+                item->setPixmap(0, BitmCubeRed);
+                break;
+            default:
+                item->setPixmap(0, BitmCubeRed);
+                break;
+            }
+        qDebug("got here 4");
         }
-qDebug("got here 3");
-        switch (iState)
-        {
-        case CDRMSchedule::IS_ACTIVE:
-            item->setPixmap(0, BitmCubeGreen);
-            break;
-        case CDRMSchedule::IS_PREVIEW:
-            item->setPixmap(0, BitmCubeOrange);
-            break;
-        case CDRMSchedule::IS_SOON_INACTIVE:
-            item->setPixmap(0, BitmCubePink);
-            break;
-        case CDRMSchedule::IS_INACTIVE:
-            item->setPixmap(0, BitmCubeRed);
-            break;
-        default:
-            item->setPixmap(0, BitmCubeRed);
-            break;
-        }
-qDebug("got here 4");
+        qDebug("got here 5");
     }
 
     /* Sort the list if items have changed */
