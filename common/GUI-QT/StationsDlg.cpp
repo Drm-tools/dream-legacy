@@ -70,6 +70,13 @@ QString MyListViewItem::key(int column, bool ascending) const
 }
 #endif
 
+CDRMSchedule::CDRMSchedule():
+ListTargets(), ListCountries(), ListLanguages(),
+StationsTable(),eSchedMode(SM_DRM),iSecondsPreview(0),
+countryFilter(""), targetFilter(""), languageFilter("")
+{
+}
+
 void CDRMSchedule::UpdateStringListForFilter(const CStationsItem& StationsItem)
 {
     QStringList result;
@@ -1248,11 +1255,6 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
         /* Show list of days */
         item->setText(8, station.strDaysShow);
 
-        /* Insert this new item in list. The item object is destroyed by
-                       the list view control when this is destroyed
-        TODO remove this if crash fixed ListViewStations->insertItem(vecpListItems[i]);
-        */
-
         vecpListItems[i] = item;
 #else
         QTreeWidgetItem* item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
@@ -1306,7 +1308,6 @@ void StationsDlg::SetStationsView()
     ClearStationsView();
 
     /* Add new item for each visible station in list view */
-qDebug("There are %d rows in the schedule", vecpListItems.size());
     for (size_t i = 0; i < vecpListItems.size(); i++)
     {
 
@@ -1315,7 +1316,6 @@ qDebug("There are %d rows in the schedule", vecpListItems.size());
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
         if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
         {
-qDebug("row %d is visible with state %d", i, iState);
             ListViewStations->insertItem(item);
             switch (iState)
             {
@@ -1336,11 +1336,7 @@ qDebug("row %d is visible with state %d", i, iState);
                 break;
             }
         }
-	else {
-qDebug("row %d is not visible with state %d", i, iState);
-        }
     }
-qDebug("done adding rows to listview");
 
     /* Sort the list if items have changed */
     if (bListHastChanged == TRUE)
