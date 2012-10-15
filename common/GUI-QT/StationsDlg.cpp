@@ -1306,18 +1306,17 @@ void StationsDlg::SetStationsView()
     ClearStationsView();
 
     /* Add new item for each visible station in list view */
+qDebug("There are %d rows in the schedule", vecpListItems.size());
     for (size_t i = 0; i < vecpListItems.size(); i++)
     {
 
         MyListViewItem* item = vecpListItems[i];
         /* Check, if station is currently transmitting. If yes, set special pixmap */
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
-        qDebug("got here 1");
         if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
         {
-            qDebug("got here 2");
+qDebug("row %d is visible with state %d", i, iState);
             ListViewStations->insertItem(item);
-            qDebug("got here 3");
             switch (iState)
             {
             case CDRMSchedule::IS_ACTIVE:
@@ -1336,10 +1335,12 @@ void StationsDlg::SetStationsView()
                 item->setPixmap(0, BitmCubeRed);
                 break;
             }
-        qDebug("got here 4");
         }
-        qDebug("got here 5");
+	else {
+qDebug("row %d is not visible with state %d", i, iState);
+        }
     }
+qDebug("done adding rows to listview");
 
     /* Sort the list if items have changed */
     if (bListHastChanged == TRUE)
