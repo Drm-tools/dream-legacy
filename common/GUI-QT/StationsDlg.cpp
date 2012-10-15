@@ -1257,7 +1257,7 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 #else
         QTreeWidgetItem* item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
         item->setText(0, station.strName);
-        item->setText(1, strTimes) /* time */
+        item->setText(1, strTimes /* time */);
         item->setText(2, QString().setNum(station.iFreq) /* freq. */);
         item->setText(3, station.strTarget   /* target */);
         item->setText(4, strPower            /* power */);
