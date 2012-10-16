@@ -869,7 +869,7 @@ void StationsDlg::httpRead()
     if(httpHeader) {
         do {
             httpSocket->readLine(buf, sizeof(buf));
-            qDebug("header %s", buf);
+            //qDebug("header %s", buf);
         } while(strcmp(buf, "\r\n")!=0);
         httpHeader=false;
     }
