@@ -96,6 +96,7 @@ void CLogging::OnTimerLogFileLong()
 
 void CLogging::start()
 {
+    enabled = true;
     /* Start logging (if not already done) */
     if(!longLog.GetLoggingActivated())
     {
@@ -115,6 +116,7 @@ void CLogging::start()
 
 void CLogging::stop()
 {
+    enabled = false;
     TimerLogFileStart.stop();
     TimerLogFileShort.stop();
     TimerLogFileLong.stop();

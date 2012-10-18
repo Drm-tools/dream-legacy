@@ -97,7 +97,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pSysEvalDlg = new systemevalDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
 
 	/* Analog demodulation window */
-    pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", Qt::WStyle_MinMax);
+    pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
 
     /* FM window */
     pFMDlg = new FMDialog(DRMReceiver, Settings, rig, NULL, "FM Receiver", FALSE, Qt::WStyle_MinMax);
@@ -817,7 +817,6 @@ void FDRMDialog::hideEvent(QHideEvent*)
 {
     /* Deactivate real-time timers */
     Timer.stop();
-	pLogging->stop();
 
     /* remember the state of the windows */
     Settings.Put("DRM Dialog", "Live Schedule Dialog visible", pLiveScheduleDlg->isVisible());
@@ -825,7 +824,7 @@ void FDRMDialog::hideEvent(QHideEvent*)
 #if QT_VERSION < 0x040000
     Settings.Put("DRM Dialog", "MultiMedia Dialog visible", pMultiMediaDlg->isVisible());
     pMultiMediaDlg->hide();
-	pMultiMediaDlg->SaveSettings(Settings);
+    pMultiMediaDlg->SaveSettings(Settings);
 #else
     Settings.Put("DRM Dialog", "BWS Dialog visible", pBWSDlg->isVisible());
     Settings.Put("DRM Dialog", "JL Dialog visible", pJLDlg->isVisible());
