@@ -1554,11 +1554,11 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
     FrontEndParameters.rIFCentreFreq = s.Get("FrontEnd", "ifcentrefrequency", SOUNDCRD_SAMPLE_RATE / 4);
 
-    /* Latitude string for log file */
+    /* Latitude string (used to be just for log file) */
     double latitude, longitude;
-    latitude = s.Get("GPS", "latitude", 1000.0);
-    /* Longitude string for log file */
-    longitude = s.Get("GPS", "longitude", 1000.0);
+    latitude = s.Get("GPS", "latitude", s.Get("Logfile", "latitude", 1000.0));
+    /* Longitude string */
+    longitude = s.Get("GPS", "longitude", s.Get("Logfile", "longitude", 1000.0));
     pReceiverParam->Lock();
     if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
     {
