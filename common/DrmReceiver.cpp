@@ -169,7 +169,7 @@ CDRMReceiver::Run()
     {
         stringstream s;
         s <<  ReceiverParam.gps_port;
-        gps_close(gps_data);
+        if(gps_data->gps_fd != -1) (void)gps_close(gps_data);
         result = gps_open_r(ReceiverParam.gps_host.c_str(), s.str().c_str(), gps_data);
         result = gps_stream(gps_data, WATCH_ENABLE|POLL_NONBLOCK, NULL);
         ReceiverParam.restart_gpsd = false;
@@ -177,7 +177,7 @@ CDRMReceiver::Run()
     if(ReceiverParam.use_gpsd)
         result = gps_poll(gps_data);
     else
-        result = gps_close(gps_data);
+        if(gps_data->gps_fd != -1) (void)gps_close(gps_data);
 #endif
 
     if (bRestartFlag) /* new acquisition requested by GUI */

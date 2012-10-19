@@ -1139,6 +1139,7 @@ CAudioSourceDecoder::CAudioSourceDecoder()
         canDecodeAAC(false),canDecodeCELP(false),canDecodeHVXC(false),
         pFile(NULL)
 {
+    HandleAACDecoder = NULL;
     cerr << "looking for FAAD2" << endl;
 #ifdef USE_FAAD2_LIBRARY
     canDecodeAAC = true;
@@ -1196,5 +1197,5 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 CAudioSourceDecoder::~CAudioSourceDecoder()
 {
     /* Close decoder handle */
-    NeAACDecClose(HandleAACDecoder);
+    if(HandleAACDecoder!=NULL) NeAACDecClose(HandleAACDecoder);
 }

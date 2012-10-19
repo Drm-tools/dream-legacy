@@ -130,6 +130,9 @@ CParameter::CParameter(CDRMReceiver *pRx):
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
     gps_data.set=0;
     gps_data.status=0;
+#ifdef HAVE_LIBGPS
+    gps_data.gps_fd = -1;
+#endif
 }
 
 CParameter::~CParameter()
@@ -213,7 +216,7 @@ CParameter::CParameter(const CParameter& p):
     eRunState(p.eRunState),
     CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
     audioencoder(p.audioencoder),audiodecoder(p.audiodecoder),
-    use_gpsd(p.use_gpsd),
+    use_gpsd(p.use_gpsd),restart_gpsd(p.restart_gpsd),
     gps_host(p.gps_host),gps_port(p.gps_port),
     rSysSimSNRdB(p.rSysSimSNRdB),
     iFrequency(p.iFrequency),
@@ -231,8 +234,6 @@ CParameter::CParameter(const CParameter& p):
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
     matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO
     gps_data = p.gps_data;
-    gps_host = p.gps_host;
-    gps_port = p.gps_port;
 }
 
 CParameter& CParameter::operator=(const CParameter& p)
@@ -315,6 +316,9 @@ CParameter& CParameter::operator=(const CParameter& p)
     audiodecoder =  p.audiodecoder;
     audioencoder =  p.audioencoder;
     use_gpsd = p.use_gpsd;
+    gps_host = p.gps_host;
+    gps_port = p.gps_port;
+    restart_gpsd = p.restart_gpsd;
     rSysSimSNRdB = p.rSysSimSNRdB;
     iFrequency = p.iFrequency;
     bValidSignalStrength = p.bValidSignalStrength;
