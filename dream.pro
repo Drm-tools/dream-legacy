@@ -52,7 +52,11 @@ contains(QT_VERSION, ^4\\..*) {
                   INCLUDEPATH += libs/qwt
                 }
                 else {
-                  INCLUDEPATH += /usr/include/qwt
+                  exists(/usr/include/qwt6) {
+                    INCLUDEPATH += /usr/include/qwt6
+                  } else {
+                    INCLUDEPATH += /usr/include/qwt
+                  }
                 }
               }
               else {
@@ -141,18 +145,14 @@ exists(libs/neaacdec.h) {
 unix {
     target.path = /usr/bin
     INSTALLS += target
-    exists(/usr/include/portaudio.h) {
-        CONFIG += portaudio
-        message("with portaudio")
+    CONFIG += link_pkgconfig
+    #packagesExist(portaudio-2.0) {
+    true {
+      CONFIG += portaudio
+      PKGCONFIG += portaudio-2.0
     }
     else {
-      exists(/opt/local/include/portaudio.h) {
-        CONFIG += portaudio
-        message("with portaudio")
-      }  
-      else {
         error("no usable sound library found - install portaudio dev package")
-      }
     }
     exists(/usr/include/hamlib/rig.h) {
         CONFIG += hamlib
@@ -184,19 +184,23 @@ unix {
                            message("with fftw3")
                        }
     else {
-        exists(/usr/include/fftw.h):LIBS += -lfftw
+      exists(/usr/include/fftw.h) {
+	message("with fftw2")
+        LIBS += -lfftw
         exists(/usr/include/rfftw.h):LIBS += -lrfftw
         exists(/opt/local/include/dfftw.h) {
             DEFINES += HAVE_DFFTW_H
             LIBS += -ldfftw
-	   message("with fftw2")
         }
         exists(/opt/local/include/drfftw.h) {
            DEFINES += HAVE_DRFFTW_H
            LIBS += -ldrfftw
-	   message("with fftw2")
         }
         DEFINES += HAVE_FFTW_H HAVE_RFFTW_H
+      }
+      else {
+        error("no usable fftw library found - install fftw dev package")
+      }
     }
     LIBS += -lz \
             -ldl

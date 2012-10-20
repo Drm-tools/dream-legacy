@@ -17,7 +17,7 @@ BuildRequires:	autoconf, automake
 BuildRequires:	fftw < 3 fftw-devel < 3
 BuildRequires:	qwt >= 4.2, qwt-devel >= 4.2
 BuildRequires:	faad2 >= 2.0.1, faad2-devel >= 2.0.1
-BuildRequires:	libjournaline, hamlib, hamlib-devel
+BuildRequires:	hamlib, hamlib-devel
 
 %description
 Digital Radio Mondiale (DRM) is the digital radio standard for

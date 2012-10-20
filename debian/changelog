@@ -1,5 +1,5 @@
-drm (1.14) unstable; urgency=low
+drm (1.15) unstable; urgency=low
 
-  * Allows building with Qt4.
+  * bug fixes, GPS updates and allows schedule fetching via http
 
- -- julian <jcable@users.sourceforge.net>  Fri, 11 Mar 2011 07:51:13 +0000
+ -- julian <jcable@users.sourceforge.net>  Fri, 19 Oct 2012 17:51:13 +0000
