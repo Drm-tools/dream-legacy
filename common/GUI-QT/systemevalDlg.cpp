@@ -628,10 +628,10 @@ CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
 {
     /* Create new chart window */
     CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
-    setCaption(tr("Chart Window"));
 
     /* Set plot style*/
     pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
+    pNewChartWin->setCaption(tr("Chart Window"));
 
     /* Set correct icon (use the same as this dialog) */
     pNewChartWin->setIcon(*this->icon());
