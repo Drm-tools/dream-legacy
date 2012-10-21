@@ -32,9 +32,8 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
+#include "../util/Pacer.h"
 #include "PacketInOut.h"
-#include <qthread.h>
-#include <qdatetime.h>
 
 class CPacketSourceFile : public CPacketSource
 {
@@ -48,10 +47,6 @@ public:
 	_BOOLEAN SetOrigin(const string& str);
 	void poll();
 
-protected:
-
-	void run();
-
 private:
 
     void readRawAF(vector<_BYTE>& vecbydata, int& interval);
@@ -61,11 +56,12 @@ private:
     void readPcap(vector<_BYTE>& vecbydata, int& interval);
     void readTagPacketHeader(string& tag, uint32_t& len);
 
-	CPacketSink		*pPacketSink;
-	uint64_t		last_packet_time;
-	void*			pF;
-	int 			wanted_dest_port;
-	enum {pcap,ff,af,pf}    eFileType;
+    CPacketSink		*pPacketSink;
+    uint64_t		last_packet_time;
+    CPacer		pacer;
+    void*		pF;
+    int 		wanted_dest_port;
+    enum {pcap,ff,af,pf}    eFileType;
 };
 
 #endif

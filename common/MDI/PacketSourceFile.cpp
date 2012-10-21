@@ -57,13 +57,14 @@ const size_t iAFHeaderLen = 10;
 const size_t iAFCRCLen = 2;
 
 CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
-    last_packet_time(0),
+    last_packet_time(0),pacer(400000000ULL),
     pF(NULL), wanted_dest_port(-1), eFileType(pcap)
 {
 }
 
 void CPacketSourceFile::poll()
 {
+    pacer.wait();
     vector<_BYTE> vecbydata (iMaxPacketSize);
     int interval;
     if(pF)
@@ -256,6 +257,8 @@ CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
     vecbydata.resize(iAFPacketLen);
 
     n = fread(&vecbydata[0], 1, iAFPacketLen, (FILE *)pF);
+
+    last_packet_time += interval;
 }
 
 // not robust against the sync characters appearing in the payload!!!!
