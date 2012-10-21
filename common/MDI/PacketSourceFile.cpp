@@ -48,6 +48,8 @@ typedef int SOCKET;
 # define INVALID_SOCKET				(-1)
 #endif
 
+#include "../util/Pacer.h"
+
 #ifdef HAVE_LIBPCAP
 # include <pcap.h>
 #endif
@@ -57,14 +59,15 @@ const size_t iAFHeaderLen = 10;
 const size_t iAFCRCLen = 2;
 
 CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
-    last_packet_time(0),pacer(400000000ULL),
+    last_packet_time(0),pacer(NULL),
     pF(NULL), wanted_dest_port(-1), eFileType(pcap)
 {
+	pacer = new CPacer(400000000ULL);
 }
 
 void CPacketSourceFile::poll()
 {
-    pacer.wait();
+    pacer->wait();
     vector<_BYTE> vecbydata (iMaxPacketSize);
     int interval;
     if(pF)

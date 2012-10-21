@@ -32,8 +32,9 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
-#include "../util/Pacer.h"
 #include "PacketInOut.h"
+
+class CPacer;
 
 class CPacketSourceFile : public CPacketSource
 {
@@ -58,7 +59,7 @@ private:
 
     CPacketSink		*pPacketSink;
     uint64_t		last_packet_time;
-    CPacer		pacer;
+    CPacer*		pacer;
     void*		pF;
     int 		wanted_dest_port;
     enum {pcap,ff,af,pf}    eFileType;
