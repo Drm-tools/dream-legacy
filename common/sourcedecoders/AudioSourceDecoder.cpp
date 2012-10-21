@@ -1187,7 +1187,7 @@ CAudioSourceDecoder::CAudioSourceDecoder()
     }
 #endif
     if(    canDecodeAAC) {
-        cerr << "AAC lib found" << endl;
+        cerr << "AAC decoder lib found" << endl;
         audiodecoder = string("Nero AAC Version ")+FAAD2_VERSION;
 	} else {
         cerr << "no usable AAC lib found" << endl;
