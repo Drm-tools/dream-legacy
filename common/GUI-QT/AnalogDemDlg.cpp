@@ -280,12 +280,25 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 
 void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 {
+	/* Close AMSS window */
+	Settings.Put("AMSS Dialog", "visible", AMSSDlg.isVisible());
+	AMSSDlg.hide();
+
 	/* tell every other window to close too */
 	emit Closed();
+
+	/* Save window geometry data */
+	CWinGeom s;
+	QRect WinGeom = geometry();
+	s.iXPos = WinGeom.x();
+	s.iYPos = WinGeom.y();
+	s.iHSize = WinGeom.height();
+	s.iWSize = WinGeom.width();
+	Settings.Put("AM Dialog", s);
+
 	// stay open until working thread is done
 	if(DRMReceiver.GetParameters()->eRunState==CParameter::STOPPED)
 	{
-		hide();
 		ce->accept();
 	}
 	else
