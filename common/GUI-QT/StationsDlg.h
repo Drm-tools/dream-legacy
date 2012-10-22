@@ -301,6 +301,7 @@ protected:
 	vector<MyListViewItem*>	vecpListItems;
 	QUrlOperator	UrlUpdateSchedule;
 	QFile *schedFile;
+	QString schedFileName;
 	QSocket *httpSocket;
 	bool httpHeader;
 #else
@@ -328,6 +329,7 @@ protected:
 signals:
 	void subscribeRig();
 	void unsubscribeRig();
+	void loadSchedule();
 public slots:
 	void OnSigStr(double);
 	void OnTimerList();
@@ -353,5 +355,6 @@ public slots:
 	void on_ComboBoxFilterTarget_activated(const QString&);
 	void on_ComboBoxFilterCountry_activated(const QString&);
 	void on_ComboBoxFilterLanguage_activated(const QString&);
+	void on_loadSchedule();
 };
 #endif

@@ -51,6 +51,7 @@
 # include <QNetworkReply>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
+#include <qapplication.h> 
 
 /* Implementation *************************************************************/
 #if QT_VERSION < 0x040000
@@ -93,7 +94,6 @@ void CDRMSchedule::UpdateStringListForFilter(const CStationsItem& StationsItem)
     result = ListCountries.grep(strCountry);
     if (result.isEmpty())
         ListCountries.append(strCountry);
-
 
     result = ListLanguages.grep(strLanguage);
     if (result.isEmpty())
@@ -263,6 +263,12 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
     const int	iMaxLenRow = 1024;
     char		cRow[iMaxLenRow];
     CStationData data;
+
+#if QT_VERSION < 0x040000
+    QApplication::setOverrideCursor( Qt::waitCursor );
+#else
+    QApplication::setOverrideCursor( Qt::BusyCursor );
+#endif
 
     StationsTable.clear();
 
@@ -488,7 +494,10 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
         /* Add new item in table */
         StationsTable.push_back(StationsItem);
 
+        UpdateStringListForFilter(StationsItem);
+
     } while(!feof(pFile));
+    QApplication::restoreOverrideCursor();
 }
 
 CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
@@ -534,20 +543,21 @@ bool CDRMSchedule::CheckFilter(const int iPos)
 
 _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 {
+    const CStationsItem& item = StationsTable[iPos];
     /* Calculate time in UTC */
     struct tm* gmtCur = gmtime(&ltime);
     const time_t lCurTime = mktime(gmtCur);
 
     /* Get stop time */
     struct tm* gmtStop = gmtime(&ltime);
-    gmtStop->tm_hour = StationsTable[iPos].iStopHour;
-    gmtStop->tm_min = StationsTable[iPos].iStopMinute;
+    gmtStop->tm_hour = item.iStopHour;
+    gmtStop->tm_min = item.iStopMinute;
     const time_t lStopTime = mktime(gmtStop);
 
     /* Get start time */
     struct tm* gmtStart = gmtime(&ltime);
-    gmtStart->tm_hour = StationsTable[iPos].iStartHour;
-    gmtStart->tm_min = StationsTable[iPos].iStartMinute;
+    gmtStart->tm_hour = item.iStartHour;
+    gmtStart->tm_min = item.iStartMinute;
     const time_t lStartTime = mktime(gmtStart);
 
     /* Check, if stop time is on next day */
@@ -573,12 +583,12 @@ _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
        tm_wday: day of week (0 - 6; Sunday = 0). "strDaysFlags" are coded with
        pseudo binary representation. A one signalls that day is active. The most
        significant 1 is the sunday, then followed the monday and so on. */
-    if ((StationsTable[iPos].strDaysFlags[gmtCur->tm_wday] ==
-            CHR_ACTIVE_DAY_MARKER) ||
+    QString strDaysFlags = item.strDaysFlags;
+    if ((strDaysFlags[gmtCur->tm_wday] == CHR_ACTIVE_DAY_MARKER) ||
             /* Check also for special case: days are 0000000. This is reserved for
                DRM test transmissions or irregular transmissions. We define here
                that these stations are transmitting every day */
-            (StationsTable[iPos].strDaysFlags == FLAG_STR_IRREGULAR_TRANSM))
+            (strDaysFlags == FLAG_STR_IRREGULAR_TRANSM))
     {
         /* Check time interval */
         if (lStopTime > lStartTime)
@@ -698,6 +708,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     /* Init UTC time shown with a label control */
     OnTimerUTCLabel();
+
+    connect(this, SIGNAL(loadSchedule()), this, SLOT(on_loadSchedule()));
 
 #if QT_VERSION >= 0x040000
 
@@ -1116,7 +1128,6 @@ void StationsDlg::httpRead()
         if(strstr(buf,"200")==NULL) {
             QMessageBox::information(this, "Dream", buf, QMessageBox::Ok);
             httpSocket->close();
-            // TODO don't overwrite file
             return;
         }
         do {
@@ -1124,6 +1135,11 @@ void StationsDlg::httpRead()
             //qDebug("header %s", buf);
         } while(strcmp(buf, "\r\n")!=0);
         httpHeader=false;
+        schedFile = new QFile(schedFileName);
+        if(!schedFile->open(IO_WriteOnly)) {
+            QMessageBox::information(this, "Dream", "can't open schedule file for writing", QMessageBox::Ok);
+            return;
+        }
     }
     while(httpSocket->bytesAvailable()>0) {
         int n = httpSocket->readBlock(buf, sizeof(buf));
@@ -1150,7 +1166,7 @@ void StationsDlg::on_actionGetUpdate_triggered()
         qurl = new QUrl(QString(url.c_str()));
         Settings.Put("Stations Dialog", "DRM URL", url);
 #if QT_VERSION < 0x040000
-        schedFile = new QFile(DRMSCHEDULE_INI_FILE_NAME);
+        schedFileName = DRMSCHEDULE_INI_FILE_NAME;
 #endif
     }
     break;
@@ -1182,7 +1198,7 @@ void StationsDlg::on_actionGetUpdate_triggered()
         }
         qurl = new QUrl(QString("http://eibispace.de/dx/sked-%1%2.csv").arg(w).arg(y.right(2)));
 #if QT_VERSION < 0x040000
-        schedFile = new QFile(AMSCHEDULE_CSV_FILE_NAME);
+        schedFileName = AMSCHEDULE_CSV_FILE_NAME;
 #endif
     }
     }
@@ -1201,20 +1217,16 @@ void StationsDlg::on_actionGetUpdate_triggered()
         }
         else
         {
-            if(schedFile->open(IO_WriteOnly)) {
-                httpSocket = new QSocket(this);
-                connect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
-                connect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
-                connect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
-                connect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead()));
-                int port = qurl->port();
-                if(port == -1)
-                    port = 80;
-                httpSocket->connectToHost(qurl->host().utf8().data(), port);
-            }
-            else {
-                QMessageBox::information(this, "Dream", "can't open schedule file for writing", QMessageBox::Ok);
-            }
+	    QApplication::setOverrideCursor( Qt::waitCursor );
+            httpSocket = new QSocket(this);
+            connect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
+            connect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
+            connect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
+            connect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead()));
+            int port = qurl->port();
+            if(port == -1)
+                port = 80;
+            httpSocket->connectToHost(qurl->host().utf8().data(), port);
         }
 #else
         manager->get(QNetworkRequest(*qurl));
@@ -1319,11 +1331,9 @@ void StationsDlg::hideEvent(QHideEvent*)
     }
 }
 
-void StationsDlg::showEvent(QShowEvent*)
+void StationsDlg::on_loadSchedule()
 {
-    /* Load the schedule if necessary */
-    if (DRMSchedule.GetStationNumber() == 0)
-        LoadSchedule(DRMSchedule.GetSchedMode());
+    LoadSchedule(DRMSchedule.GetSchedMode());
 
     /* If number of stations is zero, we assume that the ini file is missing */
     if (DRMSchedule.GetStationNumber() == 0)
@@ -1332,38 +1342,22 @@ void StationsDlg::showEvent(QShowEvent*)
         {
             QMessageBox::information(this, "Dream", tr("The file "
                                      DRMSCHEDULE_INI_FILE_NAME
-                                     " could not be found or contains no data.\nNo "
-                                     "stations can be displayed.\nTry to download this file by "
-                                     "using the 'Update' menu."), QMessageBox::Ok);
+                                     " could not be found or contains no data.\n"
+                                     "No stations can be displayed.\n"
+                                     "Try to download this file by using the 'Update' menu."),
+                                     QMessageBox::Ok);
         }
         else
         {
             QMessageBox::information(this, "Dream", tr("The file "
-                                     AMSCHEDULE_INI_FILE_NAME
-                                     " could not be found or contains no data.\nNo "
-                                     "stations can be displayed."), QMessageBox::Ok);
+                                     AMSCHEDULE_CSV_FILE_NAME
+                                     " could not be found or contains no data.\n"
+                                     "No stations can be displayed.\n"
+                                     "Try to download this file by using the 'Update' menu."),
+                                     QMessageBox::Ok);
         }
     }
 
-    /* Update window */
-    OnTimerUTCLabel();
-    OnTimerList();
-
-    /* Activate real-time timer when window is shown */
-    TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
-    TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
-
-    /* S-meter settings */
-    bool ensmeter = Settings.Get("Hamlib", "ensmeter", false);
-    if(ensmeter)
-        EnableSMeter();
-    else
-        DisableSMeter();
-#if QT_VERSION < 0x040000
-    if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, ensmeter);
-#else
-    actionEnable_S_Meter->setChecked(ensmeter);
-#endif
     /* add last update information on menu item */
     AddUpdateDateTime();
 
@@ -1401,6 +1395,34 @@ void StationsDlg::showEvent(QShowEvent*)
 #endif
         }
     }
+#endif
+    OnTimerList();
+
+    /* Activate real-time timer when window is shown */
+    TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
+}
+
+void StationsDlg::showEvent(QShowEvent*)
+{
+    /* Load the schedule if necessary */
+    if (DRMSchedule.GetStationNumber() == 0)
+        QTimer::singleShot(1, this, SLOT(on_loadSchedule()));
+
+    /* Update window */
+    OnTimerUTCLabel();
+    TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
+
+    /* S-meter settings */
+    bool ensmeter = Settings.Get("Hamlib", "ensmeter", false);
+    if(ensmeter)
+        EnableSMeter();
+    else
+        DisableSMeter();
+
+#if QT_VERSION < 0x040000
+    if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, ensmeter);
+#else
+    actionEnable_S_Meter->setChecked(ensmeter);
 #endif
 }
 
