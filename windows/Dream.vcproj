@@ -168,7 +168,7 @@
 				AdditionalDependencies="qt-mt3.lib qtmain.lib opengl32.lib glu32.lib qwt.lib zdll.lib fftw.lib setupapi.lib winmm.lib wsock32.lib faad_drm.lib libhamlib-2.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winspool.lib"
 				OutputFile="Debug\Dream.exe"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(QTDIR)\lib,libs"
+				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;..\libs\qwt;..\libs"
 				IgnoreDefaultLibraryNames="libcmt.lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=""
@@ -387,6 +387,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\GUI-QT\Logging.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\common\util\LogPrint.cpp"
 				>
 			</File>
@@ -588,6 +592,10 @@
 			</File>
 			<File
 				RelativePath="..\common\tables\TableFAC.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\common\tables\TableStations.cpp"
 				>
 			</File>
 			<File
@@ -1036,6 +1044,32 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\GUI-QT\Logging.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing ..\common\GUI-QT\Logging.h..."
+						CommandLine="$(QTDIR)\bin\moc.exe ..\common\GUI-QT\Logging.h -o moc\moc_Logging.cpp&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+						Outputs="moc\moc_Logging.cpp"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing ..\common\GUI-QT\Logging.h..."
+						CommandLine="$(QTDIR)\bin\moc.exe ..\common\GUI-QT\Logging.h -o moc\moc_Logging.cpp&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+						Outputs="moc\moc_Logging.cpp"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\common\util\LogPrint.h"
 				>
 			</File>
@@ -1240,32 +1274,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\MDI\PacketSourceFile.h"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Moc&apos;ing ..\common\MDI\PacketSourceFile.h..."
-						CommandLine="$(QTDIR)\bin\moc.exe ..\common\MDI\PacketSourceFile.h -o moc\moc_PacketSourceFile.cpp&#x0D;&#x0A;"
-						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
-						Outputs="moc\moc_PacketSourceFile.cpp"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Moc&apos;ing ..\common\MDI\PacketSourceFile.h..."
-						CommandLine="$(QTDIR)\bin\moc.exe ..\common\MDI\PacketSourceFile.h -o moc\moc_PacketSourceFile.cpp&#x0D;&#x0A;"
-						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
-						Outputs="moc\moc_PacketSourceFile.cpp"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\common\Parameter.h"
 				>
 			</File>
@@ -1460,6 +1468,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\tables\TableStations.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\MDI\TagItemDecoder.h"
 				>
 			</File>
@@ -1615,6 +1627,10 @@
 				>
 			</File>
 			<File
+				RelativePath="moc\moc_Logging.cpp"
+				>
+			</File>
+			<File
 				RelativePath="moc\moc_MultColorLED.cpp"
 				>
 			</File>
@@ -1639,11 +1655,7 @@
 				>
 			</File>
 			<File
-				RelativePath="moc\moc_PacketSourceFile.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\moc\moc_Rig.cpp"
+				RelativePath="moc\moc_Rig.cpp"
 				>
 			</File>
 			<File
