@@ -301,7 +301,6 @@ protected:
 	vector<MyListViewItem*>	vecpListItems;
 	QUrlOperator	UrlUpdateSchedule;
 	QFile *schedFile;
-	QUrl *qurl;
 	QSocket *httpSocket;
 	bool httpHeader;
 #else
@@ -315,6 +314,7 @@ protected:
 	QActionGroup* showGroup;
 	QNetworkAccessManager *manager;
 #endif
+	QUrl *qurl;
 	QTimer			TimerList;
 	QTimer			TimerUTCLabel;
 	_BOOLEAN		bReInitOnFrequencyChange;

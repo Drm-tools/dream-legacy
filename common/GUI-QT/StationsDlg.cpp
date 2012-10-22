@@ -72,9 +72,9 @@ QString MyListViewItem::key(int column, bool ascending) const
 #endif
 
 CDRMSchedule::CDRMSchedule():
-ListTargets(), ListCountries(), ListLanguages(),
-StationsTable(),eSchedMode(SM_DRM),iSecondsPreview(0),
-countryFilter(""), targetFilter(""), languageFilter("")
+    ListTargets(), ListCountries(), ListLanguages(),
+    StationsTable(),eSchedMode(SM_DRM),iSecondsPreview(0),
+    countryFilter(""), targetFilter(""), languageFilter("")
 {
 }
 
@@ -128,26 +128,26 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
     {
     case SM_DRM:
         pFile = fopen(DRMSCHEDULE_INI_FILE_NAME, "r");
-	if(pFile) {
-	    ReadINIFile(pFile);
-	    fclose(pFile);
- 	}
+        if(pFile) {
+            ReadINIFile(pFile);
+            fclose(pFile);
+        }
         break;
 
     case SM_ANALOG:
         pFile = fopen(AMSCHEDULE_INI_FILE_NAME, "r");
-	if(pFile) {
-	    ReadINIFile(pFile);
-	    fclose(pFile);
- 	}
-	else
-	{
-        pFile = fopen(AMSCHEDULE_CSV_FILE_NAME, "r");
-	if(pFile) {
-	    ReadCSVFile(pFile);
-	    fclose(pFile);
- 	}
-	}
+        if(pFile) {
+            ReadINIFile(pFile);
+            fclose(pFile);
+        }
+        else
+        {
+            pFile = fopen(AMSCHEDULE_CSV_FILE_NAME, "r");
+            if(pFile) {
+                ReadCSVFile(pFile);
+                fclose(pFile);
+            }
+        }
         break;
     }
 }
@@ -260,234 +260,235 @@ void CDRMSchedule::ReadINIFile(FILE* pFile)
 
 void CDRMSchedule::ReadCSVFile(FILE* pFile)
 {
-	const int	iMaxLenRow = 1024;
-	char		cRow[iMaxLenRow];
-        CStationData data;
+    const int	iMaxLenRow = 1024;
+    char		cRow[iMaxLenRow];
+    CStationData data;
 
-	StationsTable.clear();
+    StationsTable.clear();
 
-	do {
-		CStationsItem StationsItem;
+    do {
+        CStationsItem StationsItem;
 
-		fgets(cRow, iMaxLenRow, pFile);
-		QStringList fields;
-		stringstream ss(cRow);
-		do {
-			string s;
-			getline(ss, s, ';');
+        fgets(cRow, iMaxLenRow, pFile);
+        QStringList fields;
+        stringstream ss(cRow);
+        do {
+            string s;
+            getline(ss, s, ';');
 #if QT_VERSION < 0x030000
-			fields.append(s.c_str());
+            fields.append(s.c_str());
 #else
-			fields.push_back(s.c_str());
+            fields.push_back(s.c_str());
 #endif
-		} while(!ss.eof());
+        } while(!ss.eof());
 
-		StationsItem.iFreq = fields[0].toInt();
+        StationsItem.iFreq = fields[0].toInt();
 
-		if(fields[1] == "")
-		{
-			StationsItem.SetStartTime(0);
-			StationsItem.SetStopTime(2400);
-		}
-		else
-		{
+        if(fields[1] == "")
+        {
+            StationsItem.SetStartTime(0);
+            StationsItem.SetStopTime(2400);
+        }
+        else
+        {
 #if QT_VERSION < 0x040000
-			QStringList times = QStringList::split("-", fields[1]);
+            QStringList times = QStringList::split("-", fields[1]);
 #else
-			QStringList times = fields[1].split("-");
+            QStringList times = fields[1].split("-");
 #endif
-			StationsItem.SetStartTime(times[0].toInt());
-			StationsItem.SetStopTime(times[1].toInt());
-		}
+            StationsItem.SetStartTime(times[0].toInt());
+            StationsItem.SetStopTime(times[1].toInt());
+        }
 
-		if(fields[2].length()>0)
-		{
+        if(fields[2].length()>0)
+        {
 #if QT_VERSION < 0x040000
-			stringstream ss(fields[2].utf8().data());
+            stringstream ss(fields[2].utf8().data());
 #else
-			stringstream ss(fields[2].toStdString());
+            stringstream ss(fields[2].toStdString());
 #endif
-			char c;
-			enum Days { Sunday=0, Monday=1, Tuesday=2, Wednesday=3,
-						Thursday=4, Friday=5, Saturday=6 };
-			Days first=Sunday, last=Sunday;
-			enum { no, in, done } range_state = no;
-			// Days[SMTWTFS]=1111111
-			QString strDays = "0000000";
-			while(!ss.eof())
-			{
-				ss >> c;
-				switch(c)
-				{
-					case '-':
-						range_state = in;
-						break;
-					case 'M':
-						ss >> c;
-						last = Monday;
-						break;
-					case 'T':
-						ss >> c;
-						last = (c=='u')?Tuesday:Thursday;
-						break;
-					case 'W':
-						ss >> c;
-						last = Wednesday;
-						break;
-					case 'F':
-						ss >> c;
-						last = Friday;
-						break;
-					case 'S':
-						ss >> c;
-						last = (c=='u')?Sunday:Saturday;
-						break;
-				}
-				switch(range_state)
-				{
-					case no:
-						strDays[last] = '1';
-						break;
-					case in:
-						first = last;
-						range_state = done;
-						break;
-					case done:
-						if(first<last)
-						{
-							for(int d=first; d<=last; d++)
-								strDays[d] = '1';
-						}
-						range_state = no;
-						break;
-				}
-			}
-			StationsItem.SetDaysFlagString(strDays);
-		}
-		else
-			StationsItem.SetDaysFlagString("1111111");
+            char c;
+            enum Days { Sunday=0, Monday=1, Tuesday=2, Wednesday=3,
+                        Thursday=4, Friday=5, Saturday=6
+                      };
+            Days first=Sunday, last=Sunday;
+            enum { no, in, done } range_state = no;
+            // Days[SMTWTFS]=1111111
+            QString strDays = "0000000";
+            while(!ss.eof())
+            {
+                ss >> c;
+                switch(c)
+                {
+                case '-':
+                    range_state = in;
+                    break;
+                case 'M':
+                    ss >> c;
+                    last = Monday;
+                    break;
+                case 'T':
+                    ss >> c;
+                    last = (c=='u')?Tuesday:Thursday;
+                    break;
+                case 'W':
+                    ss >> c;
+                    last = Wednesday;
+                    break;
+                case 'F':
+                    ss >> c;
+                    last = Friday;
+                    break;
+                case 'S':
+                    ss >> c;
+                    last = (c=='u')?Sunday:Saturday;
+                    break;
+                }
+                switch(range_state)
+                {
+                case no:
+                    strDays[last] = '1';
+                    break;
+                case in:
+                    first = last;
+                    range_state = done;
+                    break;
+                case done:
+                    if(first<last)
+                    {
+                        for(int d=first; d<=last; d++)
+                            strDays[d] = '1';
+                    }
+                    range_state = no;
+                    break;
+                }
+            }
+            StationsItem.SetDaysFlagString(strDays);
+        }
+        else
+            StationsItem.SetDaysFlagString("1111111");
 
-		//StationsItem.rPower = 0.0;
+        //StationsItem.rPower = 0.0;
 //0   ;1        ;2    ;3  ;4               ;5;6;7;8;9;10
 //1170;1600-1700;Mo-Fr;USA;Voice of America;E; ; ;0; ;
-		string homecountry;
+        string homecountry;
 #if QT_VERSION < 0x030000
-		int fieldcount = fields.count();
+        int fieldcount = fields.count();
 #else
-		int fieldcount = fields.size();
+        int fieldcount = fields.size();
 #endif
-		if(fieldcount>3)
-		{
+        if(fieldcount>3)
+        {
 #if QT_VERSION < 0x040000
-			homecountry = fields[3].utf8().data();
+            homecountry = fields[3].utf8().data();
 #else
-			homecountry = fields[3].toStdString();
+            homecountry = fields[3].toStdString();
 #endif
-			string c = data.itu_r_country(homecountry);
-			if(c == "")
-				c = homecountry;
-			StationsItem.strCountry = QString(c.c_str());
-		}
+            string c = data.itu_r_country(homecountry);
+            if(c == "")
+                c = homecountry;
+            StationsItem.strCountry = QString(c.c_str());
+        }
 
-		if(fieldcount>4)
-			StationsItem.strName = fields[4];
+        if(fieldcount>4)
+            StationsItem.strName = fields[4];
 
-		if(fieldcount>5)
-		{
+        if(fieldcount>5)
+        {
 #if QT_VERSION < 0x040000
-			string l = data.eibi_language(fields[5].utf8().data());
+            string l = data.eibi_language(fields[5].utf8().data());
 #else
-			string l = data.eibi_language(fields[5].toStdString());
+            string l = data.eibi_language(fields[5].toStdString());
 #endif
-			StationsItem.strLanguage = QString(l.c_str());
-		}
+            StationsItem.strLanguage = QString(l.c_str());
+        }
 
-		if(fieldcount>6)
-		{
+        if(fieldcount>6)
+        {
 #if QT_VERSION < 0x040000
-			string s = fields[6].utf8().data();
+            string s = fields[6].utf8().data();
 #else
-			string s = fields[6].toStdString();
+            string s = fields[6].toStdString();
 #endif
-			string t = data.eibi_target(s);
-			if(t == "")
-			{
-				string c = data.itu_r_country(s);
-				if(c == "")
-					StationsItem.strTarget = QString(s.c_str());
-				else
-					StationsItem.strTarget = QString(c.c_str());
-			}
-			else
-			{
-				StationsItem.strTarget = QString(t.c_str());
-			}
-		}
-		string country;
-		string stn;
-		if(fieldcount>7)
-		{
-			StationsItem.strSite = fields[7];
+            string t = data.eibi_target(s);
+            if(t == "")
+            {
+                string c = data.itu_r_country(s);
+                if(c == "")
+                    StationsItem.strTarget = QString(s.c_str());
+                else
+                    StationsItem.strTarget = QString(c.c_str());
+            }
+            else
+            {
+                StationsItem.strTarget = QString(t.c_str());
+            }
+        }
+        string country;
+        string stn;
+        if(fieldcount>7)
+        {
+            StationsItem.strSite = fields[7];
 #if QT_VERSION < 0x040000
-			string s  = fields[7].utf8().data();
+            string s  = fields[7].utf8().data();
 #else
-			string s  = fields[7].toStdString();
+            string s  = fields[7].toStdString();
 #endif
-			if(s=="") // unknown or main Tx site of the home country
-			{
-				country = homecountry;
-			}
-			else
-			{
-				size_t i=0;
-				s += '-';
-				if(s[0]=='/') // transmitted from another country
-					i++;
-				string a,b;
-				while(s[i]!='-')
-					a += s[i++];
-				i++;
-				if(i<s.length())
-					while(s[i]!='-')
-						b += s[i++];
-				if(s[0]=='/')
-				{
-					country = a;
-					stn = b;
-				}
-				else
-				{
-					if(a.length()==3)
-					{
-						country = a;
-						stn = b;
-					}
-					else
-					{
-						country = homecountry;
-						stn = a;
-					}
-				}
-			}
-		}
-		else
-		{
-			country = homecountry;
-		}
-		QString site = QString(data.eibi_station(country, stn).c_str());
-		if(site == "")
-		{
-			//cout << StationsItem.iFreq << " [" << StationsItem.strSite << "] [" << country << "] [" << stn << "]" << endl;
-		}
-		else
-		{
-			StationsItem.strSite = site;
-		}
+            if(s=="") // unknown or main Tx site of the home country
+            {
+                country = homecountry;
+            }
+            else
+            {
+                size_t i=0;
+                s += '-';
+                if(s[0]=='/') // transmitted from another country
+                    i++;
+                string a,b;
+                while(s[i]!='-')
+                    a += s[i++];
+                i++;
+                if(i<s.length())
+                    while(s[i]!='-')
+                        b += s[i++];
+                if(s[0]=='/')
+                {
+                    country = a;
+                    stn = b;
+                }
+                else
+                {
+                    if(a.length()==3)
+                    {
+                        country = a;
+                        stn = b;
+                    }
+                    else
+                    {
+                        country = homecountry;
+                        stn = a;
+                    }
+                }
+            }
+        }
+        else
+        {
+            country = homecountry;
+        }
+        QString site = QString(data.eibi_station(country, stn).c_str());
+        if(site == "")
+        {
+            //cout << StationsItem.iFreq << " [" << StationsItem.strSite << "] [" << country << "] [" << stn << "]" << endl;
+        }
+        else
+        {
+            StationsItem.strSite = site;
+        }
 
-		/* Add new item in table */
-		StationsTable.push_back(StationsItem);
+        /* Add new item in table */
+        StationsTable.push_back(StationsItem);
 
-	} while(!feof(pFile));
+    } while(!feof(pFile));
 }
 
 CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
@@ -1029,17 +1030,14 @@ void StationsDlg::AddUpdateDateTime()
     */
     /* make sure we check the correct file (DRM or AM schedule) */
     QString strFile;
-    bool b;
     switch (DRMSchedule.GetSchedMode())
     {
     case CDRMSchedule::SM_DRM:
         strFile = DRMSCHEDULE_INI_FILE_NAME;
-        b = true;
         break;
 
     case CDRMSchedule::SM_ANALOG:
         strFile = AMSCHEDULE_INI_FILE_NAME;
-        b = false;
         break;
     }
 
@@ -1056,10 +1054,8 @@ void StationsDlg::AddUpdateDateTime()
     }
 
 #if QT_VERSION < 0x040000
-    pUpdateMenu->setItemEnabled(0, b);
     pUpdateMenu->changeItem(tr("&Get Update") + s + "...", 0);
 #else
-    actionGetUpdate->setEnabled(b);
     actionGetUpdate->setText(tr("&Get Update") + s + "...");
 #endif
 }
@@ -1088,7 +1084,8 @@ void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 #if QT_VERSION < 0x040000
 void StationsDlg::httpConnected()
 {
-    QCString s = QString("GET %1 HTTP/1.0\n\n").arg(qurl->encodedPathAndQuery()).utf8();
+    QCString s = QString("GET %1 HTTP/1.1\r\nHost: %2\r\n\r\n")
+                 .arg(qurl->encodedPathAndQuery()).arg(qurl->host()).utf8();
     httpSocket->writeBlock(s.data(), s.length());
     httpHeader=true;
 }
@@ -1115,6 +1112,13 @@ void StationsDlg::httpRead()
 {
     char buf[4000];
     if(httpHeader) {
+        httpSocket->readLine(buf, sizeof(buf));
+        if(strstr(buf,"200")==NULL) {
+            QMessageBox::information(this, "Dream", buf, QMessageBox::Ok);
+            httpSocket->close();
+            // TODO don't overwrite file
+            return;
+        }
         do {
             httpSocket->readLine(buf, sizeof(buf));
             //qDebug("header %s", buf);
@@ -1138,11 +1142,24 @@ void StationsDlg::httpError(int n)
 
 void StationsDlg::on_actionGetUpdate_triggered()
 {
-    if(false) // TODO AM
+    switch (DRMSchedule.GetSchedMode())
+    {
+    case CDRMSchedule::SM_DRM:
+    {
+        string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
+        qurl = new QUrl(QString(url.c_str()));
+        Settings.Put("Stations Dialog", "DRM URL", url);
+#if QT_VERSION < 0x040000
+        schedFile = new QFile(DRMSCHEDULE_INI_FILE_NAME);
+#endif
+    }
+    break;
+
+    case CDRMSchedule::SM_ANALOG:
     {
         QDate d = QDate::currentDate();
 #if QT_VERSION < 0x030000
-	int wk = d.dayOfYear() % 7;
+        int wk = d.dayOfYear() % 7;
 #else
         int wk = d.weekNumber();
 #endif
@@ -1150,44 +1167,42 @@ void StationsDlg::on_actionGetUpdate_triggered()
         QString y,w;
         if(wk <= 13)
         {
-                w = "b";
-                y = QString::number(yr-1);
+            w = "b";
+            y = QString::number(yr-1);
         }
         else if(wk <= 43)
         {
-                w = "a";
-                y = QString::number(yr);
+            w = "a";
+            y = QString::number(yr);
         }
         else
         {
-                w = "b";
-                y = QString::number(yr);
+            w = "b";
+            y = QString::number(yr);
         }
-        QString path = QString("http://eibispace.de/dx/sked-%1%2.csv").arg(w).arg(y.right(2));
+        qurl = new QUrl(QString("http://eibispace.de/dx/sked-%1%2.csv").arg(w).arg(y.right(2)));
+#if QT_VERSION < 0x040000
+        schedFile = new QFile(AMSCHEDULE_CSV_FILE_NAME);
+#endif
     }
-    string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
-    Settings.Put("Stations Dialog", "DRM URL", url);
+    }
     if (QMessageBox::information(this, tr("Dream Schedule Update"),
-                                 tr("Dream tries to download the newest DRM schedule\nfrom "
-                                    "baseportal.com.\nYour computer "
-                                    "must be connected to the internet.\n\nThe current file "
-                                    "DRMSchedule.ini will be overwritten.\nDo you want to "
-                                    "continue?"),
+                                 tr("Dream tries to download the newest schedule\n"
+                                    "Your computer must be connected to the internet.\n\n"
+                                    "The current file will be overwritten.\n"
+                                    "Do you want to continue?"),
                                  QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes )
     {
         /* Try to download the current schedule. Copy the file to the
            current working directory (which is "QDir().absFilePath(NULL)") */
 #if QT_VERSION < 0x040000
-//# if QT_VERSION < 0x030000
-        if(url.find("ftp")!=string::npos) {
-            UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
+        if(qurl->protocol() == QString("ftp")) {
+            UrlUpdateSchedule.copy(qurl->toString(), QDir().absFilePath(NULL));
         }
         else
         {
-            schedFile = new QFile(DRMSCHEDULE_INI_FILE_NAME);
             if(schedFile->open(IO_WriteOnly)) {
                 httpSocket = new QSocket(this);
-                qurl = new QUrl(url.c_str());
                 connect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
                 connect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
                 connect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
@@ -1201,11 +1216,8 @@ void StationsDlg::on_actionGetUpdate_triggered()
                 QMessageBox::information(this, "Dream", "can't open schedule file for writing", QMessageBox::Ok);
             }
         }
-//# else
-//        UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
-//# endif
 #else
-        manager->get(QNetworkRequest(QUrl(url.c_str())));
+        manager->get(QNetworkRequest(*qurl));
 #endif
     }
 }
