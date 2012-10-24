@@ -51,8 +51,8 @@
 # include <QNetworkReply>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
-#include <qapplication.h> 
-#include <cmath> 
+#include <qapplication.h>
+#include <cmath>
 
 /* Implementation *************************************************************/
 #if QT_VERSION < 0x040000
@@ -1117,7 +1117,7 @@ void StationsDlg::httpDisconnected()
     /* Notify the user that update was successful */
     QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
     /* Read updated ini-file */
-    LoadSchedule(CDRMSchedule::SM_DRM);
+    LoadSchedule(DRMSchedule.GetSchedMode());
 }
 #endif
 
@@ -1178,29 +1178,60 @@ void StationsDlg::on_actionGetUpdate_triggered()
     case CDRMSchedule::SM_ANALOG:
     {
         QDate d = QDate::currentDate();
-#if QT_VERSION < 0x030000
-        int wk = d.dayOfYear() % 7;
-#else
-        int wk = d.weekNumber();
-#endif
-        int yr = d.year();
-        QString y,w;
-        if(wk <= 13)
-        {
-            w = "b";
-            y = QString::number(yr-1);
+        int dom = d.day();
+        int month = d.month();
+        int year;
+        char season;
+
+// transitions last sunday in March and October
+        switch(month) {
+        case 1:
+        case 2:
+            year = d.year()-1;
+            season = 'b';
+            break;
+        case 3: {
+            QDate s = d;
+            s.setYMD(d.year(), month+1, 1);
+            s = s.addDays(0-s.dayOfWeek());
+            if(d<s) {
+                year = d.year()-1;
+                season = 'b';
+            } else {
+                year = d.year();
+                season = 'a';
+            }
         }
-        else if(wk <= 43)
-        {
-            w = "a";
-            y = QString::number(yr);
+        break;
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+            year = d.year();
+            season = 'a';
+            break;
+        case 10: {
+            QDate s = d;
+            s.setYMD(d.year(), month+1, 1);
+	    int n = s.dayOfWeek();
+            s = s.addDays(0-n);
+            if(d<s) {
+                year = d.year();
+                season = 'a';
+            } else {
+                year = d.year();
+                season = 'b';
+            }
         }
-        else
-        {
-            w = "b";
-            y = QString::number(yr);
+        break;
+        case 11:
+        case 12:
+            year = d.year();
+            season = 'b';
         }
-        qurl = new QUrl(QString("http://eibispace.de/dx/sked-%1%2.csv").arg(w).arg(y.right(2)));
+        qurl = new QUrl(QString("http://eibispace.de/dx/sked-%1%2.csv").arg(season).arg(year-2000,2));
 #if QT_VERSION < 0x040000
         schedFileName = AMSCHEDULE_CSV_FILE_NAME;
 #endif
@@ -1221,7 +1252,7 @@ void StationsDlg::on_actionGetUpdate_triggered()
         }
         else
         {
-	    QApplication::setOverrideCursor( Qt::waitCursor );
+            QApplication::setOverrideCursor( Qt::waitCursor );
             httpSocket = new QSocket(this);
             connect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
             connect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
@@ -1266,7 +1297,7 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
                 /* Notify the user that update was successful */
                 QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
                 /* Read updated ini-file */
-                LoadSchedule(CDRMSchedule::SM_DRM);
+		LoadSchedule(DRMSchedule.GetSchedMode());
             }
         }
     }
@@ -1283,7 +1314,7 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
             /* Notify the user that update was successful */
             QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
             /* Read updated ini-file */
-            LoadSchedule(CDRMSchedule::SM_DRM);
+	    LoadSchedule(DRMSchedule.GetSchedMode());
         } else {
             QMessageBox::information(this, "Dream", tr("Can't save new schedule"), QMessageBox::Ok);
         }
