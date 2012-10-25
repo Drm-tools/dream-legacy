@@ -1050,7 +1050,7 @@ void StationsDlg::AddUpdateDateTime()
         break;
 
     case CDRMSchedule::SM_ANALOG:
-        strFile = AMSCHEDULE_INI_FILE_NAME;
+        strFile = AMSCHEDULE_CSV_FILE_NAME;
         break;
     }
 
@@ -1178,7 +1178,6 @@ void StationsDlg::on_actionGetUpdate_triggered()
     case CDRMSchedule::SM_ANALOG:
     {
         QDate d = QDate::currentDate();
-        int dom = d.day();
         int month = d.month();
         int year;
         char season;
@@ -1533,6 +1532,11 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 
     ClearStationsView();
     /* Empty the string lists for combos filter */
+
+    targetFilter="";
+    countryFilter="";
+    languageFilter="";
+
     DRMSchedule.ListTargets = QStringList("");
     DRMSchedule.ListCountries = QStringList("");
     DRMSchedule.ListLanguages = QStringList("");
