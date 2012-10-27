@@ -16,7 +16,7 @@ INCLUDEPATH += libs
 macx:QMAKE_LFLAGS += -F$$PWD/libs
 contains(QT_VERSION, ^4\\..*) {
     message("Qt 4")
-    QT += network xml
+    QT += network xml qt3support
     VPATH += common/GUI-QT
     !console {
         HEADERS += common/GUI-QT/DRMPlot-qwt6.h common/GUI-QT/EvaluationDlg.h
