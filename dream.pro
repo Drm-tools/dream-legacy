@@ -183,18 +183,21 @@ unix {
 	message("with fftw2")
         LIBS += -lfftw
         exists(/usr/include/rfftw.h):LIBS += -lrfftw
-        exists(/opt/local/include/dfftw.h) {
-            DEFINES += HAVE_DFFTW_H
-            LIBS += -ldfftw
-        }
-        exists(/opt/local/include/drfftw.h) {
-           DEFINES += HAVE_DRFFTW_H
-           LIBS += -ldrfftw
-        }
         DEFINES += HAVE_FFTW_H HAVE_RFFTW_H
       }
       else {
-        error("no usable fftw library found - install fftw dev package")
+        exists(/opt/local/include/dfftw.h) {
+	  message("with fftw2")
+          DEFINES += HAVE_DFFTW_H
+          LIBS += -ldfftw
+          exists(/opt/local/include/drfftw.h) {
+           DEFINES += HAVE_DRFFTW_H
+           LIBS += -ldrfftw
+          }
+        }
+        else {
+          error("no usable fftw library found - install fftw dev package")
+        }
       }
     }
     LIBS += -lz \
