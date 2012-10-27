@@ -234,7 +234,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     action_Programme_Guide_Dialog->setEnabled(false);
 
 #if 0
-// TODO Qt4
     menu_Settings->addMenu( new CSoundCardSelMenu(
 		DRMReceiver.GetSoundInInterface(),
 		DRMReceiver.GetSoundOutInterface(),
@@ -271,6 +270,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     }
 
     //menubar->addMenu(new CDreamHelpMenu(this));
+    connect(actionAbout_Dream, SIGNAL(triggered()), &AboutDlg, SLOT(show()));
+
     connect(this, SIGNAL(plotStyleChanged(int)), pSysEvalDlg, SLOT(UpdatePlotStyle(int)));
     connect(this, SIGNAL(plotStyleChanged(int)), pAnalogDemDlg, SLOT(UpdatePlotStyle(int)));
 

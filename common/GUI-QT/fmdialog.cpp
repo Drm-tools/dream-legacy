@@ -109,7 +109,6 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	connect(actionDisplayColor, SIGNAL(triggered()), this, SLOT(OnMenuSetDisplayColor()));
 
 #if 0
-// TODO Qt4
 	menu_Settings->addMenu(
 		new CSoundCardSelMenu(
 			DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this
@@ -118,6 +117,7 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	//menu_Settings->addMenu(pRemoteMenu->menu());
 	menubar->addMenu(new CDreamHelpMenu(this));
 #endif
+	connect(actionAbout_Dream, SIGNAL(triggered()), &AboutDlg, SLOT(show()));
 #endif
 
 	/* Digi controls */
