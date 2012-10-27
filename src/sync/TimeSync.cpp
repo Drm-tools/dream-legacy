@@ -61,7 +61,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 	/* In case the time domain frequency offset estimation method is activated,
 	   the hilbert filtering of input signal must always be applied */
 #ifndef USE_FRQOFFS_TRACK_GUARDCORR
-	if ((bTimingAcqu == true) || (bRobModAcqu == true))
+	if ((bTimingAcqu == TRUE) || (bRobModAcqu == TRUE))
 #endif
 	{
 		/* ---------------------------------------------------------------------
@@ -89,7 +89,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			FirFiltDec(cvecB, cvecInpTmp, cvecZ, GRDCRR_DEC_FACT));
 
 		/* Get size of new output vector */
-		iDecInpuSize = cvecOutTmp.Size();
+		iDecInpuSize = cvecOutTmp.GetSize();
 
 		/* Copy data from Matlib vector in regular vector for storing in
 		   shift register
@@ -142,13 +142,13 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Integrate the result for controling the frequency offset, normalize
 		   estimate */
-		ReceiverParam.Lock();
+		ReceiverParam.Lock(); 
 		ReceiverParam.rFreqOffsetTrack -= rFreqOffsetEst * rNormConstFOE;
-		ReceiverParam.Unlock();
+		ReceiverParam.Unlock(); 
 #endif
 
 
-		if ((bTimingAcqu == true) || (bRobModAcqu == true))
+		if ((bTimingAcqu == TRUE) || (bRobModAcqu == TRUE))
 		{
 			/* Guard-interval correlation ----------------------------------- */
 			/* Set position pointer back for this block */
@@ -181,9 +181,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 						   not be a multiple of "iStepSizeGuardCorr". Therefore
 						   the "if"-condition */
 						/* First subtract correlation values shifted out */
-						cGuardCorr[j] -=
+						cGuardCorr[j] -= 
 							veccIntermCorrRes[j][iPosInIntermCResBuf[j]];
-						rGuardPow[j] -=
+						rGuardPow[j] -= 
 							vecrIntermPowRes[j][iPosInIntermCResBuf[j]];
 
 						/* Calculate new block and add in memory */
@@ -191,7 +191,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 						{
 							/* Actual correlation */
 							iCurPos = iTimeSyncPos + k;
-							cGuardCorrBlock[j] += HistoryBufCorr[iCurPos] *
+							cGuardCorrBlock[j] += HistoryBufCorr[iCurPos] * 
 								Conj(HistoryBufCorr[iCurPos + iLenUsefPart[j]]);
 
 							/* Energy calculation for ML solution */
@@ -232,13 +232,13 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 						/* ML solution */
 						vecrRMCorrBuffer[j][iRMCorrBufSize - 1] =
-							abs(cGuardCorr[j] + cGuardCorrBlock[j]) -
+							abs(cGuardCorr[j] + cGuardCorrBlock[j]) - 
 							(rGuardPow[j] + rGuardPowBlock[j]) / 2;
 					}
 
 					/* Energy of guard intervall calculation and detection of
 					   peak is only needed if timing aquisition is true */
-					if (bTimingAcqu == true)
+					if (bTimingAcqu == TRUE)
 					{
 						/* Start timing detection not until initialization phase
 						   is finished */
@@ -287,7 +287,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 							/* Search for maximum */
 							iMaxIndex = 0;
-							rMaxValue = (CReal) -numeric_limits<_REAL>::max(); /* Init value */
+							rMaxValue = (CReal) -_MAXREAL; /* Init value */
 							for (k = 0; k < iMaxDetBufSize; k++)
 							{
 								if (pMaxDetBuffer[k] > rMaxValue)
@@ -303,7 +303,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							{
 								/* The optimal start position for the FFT-window
 								   is the middle of the "MaxDetBuffer" */
-								iNewStartIndexField[iNewStIndCount] =
+								iNewStartIndexField[iNewStIndCount] = 
 									iTimeSyncPos * GRDCRR_DEC_FACT -
 									iSymbolBlockSize / 2 -
 									/* Compensate for Hilbert-filter delay. The
@@ -324,7 +324,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 			/* Robustness mode detection ------------------------------------ */
-			if (bRobModAcqu == true)
+			if (bRobModAcqu == TRUE)
 			{
 				/* Start robustness mode detection not until the buffer is
 				   filled */
@@ -372,32 +372,29 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					if ((rMaxValRMCorr / rSecHighPeak) > THRESHOLD_RELI_MEASURE)
 					{
 						/* Reset aquisition flag for robustness mode detection */
-						bRobModAcqu = false;
+						bRobModAcqu = FALSE;
 
 						/* Set wave mode */
-						ReceiverParam.Lock();
-						ERobMode eRobm = GetRModeFromInd(iDetectedRModeInd);
-						if(eRobm != ReceiverParam.Channel.eRobustness)
+						ReceiverParam.Lock(); 
+						if (ReceiverParam.
+							SetWaveMode(GetRModeFromInd(iDetectedRModeInd)) == TRUE)
 						{
-						    ReceiverParam.NextConfig.Channel = ReceiverParam.Channel;
-						    ReceiverParam.NextConfig.Channel.eRobustness = eRobm;
-						    ReceiverParam.RxEvent = ChannelReconfiguration;
 							/* Reset output cyclic-buffer because wave mode has
 							   changed and the data written in the buffer is not
 							   valid anymore */
 							SetBufReset1();
 						}
-						ReceiverParam.Unlock();
+						ReceiverParam.Unlock(); 
 					}
 				}
 			}
 		}
 	}
 
-	if (bTimingAcqu == true)
+	if (bTimingAcqu == TRUE)
 	{
 		/* Use all measured FFT-window start points for determining the "real"
-		   one */
+		   one */	
 		for (i = 0; i < iNewStIndCount; i++)
 		{
 			/* Check if new measurement is in range of predefined bound. This
@@ -416,13 +413,13 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				iAveCorr = 0;
 
 				/* GUI message that timing is ok */
-				ReceiverParam.Lock();
+				ReceiverParam.Lock(); 
 				ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
-				ReceiverParam.Unlock();
+				ReceiverParam.Unlock(); 
 
 				/* Acquisition was successful, reset init flag (just in case it
 				   was not reset by the non-linear correction unit */
-				bInitTimingAcqu = false;
+				bInitTimingAcqu = FALSE;
 			}
 			else
 			{
@@ -440,10 +437,10 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				{
 					/* If this is the first correction after an initialization
 					   was done, reset flag and do not show red light */
-					if (bInitTimingAcqu == true)
+					if (bInitTimingAcqu == TRUE)
 					{
 						/* Reset flag */
-						bInitTimingAcqu = false;
+						bInitTimingAcqu = FALSE;
 
 						/* Right after initialization, the first estimate is
 						   used for correction */
@@ -456,9 +453,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							(CReal) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
 
 						/* GUI message that timing was corrected (red light) */
-						ReceiverParam.Lock();
+						ReceiverParam.Lock(); 
 						ReceiverParam.ReceiveStatus.TSync.SetStatus(CRC_ERROR);
-						ReceiverParam.Unlock();
+						ReceiverParam.Unlock(); 
 					}
 
 					/* Reset counters */
@@ -469,11 +466,11 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				{
 					/* GUI message that timing is yet ok (yellow light). Do not
 					   show any light if init was done right before this */
-					if (bInitTimingAcqu == false)
+					if (bInitTimingAcqu == FALSE)
 					{
-						ReceiverParam.Lock();
+						ReceiverParam.Lock(); 
 						ReceiverParam.ReceiveStatus.TSync.SetStatus(DATA_ERROR);
-						ReceiverParam.Unlock();
+						ReceiverParam.Unlock(); 
 					}
 				}
 			}
@@ -491,11 +488,11 @@ fflush(pFile);
 	}
 	else
 	{
-		ReceiverParam.Lock();
+		ReceiverParam.Lock(); 
 		/* Detect situation when acquisition was deactivated right now */
-		if (bAcqWasActive == true)
+		if (bAcqWasActive == TRUE)
 		{
-			bAcqWasActive = false;
+			bAcqWasActive = FALSE;
 
 			/* Reset also the tracking value since the tracking could not get
 			   right parameters since the timing was not yet correct */
@@ -510,7 +507,7 @@ fflush(pFile);
 		   light */
 		ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
 
-		ReceiverParam.Unlock();
+		ReceiverParam.Unlock(); 
 
 #ifdef _DEBUG_
 /* Save estimated positions of timing (tracking) */
@@ -542,7 +539,7 @@ fflush(pFile);
 
 	/* If synchronized DRM input stream is used, overwrite the detected
 	   timing */
-	if (bSyncInput == true)
+	if (bSyncInput == TRUE)
 	{
 		/* Set fixed timing position */
 		iStartIndex = iSymbolBlockSize;
@@ -552,7 +549,7 @@ fflush(pFile);
 		   module  */
 		for (k = iGuardSize; k < iSymbolBlockSize; k++)
 		{
-			(*pvecOutputData)[k - iGuardSize] =
+			(*pvecOutputData)[k - iGuardSize] = 
 				HistoryBuf[iTotalBufferSize - iInputBlockSize + k];
 		}
 	}
@@ -571,7 +568,7 @@ fflush(pFile);
 	iInputBlockSize = iSymbolBlockSize - iIntDiffToCenter;
 
 	/* In acquisition mode, correct start index */
-	if (bTimingAcqu == true)
+	if (bTimingAcqu == TRUE)
 		rStartIndex += (CReal) iIntDiffToCenter;
 
 
@@ -591,7 +588,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	CReal	rArgTemp;
 	int		iCorrBuffSize;
 
-	ReceiverParam.Lock();
+	ReceiverParam.Lock(); 
 
 	/* Get parameters from info class */
 	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
@@ -602,7 +599,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	iDecSymBS = iSymbolBlockSize / GRDCRR_DEC_FACT;
 
 	/* Calculate maximum symbol block size (This is Rob. Mode A) */
-	iMaxSymbolBlockSize = RMA_FFT_SIZE_N +
+	iMaxSymbolBlockSize = RMA_FFT_SIZE_N + 
 		RMA_FFT_SIZE_N * RMA_ENUM_TG_TU / RMA_DENOM_TG_TU;
 
 	/* We need at least two blocks of data for determining the timing */
@@ -613,12 +610,12 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	iStepSizeGuardCorr = STEP_SIZE_GUARD_CORR;
 
 	/* Size for moving average buffer for guard-interval correlation */
-	iMovAvBufSize =
+	iMovAvBufSize = 
 		(int) ((CReal) iGuardSize / GRDCRR_DEC_FACT / iStepSizeGuardCorr);
 
-	/* Size of buffer, storing the moving-average results for
+	/* Size of buffer, storing the moving-average results for 
 	   maximum detection */
-	iMaxDetBufSize =
+	iMaxDetBufSize = 
 		(int) ((CReal) iDecSymBS / iStepSizeGuardCorr);
 
 	/* Center of maximum detection buffer */
@@ -636,12 +633,12 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	iCenterOfBuf = iSymbolBlockSize;
 
 	/* Init rStartIndex only if acquisition was activated */
-	if (bTimingAcqu == true)
+	if (bTimingAcqu == TRUE)
 		rStartIndex = (CReal) iCenterOfBuf;
 
 	/* Some inits */
 	iAveCorr = 0;
-	bInitTimingAcqu = true; /* Flag to show that init was done */
+	bInitTimingAcqu = TRUE; /* Flag to show that init was done */
 
 	/* Set correction counter so that a non-linear correction is performed right
 	   at the beginning */
@@ -660,7 +657,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Set the selected robustness mode index */
-	iSelectedMode = GetIndFromRMode(ReceiverParam.Channel.eRobustness);
+	iSelectedMode = GetIndFromRMode(ReceiverParam.GetWaveMode());
 
 	/* Init init count for timing sync (one symbol) */
 	iTiSyncInitCnt = iDecSymBS / iStepSizeGuardCorr;
@@ -688,25 +685,25 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 		{
 		case 0:
 			iLenUsefPart[i] = RMA_FFT_SIZE_N / GRDCRR_DEC_FACT;
-			iLenGuardInt[i] = (int) ((CReal) RMA_FFT_SIZE_N *
+			iLenGuardInt[i] = (int) ((CReal) RMA_FFT_SIZE_N * 
 				RMA_ENUM_TG_TU / RMA_DENOM_TG_TU / GRDCRR_DEC_FACT);
 			break;
 
 		case 1:
 			iLenUsefPart[i] = RMB_FFT_SIZE_N / GRDCRR_DEC_FACT;
-			iLenGuardInt[i] = (int) ((CReal) RMB_FFT_SIZE_N *
+			iLenGuardInt[i] = (int) ((CReal) RMB_FFT_SIZE_N * 
 				RMB_ENUM_TG_TU / RMB_DENOM_TG_TU / GRDCRR_DEC_FACT);
 			break;
 
 		case 2:
 			iLenUsefPart[i] = RMC_FFT_SIZE_N / GRDCRR_DEC_FACT;
-			iLenGuardInt[i] = (int) ((CReal) RMC_FFT_SIZE_N *
+			iLenGuardInt[i] = (int) ((CReal) RMC_FFT_SIZE_N * 
 				RMC_ENUM_TG_TU / RMC_DENOM_TG_TU / GRDCRR_DEC_FACT);
 			break;
 
 		case 3:
 			iLenUsefPart[i] = RMD_FFT_SIZE_N / GRDCRR_DEC_FACT;
-			iLenGuardInt[i] = (int) ((CReal) RMD_FFT_SIZE_N *
+			iLenGuardInt[i] = (int) ((CReal) RMD_FFT_SIZE_N * 
 				RMD_ENUM_TG_TU / RMD_DENOM_TG_TU / GRDCRR_DEC_FACT);
 			break;
 		}
@@ -715,11 +712,11 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 		   the total length of the guard-interval divided by the step size.
 		   Since the guard-size must not be a multiple of "iStepSizeGuardCorr",
 		   we need to cut-off the fractional part */
-		iLengthIntermCRes[i] = (int) ((CReal) iLenGuardInt[i] /
+		iLengthIntermCRes[i] = (int) ((CReal) iLenGuardInt[i] / 
 			iStepSizeGuardCorr);
 
 		/* This length is the start point for the "for"-loop */
-		iLengthOverlap[i] = iLenGuardInt[i] -
+		iLengthOverlap[i] = iLenGuardInt[i] - 
 			iStepSizeGuardCorr;
 
 		/* Intermediate correlation results vector (init, zero out) */
@@ -728,6 +725,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 		/* Allocate memory for correlation input buffers */
 		vecrRMCorrBuffer[i].Init(iRMCorrBufSize);
+		vecrRMCorrBuffer[i] = Zeros(iRMCorrBufSize);
 
 		/* Tables for sin and cos function for the desired frequency band */
 		/* First, allocate memory for vector */
@@ -742,7 +740,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 			   Mode B: f_B = 1 / T_s = 1 / 26.66 ms = 37.5 Hz
 			   Mode C: f_C = 1 / T_s = 1 / 20 ms = 50 Hz
 			   Mode D: f_D = 1 / T_s = 1 / 16.66 ms = 60 Hz */
-			iObservedFreqBin =
+			iObservedFreqBin = 
 				(int) ((CReal) iRMCorrBufSize * STEP_SIZE_GUARD_CORR /
 				(iLenUsefPart[i] + iLenGuardInt[i]));
 
@@ -769,7 +767,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = iSymbolBlockSize; /* For the first loop */
 	iOutputBlockSize = iDFTSize;
 
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 }
 
 void CTimeSync::StartAcquisition()
@@ -779,23 +777,23 @@ void CTimeSync::StartAcquisition()
 // moved to / from the "InitInternal()" function
 
 	/* The regular acquisition flags */
-	bTimingAcqu = true;
-	bRobModAcqu = true;
+	bTimingAcqu = TRUE;
+	bRobModAcqu = TRUE;
 
 	/* Set the init flag so that the "rStartIndex" can be initialized with the
 	   center of the buffer and other important settings can be done */
 	SetInitFlag();
-
+	
 	/* This second flag is to determine the moment when the acquisition just
 	   finished. In this case, the tracking value must be reset */
-	bAcqWasActive = true;
+	bAcqWasActive = TRUE;
 
 	iCorrCounter = NUM_SYM_BEFORE_RESET;
 
 	/* Reset the buffers which are storing data for correlation (for robustness
 	   mode detection) */
-	for (int i = 0; i < NUM_ROBUSTNESS_MODES; i++)
-		vecrRMCorrBuffer[i] = Zeros(iRMCorrBufSize);
+	//for (int i = 0; i < NUM_ROBUSTNESS_MODES; i++)
+	//	vecrRMCorrBuffer[i] = Zeros(iRMCorrBufSize);
 
 	/* Reset lambda for averaging the guard-interval correlation results */
 	rLambdaCoAv = (CReal) 1.0;
@@ -825,14 +823,15 @@ void CTimeSync::SetFilterTaps(const CReal rNewOffsetNorm)
 	cvecZ.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
 }
 
-CTimeSync::CTimeSync() : iTimeSyncPos(0), bSyncInput(false), bTimingAcqu(false),
-	bRobModAcqu(false), bAcqWasActive(false), rLambdaCoAv((CReal) 1.0),
+CTimeSync::CTimeSync() : iTimeSyncPos(0), bSyncInput(FALSE), bTimingAcqu(FALSE),
+	bRobModAcqu(FALSE), bAcqWasActive(FALSE), rLambdaCoAv((CReal) 1.0),
 	iLengthIntermCRes(NUM_ROBUSTNESS_MODES),
 	iPosInIntermCResBuf(NUM_ROBUSTNESS_MODES),
 	iLengthOverlap(NUM_ROBUSTNESS_MODES), iLenUsefPart(NUM_ROBUSTNESS_MODES),
 	iLenGuardInt(NUM_ROBUSTNESS_MODES), cGuardCorr(NUM_ROBUSTNESS_MODES),
 	cGuardCorrBlock(NUM_ROBUSTNESS_MODES), rGuardPow(NUM_ROBUSTNESS_MODES),
 	rGuardPowBlock(NUM_ROBUSTNESS_MODES)
+,vecrRMCorrBuffer()
 {
 	/* Init Hilbert filter. Since the frequency offset correction was
 	   done in the previous module, the offset for the filter is

@@ -30,471 +30,493 @@
 #include "ReceptLog.h"
 #include <iomanip>
 #include <iostream>
-#include <cmath>
-/* DONE - reset minutes (and stats) when retuning */
 
-/* TODO
-  Apply the start delay after re-tuning
-  Better: put a log file header in on syncing with the DRM stream
-*/
+/* implementation --------------------------------------------- */
 
+CReceptLog::CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALSE),
+            bRxlEnabled(FALSE), bPositionEnabled(FALSE),
+            iSecDelLogStart(0)
+{
+    iFrequency = Parameters.GetFrequency();
+    latitude = Parameters.gps_data.fix.latitude;
+    longitude = Parameters.gps_data.fix.longitude;
+}
 
 void
 CReceptLog::Start(const string & filename)
 {
-	File.open(filename.c_str(), ios::app);
-	if (File.is_open())
-	{
-		bLogActivated = true;
-		bHeaderNeeded = true;
-	}
-	init();
+    File.open(filename.c_str(), ios::app);
+    if (File.is_open())
+    {
+        bLogActivated = TRUE;
+        writeHeader();
+    }
+    init();
 }
 
 void
 CReceptLog::Stop()
 {
-	if (!bLogActivated)
-		return;
-	writeTrailer();
-	File.close();
-	bLogActivated = false;
+    if (!bLogActivated)
+        return;
+    writeTrailer();
+    File.close();
+    bLogActivated = FALSE;
 }
 
 void
 CReceptLog::Update()
 {
-	if (!bLogActivated)
-		return;
-    if(bHeaderNeeded)
+    if (!bLogActivated)
+        return;
+    int iCurrentFrequency = Parameters.GetFrequency();
+    double currentLatitude = Parameters.gps_data.fix.latitude;
+    double currentLongitude = Parameters.gps_data.fix.longitude;
+    if((iCurrentFrequency != iFrequency)
+    || (bPositionEnabled && int(currentLatitude) != int(latitude))
+    || (bPositionEnabled && int(currentLongitude) != int(longitude))
+    )
     {
-        if(Parameters.GetAcquiState() == AS_WITH_SIGNAL)
+        // Frequency or position has changed
+        if (bLogActivated)
         {
-				writeHeader();
-				bHeaderNeeded = false;
+            writeTrailer();
+            iFrequency = iCurrentFrequency;
+	    latitude = currentLatitude;
+	    longitude = currentLongitude;
+            writeHeader();
+        }
+        else
+        {
+            iFrequency = iCurrentFrequency;
         }
     }
-	writeParameters();
+    writeParameters();
 }
 
 /* Get robustness mode string */
 char
 CReceptLog::GetRobModeStr()
 {
-	char chRobMode = 'X';
-	switch (Parameters.Channel.eRobustness)
-	{
-	case RM_ROBUSTNESS_MODE_A:
-		chRobMode = 'A';
-		break;
+    char chRobMode = 'X';
+    switch (Parameters.GetWaveMode())
+    {
+    case RM_ROBUSTNESS_MODE_A:
+        chRobMode = 'A';
+        break;
 
-	case RM_ROBUSTNESS_MODE_B:
-		chRobMode = 'B';
-		break;
+    case RM_ROBUSTNESS_MODE_B:
+        chRobMode = 'B';
+        break;
 
-	case RM_ROBUSTNESS_MODE_C:
-		chRobMode = 'C';
-		break;
+    case RM_ROBUSTNESS_MODE_C:
+        chRobMode = 'C';
+        break;
 
-	case RM_ROBUSTNESS_MODE_D:
-		chRobMode = 'D';
-		break;
+    case RM_ROBUSTNESS_MODE_D:
+        chRobMode = 'D';
+        break;
 
-	case RM_NO_MODE_DETECTED:
-		chRobMode = 'X';
-		break;
-	}
-	return chRobMode;
-}
-
-
-void
-CReceptLog::SetLogFrequency(int iNew)
-{
-	if(iNew != iFrequency)
-	{
-		if(bLogActivated)
-		{
-			writeTrailer();
-			iFrequency = iNew;
-			init();
-			writeHeader();
-		}
-		else
-		{
-			iFrequency = iNew;
-		}
-	}
-}
-
-string CReceptLog::strdate(time_t t)
-{
-	struct tm * today;
-	stringstream s;
-
-	today = gmtime(&t);		/* Always UTC */
-
-	s << setfill('0')
-	  << setw(4) << today->tm_year + 1900 << "-"
-	  << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
-	return s.str();
-}
-
-string CReceptLog::strtime(time_t t)
-{
-	struct tm * today;
-	stringstream s;
-
-	today = gmtime(&t);		/* Always UTC */
-
-	s << setfill('0')
-	  << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
-	return s.str();
+    case RM_NO_MODE_DETECTED:
+        chRobMode = 'X';
+        break;
+    }
+    return chRobMode;
 }
 
 void
 CShortLog::init()
 {
-	Parameters.Lock();
-	Parameters.ReceiveStatus.FAC.ResetCounts();
-	Parameters.ReceiveStatus.Audio.ResetCounts();
-	Parameters.Unlock();
-	/* initialise the minute count */
-	iCount = 0;
+    Parameters.Lock();
+    Parameters.ReceiveStatus.FAC.ResetCounts();
+    Parameters.ReceiveStatus.Audio.ResetCounts();
+    Parameters.Unlock();
+    /* initialise the minute count */
+    iCount = 0;
 }
 
 void
 CShortLog::writeHeader()
 {
-	string latitude, longitude, label, RobMode;
-	ESpecOcc SpecOcc=SO_5;
-	_REAL bitrate = 0.0;
+    string latitude, longitude, label, RobMode;
+    ESpecOcc SpecOcc=SO_5;
+    _REAL bitrate = 0.0;
 
-	Parameters.Lock();
+    Parameters.Lock();
+    iFrequency = Parameters.GetFrequency();
 
-	const CGPSData & GPSData = Parameters.GPSData;
-	if (GPSData.GetPositionAvailable())
-	{
-		GPSData.asDM(latitude, longitude);
-	}
-	int iCurSelServ = Parameters.GetCurSelAudioService();
+    if (Parameters.gps_data.set & LATLON_SET)
+    {
+        asDM(latitude, Parameters.gps_data.fix.latitude, 'S', 'N');
+        asDM(longitude, Parameters.gps_data.fix.longitude, 'W', 'E');
+    }
+    int iCurSelServ = Parameters.GetCurSelAudioService();
 
-	if (Parameters.Service[iCurSelServ].IsActive())
-	{
-		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
-		label = Parameters.Service[iCurSelServ].strLabel;
-		bitrate = Parameters.GetBitRateKbps(iCurSelServ, false);
-		RobMode = GetRobModeStr();
-		SpecOcc = Parameters.Channel.eSpectrumOccupancy;
-	}
+    if (Parameters.Service[iCurSelServ].IsActive())
+    {
+        /* Service label (UTF-8 encoded string -> convert ? TODO locale) */
+        label = Parameters.Service[iCurSelServ].strLabel;
+        bitrate = Parameters.GetBitRateKbps(iCurSelServ, FALSE);
+        RobMode = GetRobModeStr();
+        SpecOcc = Parameters.GetSpectrumOccup();
+    }
 
-	Parameters.Unlock();
+    Parameters.Unlock();
 
-	if(!File.is_open())
-		return; /* allow updates when file closed */
+    if (!File.is_open())
+        return; /* allow updates when file closed */
 
-	/* Beginning of new table (similar to DW DRM log file) */
-	File << endl << ">>>>" << endl << "Dream" << endl
-		<< "Software Version " << dream_version << endl;
+    /* Beginning of new table (similar to DW DRM log file) */
+    File << endl << ">>>>" << endl << "Dream" << endl
+         << "Software Version " << dream_version_major << "." << dream_version_minor << endl;
 
-	time_t now;
-	(void) time(&now);
-	File << "Starttime (UTC)  " << strdate(now) << " " << strtime(now) << endl;
+    time_t now;
+    (void) time(&now);
+    File << "Starttime (UTC)  " << strdate(now) << " " << strtime(now) << endl;
 
-	File << "Frequency        ";
-	if (iFrequency != 0)
-		File << iFrequency << " kHz";
-	File << endl;
+    File << "Frequency        ";
+    if (iFrequency != 0)
+        File << iFrequency << " kHz";
+    File << endl;
 
-	if (latitude != "")
-	{
-		File << "Latitude         " << latitude << endl;
-		File << "Longitude        " << longitude << endl;
-	}
+    if (latitude != "")
+    {
+        File << "Latitude         " << latitude << endl;
+        File << "Longitude        " << longitude << endl;
+    }
 
-	/* Write additional text */
+    /* Write additional text */
 
-	/* First get current selected audio service */
+    /* First get current selected audio service */
 
-	/* Check whether service parameters were not transmitted yet */
-	if (RobMode != "")
-	{
-		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
-		File << fixed << setprecision(2);
-		File << "Label            " << label << endl;
-		File << "Bitrate          " << setw(4) << bitrate << " kbps" << endl;
-		File << "Mode             " << RobMode << endl;
-		File << "Bandwidth        ";
-		switch (SpecOcc)
-		{
-		case SO_0:
-			File << "4,5 kHz";
-			break;
+    /* Check whether service parameters were not transmitted yet */
+    if (RobMode != "")
+    {
+        /* Service label (UTF-8 encoded string -> convert ? TODO locale) */
+        File << fixed << setprecision(2);
+        File << "Label            " << label << endl;
+        File << "Bitrate          " << setw(4) << bitrate << " kbps" << endl;
+        File << "Mode             " << RobMode << endl;
+        File << "Bandwidth        ";
+        switch (SpecOcc)
+        {
+        case SO_0:
+            File << "4,5 kHz";
+            break;
 
-		case SO_1:
-			File << "5 kHz";
-			break;
+        case SO_1:
+            File << "5 kHz";
+            break;
 
-		case SO_2:
-			File << "9 kHz";
-			break;
+        case SO_2:
+            File << "9 kHz";
+            break;
 
-		case SO_3:
-			File << "10 kHz";
-			break;
+        case SO_3:
+            File << "10 kHz";
+            break;
 
-		case SO_4:
-			File << "18 kHz";
-			break;
+        case SO_4:
+            File << "18 kHz";
+            break;
 
-		case SO_5:
-			File << "20 kHz";
-			break;
+        case SO_5:
+            File << "20 kHz";
+            break;
 
-		default:
-			File << "10 kHz";
-		}
-		File << endl;
-	}
+        default:
+            File << "10 kHz";
+        }
+        File << endl;
+    }
 
-	File << endl << "MINUTE  SNR     SYNC    AUDIO     TYPE";
-	if (bRxlEnabled)
-		File << "      RXL";
-	File << endl;
+    File << endl << "MINUTE  SNR     SYNC    AUDIO     TYPE";
+    if (bRxlEnabled)
+        File << "      RXL";
+    File << endl;
 
+    iCount = 0; // start count each time a new header is put
 }
-
-/*
-MINUTE  SNR     SYNC    AUDIO     TYPE
-  0000   21      148  1437/10        0
-  coordinates are again decimal, I think we agreed to degrees and minutes, if I start/ stop logfiles without restarting Dream each time, then the minutes in the log do not start at 0, see attachment.
-  Simone
-
-*/
 
 void
 CShortLog::writeParameters()
 {
-	Parameters.Lock();
+    Parameters.Lock();
 
-	int iAverageSNR = (int) floor(Parameters.Measurements.SNRstat.getMean()+.5);
-	int iNumCRCOkFAC = Parameters.ReceiveStatus.FAC.GetOKCount();
-	int iNumCRCOkMSC = Parameters.ReceiveStatus.Audio.GetOKCount();
+    int iAverageSNR = (int) Round(Parameters.SNRstat.getMean());
+    int iNumCRCOkFAC = Parameters.ReceiveStatus.FAC.GetOKCount();
+    int iNumCRCOkMSC = Parameters.ReceiveStatus.Audio.GetOKCount();
 
-	Parameters.ReceiveStatus.FAC.ResetCounts();
-	Parameters.ReceiveStatus.Audio.ResetCounts();
+    Parameters.ReceiveStatus.FAC.ResetCounts();
+    Parameters.ReceiveStatus.Audio.ResetCounts();
 
-	int iTmpNumAAC=0, iRXL=0;
+    int iTmpNumAAC=0, iRXL=0;
 
-	/* If no sync, do not print number of AAC frames.
-	 * If the number of correct FAC CRCs is lower than 10%,
-	 * we assume that receiver is not synchronized */
-	if (iNumCRCOkFAC >= 15)
-		iTmpNumAAC = Parameters.iNumAudioFrames;
+    /* If no sync, do not print number of AAC frames.
+     * If the number of correct FAC CRCs is lower than 10%,
+     * we assume that receiver is not synchronized */
+    if (iNumCRCOkFAC >= 15)
+        iTmpNumAAC = Parameters.iNumAudioFrames;
 
-	if (bRxlEnabled)
-		iRXL = (int)floor(Parameters.Measurements.SigStrstat.getMean()+.5);
+    if (bRxlEnabled)
+        iRXL = (int)Round(Parameters.SigStrstat.getMean()+S9_DBUV);
 
-	Parameters.Unlock();
+    Parameters.Unlock();
 
-	int count = iCount++;
+    int count = iCount++;
 
-	if(!File.is_open())
-		return; /* allow updates when file closed */
+    if (!File.is_open())
+        return; /* allow updates when file closed */
 
-	try
-	{
-		File << "  " << fixed << setw(4) << setfill('0') << count
-			<< setfill(' ') << setw(5) << iAverageSNR
-			<< setw(9) << iNumCRCOkFAC
-			<< setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
-			<< setfill(' ') << "      0";
-		if (bRxlEnabled)
-		{
-			File << setw(10) << setprecision(2) << iRXL;
-		}
-		File << endl;
-		File.flush();
-	}
-	catch(...)
-	{
-		/* To prevent errors if user views the file during reception */
-	}
+    try
+    {
+        File << "  " << fixed << setw(4) << setfill('0') << count
+             << setfill(' ') << setw(5) << iAverageSNR
+             << setw(9) << iNumCRCOkFAC
+             << setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
+             << setfill(' ') << "      0";
+        if (bRxlEnabled)
+        {
+            File << setw(10) << setprecision(2) << iRXL;
+        }
+        File << endl;
+        File.flush();
+    }
+    catch (...)
+    {
+        /* To prevent errors if user views the file during reception */
+    }
 }
 
 void
 CShortLog::writeTrailer()
 {
 
-	_REAL rMaxSNR, rMinSNR;
-	_REAL rMaxSigStr=0.0, rMinSigStr=0.0;
+    _REAL rMaxSNR, rMinSNR;
+    _REAL rMaxSigStr=0.0, rMinSigStr=0.0;
 
-	Parameters.Lock();
-	Parameters.Measurements.SNRstat.getMinMax(rMinSNR, rMaxSNR);
-	if (bRxlEnabled)
-	{
-		Parameters.Measurements.SigStrstat.getMinMax(rMinSigStr, rMaxSigStr);
-	}
-	Parameters.Unlock();
+    Parameters.Lock();
+    Parameters.SNRstat.getMinMax(rMinSNR, rMaxSNR);
+    if (bRxlEnabled)
+    {
+        Parameters.SigStrstat.getMinMax(rMinSigStr, rMaxSigStr);
+        rMinSigStr+=S9_DBUV;
+        rMaxSigStr+=S9_DBUV;
+    }
+    Parameters.Unlock();
 
-	if(!File.is_open())
-		return; /* allow updates when file closed */
+    if (!File.is_open())
+        return; /* allow updates when file closed */
 
-	File << fixed << setprecision(1);
-	File << endl << "SNR min: " << setw(4) << rMinSNR << ", max: " << setw(4) << rMaxSNR << endl;
+    File << fixed << setprecision(1);
+    File << endl << "SNR min: " << setw(4) << rMinSNR << ", max: " << setw(4) << rMaxSNR << endl;
 
-	if (bRxlEnabled)
-	{
-		File << "RXL min: " << setw(4) << rMinSigStr << ", max: " << setw(4) << rMaxSigStr << endl;
-	}
+    if (bRxlEnabled)
+    {
+        File << "RXL min: " << setw(4) << rMinSigStr << ", max: " << setw(4) << rMaxSigStr << endl;
+    }
 
-	/* Short log file ending */
-	File << "CRC: " << endl << "<<<<" << endl << endl;
+    /* Short log file ending */
+    File << "CRC: " << endl << "<<<<" << endl << endl;
 }
 
 void
 CLongLog::writeHeader()
 {
-	if(!File.is_open())
-		return; /* allow updates when file closed */
+    if (!File.is_open())
+        return; /* allow updates when file closed */
 
-	File <<
-		"FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY";
-	if (bRxlEnabled)
-		File << ",     RXL";
-	if (bPositionEnabled)
-		File << ",  LATITUDE, LONGITUDE";
+    File <<
+         "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY";
+    if (bRxlEnabled)
+        File << ",     RXL";
+    if (bPositionEnabled)
+        File << ",  LATITUDE, LONGITUDE";
 #ifdef _DEBUG_
-	/* In case of debug mode, use more parameters */
-	File << ",    DC-FREQ, SAMRATEOFFS";
+    /* In case of debug mode, use more parameters */
+    File << ",    DC-FREQ, SAMRATEOFFS";
 #endif
-	File << endl;
+    File << endl;
 }
 
 void
 CLongLog::init()
 {
-	Parameters.Lock();
-	Parameters.ReceiveStatus.LLAudio.ResetCounts();
-	Parameters.Unlock();
+    Parameters.Lock();
+    Parameters.ReceiveStatus.LLAudio.ResetCounts();
+    Parameters.Unlock();
 }
 
 void
 CLongLog::writeParameters()
 {
 
-	Parameters.Lock();
+    Parameters.Lock();
 
-	/* Get parameters for delay and Doppler. In case the receiver is
-	   not synchronized, set parameters to zero */
-	_REAL rDelay = (_REAL) 0.0;
-	_REAL rDoppler = (_REAL) 0.0;
-	(void)Parameters.Measurements.Doppler.get(rDoppler);
-    (void)Parameters.Measurements.Delay.get(rDelay);
+    /* Get parameters for delay and Doppler. In case the receiver is
+       not synchronized, set parameters to zero */
+    _REAL rDelay = (_REAL) 0.0;
+    _REAL rDoppler = (_REAL) 0.0;
+    if (Parameters.GetAcquiState() == AS_WITH_SIGNAL)
+    {
+        rDelay = Parameters.rMinDelay;
+        rDoppler = Parameters.rSigmaEstimate;
+    }
 
-	/* Only show mode if FAC CRC was ok */
-	int iCurProtLevPartA = 0;
-	int iCurProtLevPartB = 0;
-	int iCurProtLevPartH = 0;
-	int iCurMSCSc = 0;
+    /* Only show mode if FAC CRC was ok */
+    int iCurProtLevPartA = 0;
+    int iCurProtLevPartB = 0;
+    int iCurProtLevPartH = 0;
+    int iCurMSCSc = 0;
 
-	if (Parameters.ReceiveStatus.FAC.GetStatus() == RX_OK)
-	{
-		/* Copy protection levels */
-		iCurProtLevPartA = Parameters.MSCParameters.ProtectionLevel.iPartA;
-		iCurProtLevPartB = Parameters.MSCParameters.ProtectionLevel.iPartB;
-		iCurProtLevPartH = Parameters.MSCParameters.ProtectionLevel.iHierarch;
-		switch (Parameters.Channel.eMSCmode)
-		{
-		case CS_3_SM:
-			iCurMSCSc = 0;
-			break;
+    if (Parameters.ReceiveStatus.FAC.GetStatus() == RX_OK)
+    {
+        /* Copy protection levels */
+        iCurProtLevPartA = Parameters.MSCPrLe.iPartA;
+        iCurProtLevPartB = Parameters.MSCPrLe.iPartB;
+        iCurProtLevPartH = Parameters.MSCPrLe.iHierarch;
+        switch (Parameters.eMSCCodingScheme)
+        {
+        case CS_3_SM:
+            iCurMSCSc = 0;
+            break;
 
-		case CS_3_HMMIX:
-			iCurMSCSc = 1;
-			break;
+        case CS_3_HMMIX:
+            iCurMSCSc = 1;
+            break;
 
-		case CS_3_HMSYM:
-			iCurMSCSc = 2;
-			break;
+        case CS_3_HMSYM:
+            iCurMSCSc = 2;
+            break;
 
-		case CS_2_SM:
-			iCurMSCSc = 3;
-			break;
+        case CS_2_SM:
+            iCurMSCSc = 3;
+            break;
 
-		case CS_1_SM:			/* TODO */
-			break;
-		}
-	}
+        case CS_1_SM:			/* TODO */
+            break;
+        }
+    }
 
-	char cRobMode = GetRobModeStr();
+    char cRobMode = GetRobModeStr();
 
-	_REAL rSNR = Parameters.Measurements.SNRstat.getCurrent();
-	int iFrameSyncStatus = (Parameters.ReceiveStatus.FSync.GetStatus()==RX_OK)?1:0;
-	int iFACStatus = (Parameters.ReceiveStatus.FAC.GetStatus()==RX_OK)?1:0;
-	int iAudioStatus = (Parameters.ReceiveStatus.LLAudio.GetStatus()==RX_OK)?1:0;
-	int iNumCRCMSC = Parameters.ReceiveStatus.LLAudio.GetCount();
-	int iNumCRCOkMSC = Parameters.ReceiveStatus.LLAudio.GetOKCount();
+    _REAL rSNR = Parameters.SNRstat.getCurrent();
+    int iFrameSyncStatus = (Parameters.ReceiveStatus.FSync.GetStatus()==RX_OK)?1:0;
+    int iFACStatus = (Parameters.ReceiveStatus.FAC.GetStatus()==RX_OK)?1:0;
+    int iAudioStatus = (Parameters.ReceiveStatus.LLAudio.GetStatus()==RX_OK)?1:0;
+    int iNumCRCMSC = Parameters.ReceiveStatus.LLAudio.GetCount();
+    int iNumCRCOkMSC = Parameters.ReceiveStatus.LLAudio.GetOKCount();
 
-	Parameters.ReceiveStatus.LLAudio.ResetCounts();
+    Parameters.ReceiveStatus.LLAudio.ResetCounts();
 
-	double latitude=0.0, longitude=0.0;
-	if (bPositionEnabled)
-	{
-		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
-	}
+    double latitude=0.0, longitude=0.0;
+    if (bPositionEnabled && (Parameters.gps_data.set & LATLON_SET))
+    {
+        latitude = Parameters.gps_data.fix.latitude;
+        longitude = Parameters.gps_data.fix.longitude;
+    }
 
-	Parameters.Unlock();
+    Parameters.Unlock();
 
-	if(!File.is_open())
-		return; /* allow updates when file closed */
+    if (!File.is_open())
+        return; /* allow updates when file closed */
 
-	try
-	{
-		time_t now;
-		(void) time(&now);
-		File << fixed << setprecision(2)
-			<< setw(5) << iFrequency << '/' << setw(1) << cRobMode
-			<< iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH << "         ,"
-			<< " " << strdate(now) << ", "
-			<< strtime(now) << ".0" << ","
-			<< setw(7) << rSNR << ","
-			<< setw(5) << iFrameSyncStatus << ","
-			<< setw(4) << iFACStatus << ","
-			<< setw(4) << iAudioStatus << ","
-			<< setw(6) << iNumCRCMSC << ","
-			<< setw(8) << iNumCRCOkMSC << ","
-			<< "  " << setw(6) << rDoppler << ','
-			<< setw(6) << rDelay;
+    try
+    {
+        time_t now;
+        (void) time(&now);
+        File << fixed << setprecision(2)
+             << setw(5) << iFrequency << '/' << setw(1) << cRobMode
+             << iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH << "         ,"
+             << " " << strdate(now) << ", "
+             << strtime(now) << ".0" << ","
+             << setw(7) << rSNR << ","
+             << setw(5) << iFrameSyncStatus << ","
+             << setw(4) << iFACStatus << ","
+             << setw(4) << iAudioStatus << ","
+             << setw(6) << iNumCRCMSC << ","
+             << setw(8) << iNumCRCOkMSC << ","
+             << "  " << setw(6) << rDoppler << ','
+             << setw(6) << rDelay;
 
-		if (bRxlEnabled)
-			File << ',' << setprecision(2) << setw(8) << Parameters.Measurements.SigStrstat.getCurrent();
+        if (bRxlEnabled)
+            File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent()+S9_DBUV;
 
-		if (bPositionEnabled)
-			File << ',' << setprecision(4) << setw(10) << latitude << ',' << setw(10) << longitude;
+        if (bPositionEnabled)
+            File << ',' << setprecision(4) << setw(10) << latitude << ',' << setw(10) << longitude;
 
 #ifdef _DEBUG_
-		/* Some more parameters in debug mode */
-		Parameters.Lock();
-		File << Parameters.GetDCFrequency() << ',' << Parameters.GetSampFreqEst();
-		Parameters.Unlock();
+        /* Some more parameters in debug mode */
+        Parameters.Lock();
+        File << Parameters.GetDCFrequency() << ',' << Parameters.GetSampFreqEst();
+        Parameters.Unlock();
 #endif
-		File << endl;
-		File.flush();
-	}
+        File << endl;
+        File.flush();
+    }
 
-	catch(...)
-	{
-		/* To prevent errors if user views the file during reception */
-	}
+    catch (...)
+    {
+        /* To prevent errors if user views the file during reception */
+    }
 
 }
 
 void
 CLongLog::writeTrailer()
 {
-	if(!File.is_open())
-		return; /* allow updates when file closed */
+    if (!File.is_open())
+        return; /* allow updates when file closed */
 
-	File << endl << endl;
+    File << endl << endl;
+}
+
+string CReceptLog::strdate(time_t t)
+{
+    struct tm * today;
+    stringstream s;
+
+    today = gmtime(&t);		/* Always UTC */
+
+    s << setfill('0')
+      << setw(4) << today->tm_year + 1900 << "-"
+      << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
+    return s.str();
+}
+
+string CReceptLog::strtime(time_t t)
+{
+    struct tm * today;
+    stringstream s;
+
+    today = gmtime(&t);		/* Always UTC */
+
+    s << setfill('0')
+      << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
+    return s.str();
+}
+
+void
+CReceptLog::asDM(string& pos, double d, char n, char p) const
+{
+    stringstream s;
+    char np;
+    int ideg;
+    double dmin;
+    if (d<0.0)
+    {
+        np = n;
+        ideg = 0 - int(d);
+        dmin = 0.0 - d;
+    }
+    else
+    {
+        np = p;
+        ideg = int(d);
+        dmin = d;
+    }
+    int degrees = (unsigned int) dmin;
+    uint16_t minutes = (unsigned int) (((floor((dmin - degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
+    s << ideg << '\xb0' << setw(2) << setfill('0') << minutes << "'" << np;
+    pos = s.str();
 }

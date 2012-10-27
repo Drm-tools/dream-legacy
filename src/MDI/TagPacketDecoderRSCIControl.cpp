@@ -7,7 +7,7 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)
+ *	(MDI), Receiver Status and Control Interface (RSCI)  
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
@@ -39,22 +39,33 @@
 #include "TagPacketDecoderRSCIControl.h"
 
 // constructor: adds all of the decoders in the vocabulary to the list
-CTagPacketDecoderRSCIControl::CTagPacketDecoderRSCIControl(CRSISubscriber *pSubscriber)
-: TagItemDecoderCact()
+CTagPacketDecoderRSCIControl::CTagPacketDecoderRSCIControl(void) 
+: pDRMReceiver(NULL)
+, TagItemDecoderCact()
 , TagItemDecoderCfre()
 , TagItemDecoderCdmo()
 , TagItemDecoderCrec()
 , TagItemDecoderCpro()
-, TagItemDecoderCser()
 {
-	TagItemDecoderCrec.SetSubscriber(pSubscriber);
-	TagItemDecoderCpro.SetSubscriber(pSubscriber);
-
 	// Add each tag item decoder to the vocabulary
 	AddTagItemDecoder(&TagItemDecoderCact);
 	AddTagItemDecoder(&TagItemDecoderCfre);
 	AddTagItemDecoder(&TagItemDecoderCdmo);
 	AddTagItemDecoder(&TagItemDecoderCrec);
 	AddTagItemDecoder(&TagItemDecoderCpro);
-	AddTagItemDecoder(&TagItemDecoderCser);
+}
+
+
+void CTagPacketDecoderRSCIControl::SetReceiver(CDRMReceiver *pReceiver)
+{
+	pDRMReceiver = pReceiver;
+	TagItemDecoderCact.SetReceiver(pReceiver);
+	TagItemDecoderCfre.SetReceiver(pReceiver);
+	TagItemDecoderCdmo.SetReceiver(pReceiver);
+	TagItemDecoderCrec.SetReceiver(pReceiver);
+}
+
+void CTagPacketDecoderRSCIControl::SetSubscriber(CRSISubscriber *pSubscriber)
+{
+	TagItemDecoderCpro.SetSubscriber(pSubscriber);
 }

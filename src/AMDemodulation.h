@@ -29,10 +29,14 @@
 #if !defined(AMDEMOD_H__3B0BEVJBN8LKH2934BGF4344_BB27912__INCLUDED_)
 #define AMDEMOD_H__3B0BEVJBN8LKH2934BGF4344_BB27912__INCLUDED_
 
-#include "GlobalDefinitions.h"
-#include "util/ReceiverModul.h"
+#include "Parameter.h"
+#include "util/Modul.h"
+#include "util/Vector.h"
 #include "matlib/Matlib.h"
 #include "resample/Resample.h"
+#ifdef HAVE_SPEEX
+ #include <speex/speex_preprocess.h>
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -92,46 +96,60 @@
 class CNoiseReduction
 {
 public:
-	CNoiseReduction() : eNoiRedDegree(NR_MEDIUM) {}
-	virtual ~CNoiseReduction() {}
+    CNoiseReduction() : eNoiRedDegree(NR_MEDIUM)
+#ifdef HAVE_SPEEX
+	 ,preprocess_state(NULL),use_speex_denoise(false)
+#endif
+	{
+	}
+    virtual ~CNoiseReduction() {}
 
-	enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
+    enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
 
-	void Init(const int iNewBlockLen);
-	void Process(CRealVector& vecrIn /* in/out */);
+    void Init(const int iNewBlockLen);
+    void Process(CRealVector& vecrIn /* in/out */);
 
-	void SetNoiRedDegree(const ENoiRedDegree eNND) {eNoiRedDegree = eNND;}
-	ENoiRedDegree GetNoiRedDegree() {return eNoiRedDegree;}
+    void SetNoiRedSpeex(bool);
+
+    void SetNoiRedDegree(const ENoiRedDegree eNND);
+
+    ENoiRedDegree GetNoiRedDegree() {
+        return eNoiRedDegree;
+    }
 
 protected:
-	void UpdateNoiseEst(CRealVector& vecrNoisePSD,
-		const CRealVector& vecrSqMagSigFreq, const ENoiRedDegree eNoiRedDegree);
-	CRealVector OptimalFilter(const CComplexVector& vecrSigFreq,
-		const CRealVector& vecrSqMagSigFreq, const CRealVector& vecrNoisePSD);
+    void UpdateNoiseEst(CRealVector& vecrNoisePSD,
+                        const CRealVector& vecrSqMagSigFreq, const ENoiRedDegree eNoiRedDegree);
+    CRealVector OptimalFilter(const CComplexVector& vecrSigFreq,
+                              const CRealVector& vecrSqMagSigFreq, const CRealVector& vecrNoisePSD);
 
-	int				iBlockLen;
-	int				iHalfBlockLen;
-	int				iBlockLenLong;
-	int				iFreqBlLen;
-	int				iMinStatHistLen;
-	CReal			rLamPSD;
-	CRealMatrix		matrMinimumStatHist;
-	CComplexVector	veccSigFreq;
-	CRealVector		vecrSqMagSigFreq;
-	CRealVector		vecrSigPSD;
-	CRealVector		vecrNoisePSD;
-	CFftPlans		FftPlan;
-	CComplexVector	veccOptFilt;
-	CRealVector		vecrOldSignal;
-	CRealVector		vecrVeryOldSignal;
-	CRealVector		vecrLongSignal;
-	CRealVector		vecrOldOutSignal;
-	CRealVector		vecrOutSig1;
-	CRealVector		vecrTriangWin;
-	CRealVector		vecrOptFiltTime;
-	CRealVector		vecrFiltResult;
+    int				iBlockLen;
+    int				iHalfBlockLen;
+    int				iBlockLenLong;
+    int				iFreqBlLen;
+    int				iMinStatHistLen;
+    CReal			rLamPSD;
+    CRealMatrix		matrMinimumStatHist;
+    CComplexVector	veccSigFreq;
+    CRealVector		vecrSqMagSigFreq;
+    CRealVector		vecrSigPSD;
+    CRealVector		vecrNoisePSD;
+    CFftPlans		FftPlan;
+    CComplexVector	veccOptFilt;
+    CRealVector		vecrOldSignal;
+    CRealVector		vecrVeryOldSignal;
+    CRealVector		vecrLongSignal;
+    CRealVector		vecrOldOutSignal;
+    CRealVector		vecrOutSig1;
+    CRealVector		vecrTriangWin;
+    CRealVector		vecrOptFiltTime;
+    CRealVector		vecrFiltResult;
 
-	ENoiRedDegree	eNoiRedDegree;
+    ENoiRedDegree	eNoiRedDegree;
+#ifdef HAVE_SPEEX
+    SpeexPreprocessState *preprocess_state;
+    bool		use_speex_denoise;
+#endif
 };
 
 
@@ -139,28 +157,30 @@ protected:
 class CFreqOffsAcq
 {
 public:
-	CFreqOffsAcq() : bAcquisition(false), rCurNormFreqOffset((CReal) 0.0) {}
-	void Init(const int iNewBlockSize);
-	bool Run(const CVector<_REAL>& vecrInpData);
+    CFreqOffsAcq() : bAcquisition(FALSE), rCurNormFreqOffset((CReal) 0.0) {}
+    void Init(const int iNewBlockSize);
+    _BOOLEAN Run(const CVector<_REAL>& vecrInpData);
 
-	void Start(const CReal rNewNormCenter);
-	CReal GetCurResult() {return rCurNormFreqOffset;}
+    void Start(const CReal rNewNormCenter);
+    CReal GetCurResult() {
+        return rCurNormFreqOffset;
+    }
 
 protected:
-	int						iBlockSize;
-	CFftPlans				FftPlanAcq;
-	CRealVector				vecrFFTInput;
-	int						iTotalBufferSize;
-	int						iHalfBuffer;
-	int						iAquisitionCounter;
-	CShiftRegister<_REAL>	vecrFFTHistory;
-	CRealVector				vecrPSD;
-	int						iSearchWinStart;
-	int						iSearchWinEnd;
-	bool				bAcquisition;
+    int						iBlockSize;
+    CFftPlans				FftPlanAcq;
+    CRealVector				vecrFFTInput;
+    int						iTotalBufferSize;
+    int						iHalfBuffer;
+    int						iAquisitionCounter;
+    CShiftRegister<_REAL>	vecrFFTHistory;
+    CRealVector				vecrPSD;
+    int						iSearchWinStart;
+    int						iSearchWinEnd;
+    _BOOLEAN				bAcquisition;
 
-	CReal					rNormCenter;
-	CReal					rCurNormFreqOffset;
+    CReal					rNormCenter;
+    CReal					rCurNormFreqOffset;
 };
 
 
@@ -168,19 +188,22 @@ protected:
 class CAGC
 {
 public:
+    enum EType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
 
-	CAGC() : eType(AT_MEDIUM) {}
-	void Init(const int iNewBlockSize);
-	void Process(CRealVector& vecrIn /* in/out */);
+    CAGC() : eType(AT_MEDIUM) {}
+    void Init(const int iNewBlockSize);
+    void Process(CRealVector& vecrIn /* in/out */);
 
-	void SetType(const EType eNewType);
-	EType GetType() {return eType;}
+    void SetType(const EType eNewType);
+    EType GetType() {
+        return eType;
+    }
 
 protected:
-	int		iBlockSize;
-	EType	eType;
-	CReal	rAttack, rDecay;
-	CReal	rAvAmplEst;
+    int		iBlockSize;
+    EType	eType;
+    CReal	rAttack, rDecay;
+    CReal	rAvAmplEst;
 };
 
 
@@ -188,15 +211,15 @@ protected:
 class CMixer
 {
 public:
-	CMixer() : cCurExp((CReal) 1.0), cExpStep((CReal) 1.0) {}
-	void Init(const int iNewBlockSize);
-	void Process(CComplexVector& veccIn /* in/out */);
+    CMixer() : cCurExp((CReal) 1.0), cExpStep((CReal) 1.0) {}
+    void Init(const int iNewBlockSize);
+    void Process(CComplexVector& veccIn /* in/out */);
 
-	void SetMixFreq(const CReal rNewNormMixFreq);
+    void SetMixFreq(const CReal rNewNormMixFreq);
 
 protected:
-	int			iBlockSize;
-	CComplex	cCurExp, cExpStep;
+    int			iBlockSize;
+    CComplex	cCurExp, cExpStep;
 };
 
 
@@ -204,115 +227,160 @@ protected:
 class CPLL
 {
 public:
-	CPLL() : rCurPhase((CReal) 0.0) {}
-	void Init(const int iNewBlockSize);
-	void Process(CRealVector& vecrIn /* in/out */);
+    CPLL() : rCurPhase((CReal) 0.0) {}
+    void Init(const int iNewBlockSize);
+    void Process(CRealVector& vecrIn /* in/out */);
 
-	void SetRefNormFreq(const CReal rNewNormFreq);
-	CReal GetCurPhase() {return rCurPhase;}
-	CReal GetCurNormFreqOffs()
-		{return rNormCurFreqOffset + rNormCurFreqOffsetAdd;}
+    void SetRefNormFreq(const CReal rNewNormFreq);
+    CReal GetCurPhase() {
+        return rCurPhase;
+    }
+    CReal GetCurNormFreqOffs()
+    {
+        return rNormCurFreqOffset + rNormCurFreqOffsetAdd;
+    }
 
 protected:
-	CMixer			Mixer;
-	int				iBlockSize;
-	CRealVector		rvecRealTmp;
-	CRealVector		rvecImagTmp;
-	CComplexVector	cvecLow;
-	CReal			rNormCurFreqOffset;
-	CReal			rNormCurFreqOffsetAdd;
-	CReal			rCurPhase;
+    CMixer			Mixer;
+    int				iBlockSize;
+    CRealVector		rvecRealTmp;
+    CRealVector		rvecImagTmp;
+    CComplexVector	cvecLow;
+    CReal			rNormCurFreqOffset;
+    CReal			rNormCurFreqOffsetAdd;
+    CReal			rCurPhase;
 
-	CRealVector		rvecZReal;
-	CRealVector		rvecZImag;
-	CRealVector		rvecA;
-	CRealVector		rvecB;
+    CRealVector		rvecZReal;
+    CRealVector		rvecZImag;
+    CRealVector		rvecA;
+    CRealVector		rvecB;
 };
 
 /* AM demodulation module --------------------------------------------------- */
 class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
-	CAMDemodulation();
-	virtual ~CAMDemodulation() {}
+    CAMDemodulation();
+    virtual ~CAMDemodulation() {}
 
-	void SetAcqFreq(const CReal rNewNormCenter);
+    enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_FM};
+    enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH, NR_SPEEX_LOW, NR_SPEEX_MEDIUM, NR_SPEEX_HIGH};
 
-	void EnableAutoFreqAcq(const bool bNewEn)
-		{bAutoFreqAcquIsEnabled = bNewEn;}
-	bool AutoFreqAcqEnabled() {return bAutoFreqAcquIsEnabled;}
+    void SetAcqFreq(const CReal rNewNormCenter);
 
-	void EnablePLL(const bool bNewEn) {bPLLIsEnabled = bNewEn;}
-	bool PLLEnabled() {return bPLLIsEnabled;}
+    void EnableAutoFreqAcq(const _BOOLEAN bNewEn)
+    {
+        bAutoFreqAcquIsEnabled = bNewEn;
+    }
+    _BOOLEAN AutoFreqAcqEnabled() {
+        return bAutoFreqAcquIsEnabled;
+    }
 
-	void SetAGCType(const EType eNewType);
-	EType GetAGCType() {return AGC.GetType();}
+    void EnablePLL(const _BOOLEAN bNewEn) {
+        bPLLIsEnabled = bNewEn;
+    }
+    _BOOLEAN PLLEnabled() {
+        return bPLLIsEnabled;
+    }
 
-	void SetNoiRedType(const ENoiRedType eNewType);
-	ENoiRedType GetNoiRedType() {return NoiRedType;}
+    void SetDemodType(const EDemodType eNewType);
+    EDemodType GetDemodType() {
+        return eDemodType;
+    }
 
-	bool GetPLLPhase(CReal& rPhaseOut);
+    void SetFilterBW(const int iNewBW);
+    int GetFilterBW() {
+        return (int) (rBPNormBW * SOUNDCRD_SAMPLE_RATE);
+    }
 
-	bool GetFrameBoundary() {return iFreeSymbolCounter==0;}
+    void SetAGCType(const CAGC::EType eNewType);
+    CAGC::EType GetAGCType() {
+        return AGC.GetType();
+    }
 
-	void SetFilterBWHz(int);
-	int GetFilterBWHz();
+    void SetNoiRedType(const ENoiRedType eNewType);
+    ENoiRedType GetNoiRedType() {
+        return NoiRedType;
+    }
 
-	void SetDemodType(EModulationType);
-	EModulationType GetDemodType() { return eDemodType; }
+    _BOOLEAN haveSpeex() {
+#ifdef HAVE_SPEEX
+        return TRUE;
+#else
+        return FALSE;
+#endif
+    }
+
+    void GetBWParameters(CReal& rCenterFreq, CReal& rBW)
+    {
+        rCenterFreq = rBPNormCentOffsTot;
+        rBW = rBPNormBW;
+    }
+
+    _BOOLEAN GetPLLPhase(CReal& rPhaseOut);
+    CReal GetCurMixFreqOffs() const
+    {
+        return rNormCurMixFreqOffs * SOUNDCRD_SAMPLE_RATE;
+    }
+
+    _BOOLEAN GetFrameBoundary() {
+        return iFreeSymbolCounter==0;
+    }
+
 
 protected:
-	void SetBPFilter(const CReal rNewBPNormBW);
-	void SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs);
+    void SetBPFilter(const CReal rNewBPNormBW, const CReal rNewNormFreqOffset,
+                     const EDemodType eDemodType);
+    void SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs);
 
-	CComplexVector					cvecBReal;
-	CComplexVector					cvecBImag;
-	CRealVector					rvecZReal;
-	CRealVector					rvecZImag;
-	CComplexVector					cvecBAMAfterDem;
-	CRealVector					rvecZAMAfterDem;
+    CComplexVector				cvecBReal;
+    CComplexVector				cvecBImag;
+    CRealVector					rvecZReal;
+    CRealVector					rvecZImag;
+    CComplexVector				cvecBAMAfterDem;
+    CRealVector					rvecZAMAfterDem;
 
-	CRealVector					rvecInpTmp;
-	CComplexVector					cvecHilbert;
-	int						iHilFiltBlLen;
-	CFftPlans					FftPlansHilFilt;
+    CRealVector					rvecInpTmp;
+    CComplexVector				cvecHilbert;
+    int							iHilFiltBlLen;
+    CFftPlans					FftPlansHilFilt;
 
-	int						iFilterBWHz;
-	CReal						rBPNormBW;
-	CReal						rNormCurMixFreqOffs;
-	CReal						rBPNormCentOffsTot;
+    CReal						rBPNormBW;
+    CReal						rNormCurMixFreqOffs;
+    CReal						rBPNormCentOffsTot;
 
-	CRealVector					rvecZAM;
-	CRealVector					rvecADC;
-	CRealVector					rvecBDC;
-	CRealVector					rvecZFM;
-	CRealVector					rvecAFM;
-	CRealVector					rvecBFM;
+    CRealVector					rvecZAM;
+    CRealVector					rvecADC;
+    CRealVector					rvecBDC;
+    CRealVector					rvecZFM;
+    CRealVector					rvecAFM;
+    CRealVector					rvecBFM;
 
-	int						iSymbolBlockSize;
+    int							iSymbolBlockSize;
 
-	bool					        bPLLIsEnabled;
-	bool						bAutoFreqAcquIsEnabled;
+    _BOOLEAN					bPLLIsEnabled;
+    _BOOLEAN					bAutoFreqAcquIsEnabled;
 
-	CComplex					cOldVal;
+    EDemodType					eDemodType;
 
-
-	/* Objects */
-	CPLL						PLL;
-	CMixer						Mixer;
-	CFreqOffsAcq					FreqOffsAcq;
-	CAGC						AGC;
-	CNoiseReduction					NoiseReduction;
-	ENoiRedType					NoiRedType;
-	EModulationType					eDemodType;
-
-	/* OPH: counter to count symbols within a frame in order to generate */
-	/* RSCI output */
-	int						iFreeSymbolCounter;
+    CComplex					cOldVal;
 
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    /* Objects */
+    CPLL						PLL;
+    CMixer						Mixer;
+    CFreqOffsAcq				FreqOffsAcq;
+    CAGC						AGC;
+    CNoiseReduction				NoiseReduction;
+    ENoiRedType					NoiRedType;
+
+    /* OPH: counter to count symbols within a frame in order to generate */
+    /* RSCI output */
+    int							iFreeSymbolCounter;
+
+
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 

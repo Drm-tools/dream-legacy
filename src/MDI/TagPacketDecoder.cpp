@@ -46,163 +46,172 @@
 #include "../util/CRC.h"
 #include <iostream>
 
-CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0)
+CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0),iSeqNumber(0xffff)
 {
 }
 
 // This should be in its own class
 CTagPacketDecoder::Error
-	CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
+CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 {
-    int i;
-    static uint32_t iLastSeqNo = 0xffffffff;
 
-    /* CRC check ------------------------------------------------------------ */
-    CCRC CRCObject;
-    // FIXME: is this length always the correct length? In the actual packet
-    // there is also a value for the length included!!!???!???
-    const int iLenAFPkt = vecbiAFPkt.Size();
+	int i;
 
-    /* We do the CRC check at the beginning no matter if it is used or not
+	/* CRC check ------------------------------------------------------------ */
+	CCRC CRCObject;
+	// FIXME: is this length always the correct length? In the actual packet
+	// there is also a value for the length included!!!???!???
+	int iLenAFPkt = vecbiAFPkt.Size();
+
+	/* We do the CRC check at the beginning no matter if it is used or not
 	   since we have to reset bit access for that */
-    /* Reset bit extraction access */
-    vecbiAFPkt.ResetBitAccess();
+	/* Reset bit extraction access */
+	vecbiAFPkt.ResetBitAccess();
 
-    /* Check the CRC of this packet */
-    CRCObject.Reset(16);
+	/* Check the CRC of this packet */
+	CRCObject.Reset(16);
 
-    /* "- 2": 16 bits for CRC at the end */
-    for (i = 0; i < iLenAFPkt / BITS_BINARY - 2; i++)
-	CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(BITS_BINARY));
+	/* "- 2": 16 bits for CRC at the end */
+	for (i = 0; i < iLenAFPkt / SIZEOF__BYTE - 2; i++)
+	{
+		CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE));
+	}
 
-    const bool bCRCOk = CRCObject.CheckCRC(vecbiAFPkt.Separate(16));
+	const _BOOLEAN bCRCOk = CRCObject.CheckCRC(vecbiAFPkt.Separate(16));
 
-    /* Actual packet decoding ----------------------------------------------- */
-    vecbiAFPkt.ResetBitAccess();
+	/* Actual packet decoding ----------------------------------------------- */
+	vecbiAFPkt.ResetBitAccess();
 
-    /* SYNC: two-byte ASCII representation of "AF" (2 bytes) */
-    string strSyncASCII = "";
-    for (i = 0; i < 2; i++)
-    {
-	_BYTE by = (_BYTE) vecbiAFPkt.Separate(BITS_BINARY);
-	//strSyncASCII += (_BYTE) vecbiAFPkt.Separate(BITS_BINARY);
-	strSyncASCII += by;
-    }
+	/* SYNC: two-byte ASCII representation of "AF" (2 bytes) */
+	string strSyncASCII = "";
+	for (i = 0; i < 2; i++)
+	{
+		strSyncASCII += (_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE);
+	}
+	/* Check if string is correct */
+	if (strSyncASCII.compare("AF") != 0)
+	{
+		cerr << "not an AF packet" << endl;
+		return E_SYNC;
+	}
 
-    /* Check if string is correct */
-    if (strSyncASCII.compare("AF") != 0)
-    {
-	cerr << "not an AF packet" << endl;
-	return E_SYNC;
-    }
+	/* LEN: length of the payload, in bytes (4 bytes long -> 32 bits) */
+	const int iPayLLen = (int) vecbiAFPkt.Separate(32);
 
-    /* LEN: length of the payload, in bytes (4 bytes long -> 32 bits) */
-    const int iPayLLen = (int) vecbiAFPkt.Separate(32);
-
-    /* SEQ: sequence number. Each AF Packet shall increment the sequence number
+	/* SEQ: sequence number. Each AF Packet shall increment the sequence number
 	   by one for each packet sent, regardless of content. There shall be no
 	   requirement that the first packet received shall have a specific value.
 	   The counter shall wrap from FFFF_[16] to 0000_[16], thus the value shall
 	   count, FFFE_[16], FFFF_[16], 0000_[16], 0001_[16], etc.
 	   (2 bytes long -> 16 bits) */
 
-    // TODO: use sequence number somehow!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    const uint32_t iCurSeqNum = (int) vecbiAFPkt.Separate(16);
-    //cout << "AF " << iCurSeqNum << endl;
+	const int iCurSeqNum = (int) vecbiAFPkt.Separate(16);
+	(void)iCurSeqNum;
+	iSeqNumber++;
+	if(iSeqNumber!=iCurSeqNum)
+	{
+		if(iSeqNumber!=0xffff)
+			cerr << "AF SEQ: expected " << iSeqNumber << " got " << iCurSeqNum << endl;
+		iSeqNumber=iCurSeqNum;
+	}
 
-    iLastSeqNo++;
-    if((iLastSeqNo!=0) && (iCurSeqNum != iLastSeqNo)) // don't check on initial
-	cerr << "Sequence Number Error expected " << iLastSeqNo << " got " << iCurSeqNum << endl;
-    iLastSeqNo = iCurSeqNum;
-
-    /* AR: AF protocol Revision -
+	/* AR: AF protocol Revision -
 	   a field combining the CF, MAJ and MIN fields */
-    /* CF: CRC Flag, 0 if the CRC field is not used (CRC value shall be
+	/* CF: CRC Flag, 0 if the CRC field is not used (CRC value shall be
 	   0000_[16]) or 1 if the CRC field contains a valid CRC (1 bit long) */
-    if (vecbiAFPkt.Separate(1)==1)
-    {
-	/* Use CRC check which was already done */
-	if (!bCRCOk)
-	    return E_CRC;
-    }
+	if (vecbiAFPkt.Separate(1)==1)
+	{
+		/* Use CRC check which was already done */
+		if (!bCRCOk)
+			return E_CRC;
+	}
 
-    /* MAJ: major revision of the AF protocol in use (3 bits long) */
-    const int iMajRevAFProt = (int) vecbiAFPkt.Separate(3);
-    (void)iMajRevAFProt;
+	/* MAJ: major revision of the AF protocol in use (3 bits long) */
+	const int iMajRevAFProt = (int) vecbiAFPkt.Separate(3);
+	(void)iMajRevAFProt;
 
-    /* MIN: minor revision of the AF protocol in use (4 bits long) */
-    const int iMinRevAFProt = (int) vecbiAFPkt.Separate(4);
-    (void)iMinRevAFProt;
+	/* MIN: minor revision of the AF protocol in use (4 bits long) */
+	const int iMinRevAFProt = (int) vecbiAFPkt.Separate(4);
+	(void)iMinRevAFProt;
 
-    // TODO: check if protocol versions match our version!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// TODO: check if protocol versions match our version!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
-    /* Protocol Type (PT): single byte encoding the protocol of the data carried
+	/* Protocol Type (PT): single byte encoding the protocol of the data carried
 	   in the payload. For TAG Packets, the value shall be the ASCII
 	   representation of "T" */
-    if ((_BYTE) vecbiAFPkt.Separate(BITS_BINARY) != 'T')
-    {
-	return E_PROTO;
-    }
+	if ((_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE) != 'T')
+	{
+		return E_PROTO;
+	}
 
 
-    /* Payload -------------------------------------------------------------- */
-    DecodeTagPacket(vecbiAFPkt, iPayLLen);
+	/* Payload -------------------------------------------------------------- */
+	DecodeTagPacket(vecbiAFPkt, iPayLLen);
 
-    return E_OK;
+	return E_OK;
 }
 
-// Decode all the tags in the tag packet. To do things before or after the decoding,
-// override this and call the base class function to do the decoding
+	// Decode all the tags in the tag packet. To do things before or after the decoding,
+	// override this and call the base class function to do the decoding
 void CTagPacketDecoder::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, const int iPayloadLen)
 {
-    /* Decode all tags */
-    int iCurConsBytes = 0;
+	/* Decode all tags */
+	int iCurConsBytes = 0;
 
-    /* Each tag must have at least a header with 8 bytes -> "- 8" */
-    while (iCurConsBytes < iPayloadLen - 8)
-	iCurConsBytes += DecodeTag(vecbiPkt);
+	/* Each tag must have at least a header with 8 bytes -> "- 8" */
+	while (iCurConsBytes < iPayloadLen - 8)
+		iCurConsBytes += DecodeTag(vecbiPkt);
 }
 
-// Go through all the tag item decoders to find one that matches the current tag name.
+	// Go through all the tag item decoders to find one that matches the current tag name.
 int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 {
-    /* Decode tag name (always four bytes long) */
-    string strTagName = "";
-    for (size_t i = 0; i < 4; i++)
-	strTagName += (_BYTE) vecbiTag.Separate(BITS_BINARY);
-    /* Get tag data length (4 bytes = 32 bits) */
-    const int iLenDataBits = vecbiTag.Separate(32);
+	int i;
 
-    /* Read the TAG payload. Even if the payload is not the expected length the tag packet decoding won't get out of sync */
-    CVector<_BINARY> vecbiTagItemPayload = vecbiTag.SeparateVector(iLenDataBits);
+	/* Decode tag name (always four bytes long) */
+	string strTagName = "";
+	for (i = 0; i < 4; i++)
+		strTagName += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+	/* Get tag data length (4 bytes = 32 bits) */
+	const int iLenDataBits = vecbiTag.Separate(32);
 
-    /* Check the tag name against each tag decoder in the vector of tag decoders */
-    bool bTagWasDec = false;
-    for (size_t i=0; i<vecpTagItemDecoders.size(); i++)
-    {
-	if (strTagName.compare(vecpTagItemDecoders[i]->GetTagName()) == 0) // it's this tag
+	/* Check the tag name against each tag decoder in the vector of tag decoders */
+	_BOOLEAN bTagWasDec = FALSE;
+	for (i=0; i<vecpTagItemDecoders.Size(); i++)
 	{
-	    vecpTagItemDecoders[i]->DecodeTag(vecbiTagItemPayload, iLenDataBits);
-	    bTagWasDec = true;
+		if (strTagName.compare(vecpTagItemDecoders[i]->GetTagName()) == 0) // it's this tag
+		{
+			vecpTagItemDecoders[i]->DecodeTag(vecbiTag, iLenDataBits);
+			bTagWasDec = TRUE;
+		}
 	}
-    }
 
-    /* Return number of consumed bytes. This number is the actual body plus two
+	/* Take care of tags which are not supported */
+	if (bTagWasDec == FALSE)
+	{
+		/* Take bits from tag vector */
+		for (i = 0; i < iLenDataBits; i++)
+			vecbiTag.Separate(1);
+	}
+
+	/* Return number of consumed bytes. This number is the actual body plus two
 	   times for bytes for the header = 8 bytes */
-    return iLenDataBits / BITS_BINARY + 8;
+	return iLenDataBits / SIZEOF__BYTE + 8;
 
 }
+
 
 void CTagPacketDecoder::AddTagItemDecoder(CTagItemDecoder *pTagItemDecoder)
 {
-    vecpTagItemDecoders.push_back(pTagItemDecoder);
+	vecpTagItemDecoders.Add(pTagItemDecoder);
 }
 
-void CTagPacketDecoder::InitTagItemDecoders()
+void CTagPacketDecoder::InitTagItemDecoders(void)
 {
-    for (size_t i=0; i<vecpTagItemDecoders.size(); i++)
-    {
-	vecpTagItemDecoders[i]->Init();
-    }
+	for (int i=0; i<vecpTagItemDecoders.Size(); i++)
+	{
+		vecpTagItemDecoders[i]->Init();
+	}
+
 }

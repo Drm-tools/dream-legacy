@@ -34,56 +34,36 @@
 #include "../util/Vector.h"
 #include "../Parameter.h"
 
-/* MAP ---------------------------------------------------------------------- */
-#ifdef USE_MAX_LOG_MAP
-typedef _REAL							_DECISION;
-# define ML_SOFT_INF_MAX_VALUE			((_DECISION) 1e10)
-inline _BINARY ExtractBit(_DECISION dD) {return dD > 0 ? 1 : 0;}
-inline _DECISION BitToSoft(_BINARY biB) {return biB == 0 ? -1.0 : 1.0;}
-#else
-typedef _BINARY							_DECISION;
-#define ExtractBit(a)					(a)
-#define BitToSoft(a)					(a)
-#endif
 
 /* Classes ********************************************************************/
-/* For metric */
-class CDistance
-{
-public:
-	/* Distance towards 0 or towards 1 */
-	_REAL rTow0;
-	_REAL rTow1;
-};
-
 class CChannelCode
 {
 public:
-	CChannelCode();
-	virtual ~CChannelCode() {}
+    CChannelCode();
+    virtual ~CChannelCode() {}
 
-	inline _BINARY Convolution(const _BYTE byNewStateShiftReg,
-							   const int iGenPolyn) const
-	{
-		/* Mask bits with generator polynomial and get convolution result from
-		   pre-calculated table (speed optimization). Since we have a AND
-		   operation on the "byGeneratorMatrix", the index of the convolution
-		   table cannot exceed the size of the table (although the value in
-		   "byNewStateShiftReg" can be larger) */
-		return vecbiParity[byNewStateShiftReg & byGeneratorMatrix[iGenPolyn]];
-	}
+    inline _BINARY Convolution(const _BYTE byNewStateShiftReg,
+                               const int iGenPolyn) const
+    {
+        /* Mask bits with generator polynomial and get convolution result from
+           pre-calculated table (speed optimization). Since we have a AND
+           operation on the "byGeneratorMatrix", the index of the convolution
+           table cannot exceed the size of the table (although the value in
+           "byNewStateShiftReg" can be larger) */
+        return vecbiParity[byNewStateShiftReg & byGeneratorMatrix[iGenPolyn]];
+    }
 
-	CVector<int> GenPuncPatTable(ECodScheme eNewCodingScheme,
-								 EChanType eNewChannelType,
-								 int iN1, int iN2,
-								 int iNewNumOutBitsPartA,
-								 int iNewNumOutBitsPartB,
-								 int iPunctPatPartA, int iPunctPatPartB,
-								 int iLevel);
+    CVector<int> GenPuncPatTable(ECodScheme eNewCodingScheme,
+                                 EChanType eNewChannelType,
+                                 int iN1, int iN2,
+                                 int iNewNumOutBitsPartA,
+                                 int iNewNumOutBitsPartB,
+                                 int iPunctPatPartA, int iPunctPatPartB,
+                                 int iLevel);
 
 
 private:
-	_BINARY vecbiParity[1 << BITS_BINARY];
+    _BINARY vecbiParity[1 << SIZEOF__BYTE];
 };
 
 

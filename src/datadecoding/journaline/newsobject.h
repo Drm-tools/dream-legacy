@@ -61,8 +61,8 @@
 ***
 **/
 #ifdef _MSC_VER
-# if !defined(_WINSOCK2API_) && !defined(_WINSOCKAPI_)
-#  include <Winsock2.h>
+# ifndef _WINSOCKAPI_
+#  include <winsock2.h>
 # endif
 #else
 # include <sys/time.h>

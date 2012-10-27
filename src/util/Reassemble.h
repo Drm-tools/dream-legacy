@@ -47,36 +47,36 @@ public:
 		return vecbHaveSegment.size ();
 	}
 
-	bool Ready ()
+	_BOOLEAN Ready ()
 	{
 		if (vecbHaveSegment.size () == 0)
-			return false;
+			return FALSE;
 		for (size_t i = 0; i < vecbHaveSegment.size (); i++)
 		{
-			if (vecbHaveSegment[i] == false)
+			if (vecbHaveSegment[i] == FALSE)
 			{
-				return false;
+				return FALSE;
 			}
 		}
-		return true;
+		return TRUE;
 	}
 
 	void AddSegment (int iSegNum)
 	{
 		if ((iSegNum + 1) > int (vecbHaveSegment.size ()))
-			vecbHaveSegment.resize (iSegNum + 1, false);
-		vecbHaveSegment[iSegNum] = true;
+			vecbHaveSegment.resize (iSegNum + 1, FALSE);
+		vecbHaveSegment[iSegNum] = TRUE;
 	}
 
-	bool HaveSegment (int iSegNum)
+	_BOOLEAN HaveSegment (int iSegNum)
 	{
 		if (iSegNum < int (vecbHaveSegment.size ()))
 			return vecbHaveSegment[iSegNum];
-		return false;
+		return FALSE;
 	}
 
 protected:
-	vector < bool > vecbHaveSegment;
+	vector < _BOOLEAN > vecbHaveSegment;
 };
 
 /* The base class reassembles chunks of byte vectors into one big vector.
@@ -86,7 +86,7 @@ protected:
  * CReassemblerN o;
  * o.AddSegment (veco, iSegSize, 1);
  * o.AddSegment (veco, iSegSize, 3);
- * o.AddSegment (veco, iSegSize, 7, true); // last segment, ie there are 8 segments, 0..7
+ * o.AddSegment (veco, iSegSize, 7, TRUE); // last segment, ie there are 8 segments, 0..7
  * o.AddSegment (veco, iSegSize, 2);
  * o.AddSegment (veco, iSegSize, 4);
  * o.AddSegment (veco, iSegSize, 6);
@@ -126,12 +126,12 @@ public:
 		bReady = false;
 	}
 
-	bool Ready ()
+	_BOOLEAN Ready ()
 	{
 		return bReady;
 	}
 
-	void AddSegment (vector<_BYTE> &vecDataIn, int iSegNum, bool bLast);
+	void AddSegment (vector<_BYTE> &vecDataIn, int iSegNum, _BOOLEAN bLast);
 
 	vector<_BYTE> vecData;
 

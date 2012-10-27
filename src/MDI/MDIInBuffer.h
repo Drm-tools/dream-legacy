@@ -30,9 +30,15 @@
 #define MDI_IN_BUFFER_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
-#ifdef QT_CORE_LIB
+#if QT_VERSION < 0x040000
+# if QT_VERSION < 0x030000
+#  include <qthread.h>
+# else
 # include <qwaitcondition.h>
-# include <qmutex.h>
+# endif
+#else
+# include <QWaitCondition>
+# include <QMutex>
 #endif
 #include <vector>
 #include <queue>
@@ -40,10 +46,7 @@
 class CMDIInBuffer
 {
 public:
-	CMDIInBuffer() : buffer()
-#ifdef QT_CORE_LIB
-	,guard(),blocker()
-#endif
+	CMDIInBuffer() : buffer() ,guard(),blocker()
 	{}
 
 	void Put(const vector<_BYTE>& data);
@@ -51,10 +54,8 @@ public:
 
 protected:
 	queue< vector<_BYTE> > buffer;
-#ifdef QT_CORE_LIB
 	QMutex guard;
 	QWaitCondition blocker;
-#endif
 };
 
 #endif

@@ -28,7 +28,6 @@
 
 #include "OFDMCellMapping.h"
 
-#include <iostream>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -36,62 +35,59 @@
 \******************************************************************************/
 void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 {
-	const CCellMappingTable& cmt = TransmParam.CellMappingTable;
+	const CCellMappingTable& Param = TransmParam.CellMappingTable;
 
 	/* Mapping of the data and pilot cells on the OFDM symbol --------------- */
 	/* Set absolute symbol position */
 	int iSymbolCounterAbs =
-		TransmParam.FACParameters.iFrameId * iNumSymPerFrame + iSymbolCounter;
+		TransmParam.iFrameIDTransm * iNumSymPerFrame + iSymbolCounter;
+
 	/* Init temporary counter */
 	int iDummyCellCounter = 0;
 	int iMSCCounter = 0;
 	int iFACCounter = 0;
 	int iSDCCounter = 0;
-	CVectorEx<_COMPLEX>& vecOutputData = *pvecOutputData;
-	CVectorEx<_COMPLEX>& vecMSCData = *pvecInputData;
-	CVectorEx<_COMPLEX>& vecFACData = *pvecInputData2;
-	CVectorEx<_COMPLEX>& vecSDCData = *pvecInputData3;
-
 	for (int iCar = 0; iCar < iNumCarrier; iCar++)
 	{
 		/* MSC */
-		if (_IsMSC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
+		if (_IsMSC(Param.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
-			if (iMSCCounter >= cmt.veciNumMSCSym[iSymbolCounterAbs])
+			if (iMSCCounter >= Param.veciNumMSCSym[iSymbolCounterAbs])
 			{
 				/* Insert dummy cells */
-				vecOutputData[iCar] = pcDummyCells[iDummyCellCounter];
+				(*pvecOutputData)[iCar] = pcDummyCells[iDummyCellCounter];
 
 				iDummyCellCounter++;
 			}
 			else
-				vecOutputData[iCar] = vecMSCData[iMSCCounter];
-
+				(*pvecOutputData)[iCar] = (*pvecInputData)[iMSCCounter];
+				
 			iMSCCounter++;
 		}
-		/* FAC */
-		if (_IsFAC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
-		{
-			vecOutputData[iCar] = vecFACData[iFACCounter];
 
+		/* FAC */
+		if (_IsFAC(Param.matiMapTab[iSymbolCounterAbs][iCar]))
+		{
+			(*pvecOutputData)[iCar] = (*pvecInputData2)[iFACCounter];
+				
 			iFACCounter++;
 		}
 
 		/* SDC */
-		if (_IsSDC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
+		if (_IsSDC(Param.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
-			vecOutputData[iCar] = vecSDCData[iSDCCounter];
-
+			(*pvecOutputData)[iCar] = (*pvecInputData3)[iSDCCounter];
+				
 			iSDCCounter++;
 		}
 
 		/* Pilots */
-		if (_IsPilot(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
-			vecOutputData[iCar] = cmt.matcPilotCells[iSymbolCounterAbs][iCar];
+		if (_IsPilot(Param.matiMapTab[iSymbolCounterAbs][iCar]))
+			(*pvecOutputData)[iCar] = Param.matcPilotCells[iSymbolCounterAbs][iCar];
 
 		/* DC carrier */
-		if (_IsDC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
-			vecOutputData[iCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+		if (_IsDC(Param.matiMapTab[iSymbolCounterAbs][iCar]))
+			(*pvecOutputData)[iCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 	}
 
 	/* Increase symbol-counter and wrap if needed */
@@ -101,37 +97,36 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 		iSymbolCounter = 0;
 
 		/* Increase frame-counter (ID) (Used also in FAC.cpp) */
-		TransmParam.FACParameters.iFrameId++;
-		if (TransmParam.FACParameters.iFrameId == NUM_FRAMES_IN_SUPERFRAME)
-			TransmParam.FACParameters.iFrameId = 0;
+		TransmParam.iFrameIDTransm++;
+		if (TransmParam.iFrameIDTransm == NUM_FRAMES_IN_SUPERFRAME)
+			TransmParam.iFrameIDTransm = 0;
 	}
 
 	/* Set absolute symbol position (for updated relative positions) */
 	iSymbolCounterAbs =
-		TransmParam.FACParameters.iFrameId * iNumSymPerFrame + iSymbolCounter;
+		TransmParam.iFrameIDTransm * iNumSymPerFrame + iSymbolCounter;
 
 	/* Set input block-sizes for next symbol */
-	iInputBlockSize = cmt.veciNumMSCSym[iSymbolCounterAbs];
-	iInputBlockSize2 = cmt.veciNumFACSym[iSymbolCounterAbs];
-	iInputBlockSize3 = cmt.veciNumSDCSym[iSymbolCounterAbs];
-
+	iInputBlockSize = Param.veciNumMSCSym[iSymbolCounterAbs];
+	iInputBlockSize2 = Param.veciNumFACSym[iSymbolCounterAbs];
+	iInputBlockSize3 = Param.veciNumSDCSym[iSymbolCounterAbs];
 }
 
 void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 {
-	const CCellMappingTable& cmt = TransmParam.CellMappingTable;
+	const CCellMappingTable& Param = TransmParam.CellMappingTable;
 
-	iNumSymPerFrame = cmt.iNumSymPerFrame;
-	iNumCarrier = cmt.iNumCarrier;
+	iNumSymPerFrame = Param.iNumSymPerFrame;
+	iNumCarrier = Param.iNumCarrier;
 
 	/* Init symbol-counter */
 	iSymbolCounter = 0;
 
 	/* Init frame ID */
-	TransmParam.FACParameters.iFrameId = 0;
+	TransmParam.iFrameIDTransm = 0;
 
 	/* Choose right dummy cells for MSC QAM scheme */
-	switch (TransmParam.Channel.eMSCmode)
+	switch (TransmParam.eMSCCodingScheme)
 	{
 	case CS_1_SM: /* no 4QAM in MSC */
 		break;
@@ -148,10 +143,10 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 	}
 
 	/* Define block-sizes for input and output of the module ---------------- */
-	iInputBlockSize = cmt.veciNumMSCSym[0];
-	iInputBlockSize2 = cmt.veciNumFACSym[0];
-	iInputBlockSize3 = cmt.veciNumSDCSym[0];
-	iOutputBlockSize = cmt.iNumCarrier; /* Output */
+	iInputBlockSize = Param.veciNumMSCSym[0]; /* MSC */
+	iInputBlockSize2 = Param.veciNumFACSym[0]; /* FAC */
+	iInputBlockSize3 = Param.veciNumSDCSym[0]; /* SDC */
+	iOutputBlockSize = Param.iNumCarrier; /* Output */
 }
 
 
@@ -160,16 +155,16 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 \******************************************************************************/
 void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	const CCellMappingTable& cmt = ReceiverParam.CellMappingTable;
+	const CCellMappingTable& Param = ReceiverParam.CellMappingTable;
 
 	/* Set absolute symbol position */
 	const int iSymbolCounterAbs =
 		iCurrentFrameID * iNumSymPerFrame + iSymbolCounter;
 
 	/* Set output block-sizes for this symbol */
-	iOutputBlockSize = cmt.veciNumMSCSym[iSymbolCounterAbs];
-	iOutputBlockSize2 = cmt.veciNumFACSym[iSymbolCounterAbs];
-	iOutputBlockSize3 = cmt.veciNumSDCSym[iSymbolCounterAbs];
+	iOutputBlockSize = Param.veciNumMSCSym[iSymbolCounterAbs];
+	iOutputBlockSize2 = Param.veciNumFACSym[iSymbolCounterAbs];
+	iOutputBlockSize3 = Param.veciNumSDCSym[iSymbolCounterAbs];
 
 	/* Demap data from the cells */
 	int iMSCCounter = 0;
@@ -178,10 +173,10 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 	for (int iCar = 0; iCar < iNumCarrier; iCar++)
 	{
 		/* MSC */
-		if (_IsMSC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
+		if (_IsMSC(Param.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
 			/* Ignore dummy cells */
-			if (iMSCCounter < cmt.veciNumMSCSym[iSymbolCounterAbs])
+			if (iMSCCounter < Param.veciNumMSCSym[iSymbolCounterAbs])
 			{
 				(*pvecOutputData)[iMSCCounter] = (*pvecInputData)[iCar];
 
@@ -191,7 +186,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 
 		/* FAC */
-		if (_IsFAC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
+		if (_IsFAC(Param.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
 			(*pvecOutputData2)[iFACCounter] = (*pvecInputData)[iCar];
 
@@ -200,7 +195,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 
 		/* SDC */
-		if (_IsSDC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
+		if (_IsSDC(Param.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
 			(*pvecOutputData3)[iSDCCounter] = (*pvecInputData)[iCar];
 
@@ -254,7 +249,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Frame ID of this FAC block stands for the "current" block. We need
 		   the ID of the next block, therefore we have to add "1" */
-		int iNewFrameID = ReceiverParam.FACParameters.iFrameId + 1;
+		int iNewFrameID = ReceiverParam.iFrameIDReceiv + 1;
 		if (iNewFrameID == NUM_FRAMES_IN_SUPERFRAME)
 			iNewFrameID = 0;
 
@@ -262,6 +257,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 		iCurrentFrameID++;
 		if (iCurrentFrameID == NUM_FRAMES_IN_SUPERFRAME)
 			iCurrentFrameID = 0;
+
 		/* Check if frame ID has changed, if yes, reset output buffers to avoid
 		   buffer overflows */
 		if (iCurrentFrameID != iNewFrameID)
@@ -296,16 +292,12 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 void COFDMCellDemapping::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.CellMappingTable.MakeTable(
-		ReceiverParam.Channel.eRobustness,
-		ReceiverParam.Channel.eSpectrumOccupancy
-	);
-	const CCellMappingTable& cmt = ReceiverParam.CellMappingTable;
+	const CCellMappingTable& Param = ReceiverParam.CellMappingTable;
 
-	iNumSymPerFrame = cmt.iNumSymPerFrame;
-	iNumCarrier = cmt.iNumCarrier;
-	iNumUsefMSCCellsPerFrame = cmt.iNumUsefMSCCellsPerFrame;
-	iNumSDCCellsPerSFrame = cmt.iNumSDCCellsPerSFrame;
+	iNumSymPerFrame = Param.iNumSymPerFrame;
+	iNumCarrier = Param.iNumCarrier;
+	iNumUsefMSCCellsPerFrame = Param.iNumUsefMSCCellsPerFrame;
+	iNumSDCCellsPerSFrame = Param.iNumSDCCellsPerSFrame;
 
 	/* Init symbol-counter and internal frame counter */
 	iSymbolCounter = 0;
@@ -327,11 +319,11 @@ void COFDMCellDemapping::InitInternal(CParameter& ReceiverParam)
 	iMaxOutputBlockSize2 = NUM_FAC_BITS_PER_BLOCK;
 	/* SDC, one block is exactly finished when last symbol with SDC cells is
 	   processed */
-	iMaxOutputBlockSize3 = cmt.iNumSDCCellsPerSFrame;
+	iMaxOutputBlockSize3 = Param.iNumSDCCellsPerSFrame;
 	/* MSC, since the MSC logical frames must not end at the end of one symbol
 	   (could be somewhere in the middle of the symbol), the output buffer must
 	   accept more cells than one logical MSC frame is long. The worst case is
 	   that the block ends right at the beginning of one symbol; in this case we
 	   have an overhang of approximately one symbol of MSC cells */
-	iMaxOutputBlockSize = cmt.iNumUsefMSCCellsPerFrame + cmt.iMaxNumMSCSym;
+	iMaxOutputBlockSize = Param.iNumUsefMSCCellsPerFrame + Param.iMaxNumMSCSym;
 }

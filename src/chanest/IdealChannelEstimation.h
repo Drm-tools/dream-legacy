@@ -30,7 +30,7 @@
 #define IDEALCHANEST_H__3B0BA660_CA3452341912__INCLUDED_
 
 #include "../Parameter.h"
-#include "../util/SimulationModul.h"
+#include "../util/Modul.h"
 #include "../matlib/Matlib.h"
 #include "../util/Vector.h"
 #include "ChanEstTime.h" /* Because of "CPilotModiClass" */
@@ -39,7 +39,7 @@
 
 /* Classes ********************************************************************/
 class CIdealChanEst :
-	public CSimulationModul<CEquSig, CEquSig, CChanSimData<_COMPLEX> >,
+	public CSimulationModul<CEquSig, CEquSig, CChanSimDataDemod>, 
 	public CPilotModiClass
 {
 public:

@@ -55,7 +55,7 @@
 /// @file       NML.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.cpp,v 1.2.2.5 2009/03/05 23:14:15 jcable Exp $
+/// $Id: NML.cpp,v 1.9 2012/09/30 10:33:58 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -66,15 +66,13 @@
 ///
 //////////////////////////////////////////////////////////////////////////////
 
-#include <zlib.h>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <cstdio>
+#include <zlib.h>
 #include "NML.h"
 #include "Splitter.h"
 #include "cpplog.h"
-
-using namespace std;
 
 #ifdef _MSC_VER
 # pragma warning (disable: 4786)
@@ -242,7 +240,7 @@ std::string NML::Dump(void) const
           GetObjectType(),
           isStatic(),
           GetRevisionIndex(),
-          int(_news.extended_header.size()),
+          _news.extended_header.size(),
           nr_of_items);
   std::string s = buf;
   if (_news.extended_header.size())
@@ -291,6 +289,7 @@ unsigned char* NMLFactory::getNextSection( const unsigned char*& p, unsigned sho
 			}
 			// we can safely skip the datasection now
 			i += 2 + dslen;
+			            continue;	
 		}
 
 		if( !(p[i] & 0xF0) ) // any jml code
@@ -401,10 +400,12 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 			return n;
 		}
 
+		/*
 		log_info
 			<< "decompressed NML, "
 			<< len << " -> " << ulen
 			<< endmsg;
+		*/
 
 		if( ulen + NML::NML_NR_OF_HEADER_BYTES + rno.extended_header_len > NML::NML_MAX_LEN )
 		{
@@ -419,10 +420,12 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 		p = uncompressed.nml + NML::NML_NR_OF_HEADER_BYTES + rno.extended_header_len;
 		len = uncompressed.nml_len;
 
+		/*
 		log_info
 			<< "compressed NML len=" << rno.nml_len
 			<< ", uncompressed NML len= " << uncompressed.nml_len
 			<< endmsg;
+		*/
 	}
 	// wasn't compressed, so just copy content
 	else
@@ -533,7 +536,7 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 				n->SetErrorDump( n->_news.object_id, uncompressed, error );
 				return n;
 			}
-			//bool newRow = (*p == 0x04);
+			bool newRow = (*p == 0x04);
 			len--;
 			p++;
 

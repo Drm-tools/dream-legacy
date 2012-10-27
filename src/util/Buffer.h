@@ -39,12 +39,12 @@
 template<class TData> class CBuffer
 {
 public:
-	CBuffer() : iBufferSize(0), bRequestFlag(false) {}
+	CBuffer() : iBufferSize(0), bRequestFlag(FALSE) {}
 	virtual	~CBuffer() {}
 
-	void						SetRequestFlag(const bool bNewRequestFlag)
-									{bRequestFlag = bNewRequestFlag;}
-	bool		    			GetRequestFlag() const {return bRequestFlag;}
+	void			SetRequestFlag(const _BOOLEAN bNewRequestFlag)
+						{bRequestFlag = bNewRequestFlag;}
+	_BOOLEAN		GetRequestFlag() const {return bRequestFlag;}
 
 	/* Virtual function to be declared by the derived object */
 	virtual void				Init(const int iNewBufferSize);
@@ -55,9 +55,10 @@ public:
 	virtual int					GetFillLevel() const = 0;
 
 protected:
-	CVectorEx<TData>			vecBuffer;
-	int							iBufferSize;
-	bool						bRequestFlag;
+	CVectorEx<TData>	vecBuffer;
+	int					iBufferSize;
+
+	_BOOLEAN			bRequestFlag;
 };
 
 /* Single block buffer */
@@ -134,7 +135,7 @@ template<class TData> void CSingleBuffer<TData>::Init(const int iNewBufferSize)
 template<class TData> CVectorEx<TData>* CSingleBuffer<TData>::Get(const int iRequestedSize)
 {
 	/* Get data */
-#ifdef _DEBUG_
+#ifdef _DEBUG_DREAM
 	if (iRequestedSize > iFillLevel)
 	{
 		DebugError("SingleBuffer Get()", "FillLevel",
@@ -153,7 +154,7 @@ template<class TData> void CSingleBuffer<TData>::Put(const int iOfferedSize)
 	/* New Block was added, set new fill level */
 	iFillLevel += iOfferedSize;
 
-#ifdef _DEBUG_
+#ifdef _DEBUG_DREAM
 	if (iFillLevel > this->iBufferSize)
 	{
 		DebugError("SingleBuffer Put()", "FillLevel",
@@ -190,7 +191,7 @@ template<class TData> void CCyclicBuffer<TData>::Clear()
 	iPut = 0;
 	iGet = 0;
 	iBufferState = BS_EMPTY;
-	this->bRequestFlag = false;
+	this->bRequestFlag = FALSE;
 }
 
 template<class TData> CVectorEx<TData>* CCyclicBuffer<TData>::Get(const int iRequestedSize)
@@ -205,10 +206,10 @@ template<class TData> CVectorEx<TData>* CCyclicBuffer<TData>::Get(const int iReq
 	if ((iAvailSpace < 0) || ((iAvailSpace == 0) && (iBufferState == BS_FULL)))
 		iAvailSpace += this->iBufferSize;
 
-#ifdef _DEBUG_
+#ifdef _DEBUG_DREAM
 	if (iAvailSpace < iRequestedSize)
 	{
-		DebugError("CyclicBuffer Get()", "Availabe space",
+		DebugError("CyclicBuffer Get()", "Available space",
 			iAvailSpace, "Requested size", iAvailSpace);
 	}
 #endif
@@ -266,15 +267,13 @@ template<class TData> void CCyclicBuffer<TData>::Put(const int iOfferedSize)
 	if ((iAvailSpace < 0) || ((iAvailSpace == 0) && (iBufferState == BS_EMPTY)))
 		iAvailSpace += this->iBufferSize;
 
+#ifdef _DEBUG_DREAM
 	if (iAvailSpace < iOfferedSize)
 	{
-		#ifdef _DEBUG_
 		DebugError("CyclicBuffer Put()", "Available space",
 			iAvailSpace, "Offered size", iOfferedSize);
-		#endif
-		/* Re-start the buffer pointers. Assume that the buffer itself is big enough. */
-		Clear();
 	}
+#endif
 
 
 	/* Put data ------------------------------------------------------------- */

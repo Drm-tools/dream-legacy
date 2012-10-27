@@ -26,17 +26,12 @@
 \******************************************************************************/
 
 #include "MatlibStdToolbox.h"
-#include <iostream>
-#include <limits>
 
-//	Notes: Instead of NaN we use _REAL::max. Infinite bounds are not allowed!
-
-const _REAL NaN = numeric_limits<_REAL>::max();
 
 /* Implementation *************************************************************/
 CReal Min(const CMatlibVector<CReal>& rvI)
 {
-	const int iSize = rvI.Size();
+	const int iSize = rvI.GetSize();
 	CReal rMinRet = rvI[0];
 	for (int i = 1; i < iSize; i++)
 	{
@@ -49,7 +44,7 @@ CReal Min(const CMatlibVector<CReal>& rvI)
 
 void Min(CReal& rMinVal, int& iMinInd, const CMatlibVector<CReal>& rvI)
 {
-	const int iSize = rvI.Size();
+	const int iSize = rvI.GetSize();
 	rMinVal = rvI[0]; /* Init actual minimum value */
 	iMinInd = 0; /* Init index of minimum */
 	for (int i = 1; i < iSize; i++)
@@ -73,7 +68,7 @@ CReal Max(const CMatlibVector<CReal>& rvI)
 
 void Max(CReal& rMaxVal, int& iMaxInd, const CMatlibVector<CReal>& rvI)
 {
-	const int iSize = rvI.Size();
+	const int iSize = rvI.GetSize();
 	rMaxVal = rvI[0]; /* Init actual maximum value */
 	iMaxInd = 0; /* Init index of maximum */
 	for (int i = 1; i < iSize; i++)
@@ -88,7 +83,7 @@ void Max(CReal& rMaxVal, int& iMaxInd, const CMatlibVector<CReal>& rvI)
 
 CMatlibVector<CReal> Sort(const CMatlibVector<CReal>& rvI)
 {
-	const int iSize = rvI.Size();
+	const int iSize = rvI.GetSize();
 	const int iEnd = iSize - 1;
 	CMatlibVector<CReal> fvRet(iSize, VTY_TEMP);
 
@@ -135,7 +130,7 @@ CMatlibMatrix<CReal> Eye(const int iLen)
 
 CMatlibMatrix<CComplex> Diag(const CMatlibVector<CComplex>& cvI)
 {
-	const int iSize = cvI.Size();
+	const int iSize = cvI.GetSize();
 	CMatlibMatrix<CComplex> matcRet(iSize, iSize, VTY_TEMP);
 
 	/* Set the diagonal to the values of the input vector */
@@ -166,7 +161,7 @@ CReal Trace(const CMatlibMatrix<CReal>& rmI)
 
 CMatlibMatrix<CComplex> Toeplitz(const CMatlibVector<CComplex>& cvI)
 {
-	const int				iSize = cvI.Size();
+	const int				iSize = cvI.GetSize();
 	CMatlibMatrix<CComplex>	matcRet(iSize, iSize, VTY_TEMP);
 
 	/* Create Toeplitz matrix */
@@ -222,7 +217,7 @@ CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 	/* Set result to be the identity matrix */
 	matrRet = Eye(iSize);
 
-	for (i = 0; i < iSize; i++)
+	for (i = 0; i < iSize; i++) 
 	{
 		/* Check that the element in (i,i) is not zero */
 		if ((Real(work[i][i]) == 0) && (Imag(work[i][i]) == 0))
@@ -285,7 +280,7 @@ printf("couldn't invert matrix, possibly singular.\n");
    Matlib internal calculations */
 CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 				   const CReal errorBound, CReal& integralBound,
-				   bool& integralError, const CReal ru)
+				   _BOOLEAN& integralError, const CReal ru)
 {
 /*
 	The following code (inclusive the actual Quad() function) is based on a
@@ -307,7 +302,7 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	int			m1, jend, mstart, j;
 
 	if (integralError)
-		return NaN;
+		return _MAXREAL; /* NaN */
 
 	/* Integrate over [a,b]. Initialize */
 	const int max = 1024;
@@ -349,11 +344,11 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 			m = max - 1;
 			mstart = max - 1;
 		}
-
+		
 		h = (CReal) 0.5 * h;
 		h6 = h / 6;
 		bound = (CReal) 0.5 * bound;
-
+		
 		do
 		{
 			left = x[j];
@@ -377,8 +372,8 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 			else
 			{
 				if (integralError)
-					return NaN;
-
+					return _MAXREAL; /* NaN */
+				
 				/* Are we out of memory? */
 				if (m == j)
 				{
@@ -395,7 +390,7 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 					value += _integral(f, left, x[j] + 2 * h, bound,
 						integralBound, integralError, ru);
 				}
-				else
+				else 
 				{
 					/* No, we are not */
 					left = x[j];
@@ -404,8 +399,8 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 					if (left >= right)
 					{
 						/* The error bound specified is too small! */
-						integralError = true;
-						return NaN;
+						integralError = TRUE;
+						return _MAXREAL; /* NaN */
 					}
 
 					m1 = m + step;
@@ -429,7 +424,7 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	while (m != mstart);
 
 	if (integralError)
-		return NaN;
+		return _MAXREAL; /* NaN */
 	else
 		return value;
 }
@@ -451,7 +446,7 @@ CComplex Quad(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	ru *= 2;
 
 	CReal integralBound = errorBound;
-	bool integralError = false;
+	_BOOLEAN integralError = FALSE;
 
 	/* Compute */
 	return _integral(f, a, b, errorBound, integralBound, integralError, ru);
@@ -465,7 +460,7 @@ CMatlibVector<CComplex> Fft(const CMatlibVector<CComplex>& cvI,
 	fftw_complex*	pFftwComplexIn;
 	fftw_complex*	pFftwComplexOut;
 
-	const int				n(cvI.Size());
+	const int				n(cvI.GetSize());
 
 	CMatlibVector<CComplex>	cvReturn(n, VTY_TEMP);
 
@@ -493,15 +488,30 @@ CMatlibVector<CComplex> Fft(const CMatlibVector<CComplex>& cvI,
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
 	{
+#ifdef HAVE_FFTW3_H
+		pFftwComplexIn[i][0] = cvI[i].real();
+		pFftwComplexIn[i][1] = cvI[i].imag();
+#else
 		pFftwComplexIn[i].re = cvI[i].real();
 		pFftwComplexIn[i].im = cvI[i].imag();
+#endif
 	}
 
 	/* Actual fftw call */
+#ifdef HAVE_FFTW3_H
+	pCurPlan->FFTPlForw = fftw_plan_dft_1d (pCurPlan->fftw_n, pFftwComplexIn, pFftwComplexOut, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_execute(pCurPlan->FFTPlForw);
+
+#else
 	fftw_one(pCurPlan->FFTPlForw, pFftwComplexIn, pFftwComplexOut);
+#endif
 
 	for (i = 0; i < n; i++)
+#ifdef HAVE_FFTW3_H
+		cvReturn[i] = CComplex(pFftwComplexOut[i][0], pFftwComplexOut[i][1]);
+#else
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re, pFftwComplexOut[i].im);
+#endif
 
 	if (!FftPlans.IsInitialized())
 		delete pCurPlan;
@@ -517,7 +527,7 @@ CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI,
 	fftw_complex*	pFftwComplexIn;
 	fftw_complex*	pFftwComplexOut;
 
-	const int		n(cvI.Size());
+	const int		n(cvI.GetSize());
 
 	CMatlibVector<CComplex>	cvReturn(n, VTY_TEMP);
 
@@ -545,18 +555,33 @@ CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI,
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
 	{
+#ifdef HAVE_FFTW3_H
+		pFftwComplexIn[i][0] = cvI[i].real();
+		pFftwComplexIn[i][1] = cvI[i].imag();
+#else
 		pFftwComplexIn[i].re = cvI[i].real();
 		pFftwComplexIn[i].im = cvI[i].imag();
+#endif
 	}
 
 	/* Actual fftw call */
+#ifdef HAVE_FFTW3_H
+	pCurPlan->FFTPlBackw = fftw_plan_dft_1d (pCurPlan->fftw_n, pFftwComplexIn, pFftwComplexOut, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_execute(pCurPlan->FFTPlBackw);
+#else
 	fftw_one(pCurPlan->FFTPlBackw, pFftwComplexIn, pFftwComplexOut);
-
+#endif
+	
 	const CReal scale = (CReal) 1.0 / n;
 	for (i = 0; i < n; i++)
 	{
+#ifdef HAVE_FFTW3_H
+		cvReturn[i] = CComplex(pFftwComplexOut[i][0] * scale,
+			pFftwComplexOut[i][1] * scale);
+#else
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re * scale,
 			pFftwComplexOut[i].im * scale);
+#endif
 	}
 
 	if (!FftPlans.IsInitialized())
@@ -570,14 +595,19 @@ CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI,
 {
 	int			i;
 	CFftPlans*	pCurPlan;
+#ifdef HAVE_FFTW3_H
+	double* 	pFftwRealIn;
+	double* 	pFftwRealOut;
+#else
 	fftw_real*	pFftwRealIn;
 	fftw_real*	pFftwRealOut;
+#endif
 
-	const int	iSizeI = fvI.Size();
+	const int	iSizeI = fvI.GetSize();
 	const int	iLongLength(iSizeI);
 	const int	iShortLength(iLongLength / 2);
 	const int	iUpRoundShortLength((iLongLength + 1) / 2);
-
+	
 	CMatlibVector<CComplex>	cvReturn(iShortLength
 		/* Include Nyquist frequency in case of even N */ + 1, VTY_TEMP);
 
@@ -607,7 +637,12 @@ CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI,
 		pFftwRealIn[i] = fvI[i];
 
 	/* Actual fftw call */
+#ifdef HAVE_FFTW3_H
+	pCurPlan->RFFTPlForw = fftw_plan_r2r_1d(pCurPlan->fftw_n, pFftwRealIn, pFftwRealOut, FFTW_R2HC, FFTW_ESTIMATE);
+	fftw_execute(pCurPlan->RFFTPlForw);
+#else
 	rfftw_one(pCurPlan->RFFTPlForw, pFftwRealIn, pFftwRealOut);
+#endif
 
 	/* Now build complex output vector */
 	/* Zero frequency */
@@ -633,10 +668,15 @@ CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI,
 */
 	int			i;
 	CFftPlans*	pCurPlan;
+#ifdef HAVE_FFTW3_H
+	double*		pFftwRealIn;
+	double*		pFftwRealOut;
+#else
 	fftw_real*	pFftwRealIn;
 	fftw_real*	pFftwRealOut;
+#endif
 
-	const int	iShortLength(cvI.Size() - 1); /* Nyquist frequency! */
+	const int	iShortLength(cvI.GetSize() - 1); /* Nyquist frequency! */
 	const int	iLongLength(iShortLength * 2);
 
 	CMatlibVector<CReal> fvReturn(iLongLength, VTY_TEMP);
@@ -670,14 +710,19 @@ CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI,
 		pFftwRealIn[iLongLength - i] = cvI[i].imag();
 	}
 	/* Nyquist frequency */
-	pFftwRealIn[iShortLength] = cvI[iShortLength].real();
+	pFftwRealIn[iShortLength] = cvI[iShortLength].real(); 
 
 	/* Actual fftw call */
+#ifdef HAVE_FFTW3_H
+        pCurPlan->RFFTPlBackw = fftw_plan_r2r_1d(pCurPlan->fftw_n, pFftwRealIn, pFftwRealOut, FFTW_HC2R, FFTW_ESTIMATE);
+	fftw_execute(pCurPlan->RFFTPlBackw);
+#else
 	rfftw_one(pCurPlan->RFFTPlBackw, pFftwRealIn, pFftwRealOut);
+#endif
 
 	/* Scale output vector */
 	const CReal scale = (CReal) 1.0 / iLongLength;
-	for (i = 0; i < iLongLength; i++)
+	for (i = 0; i < iLongLength; i++) 
 		fvReturn[i] = pFftwRealOut[i] * scale;
 
 	if (!FftPlans.IsInitialized())
@@ -695,7 +740,7 @@ CMatlibVector<CReal> FftFilt(const CMatlibVector<CComplex>& rvH,
 	This function only works with EVEN N!
 */
 	CFftPlans*				pCurPlan;
-	const int				iL(rvH.Size() - 1); /* Nyquist frequency! */
+	const int				iL(rvH.GetSize() - 1); /* Nyquist frequency! */
 	const int				iL2(2 * iL);
 	CMatlibVector<CReal>	rvINew(iL2);
 	CMatlibVector<CReal>	rvOutTMP(iL2);
@@ -734,8 +779,13 @@ CFftPlans::~CFftPlans()
 	if (bInitialized)
 	{
 		/* Delete old plans and intermediate buffers */
+#ifdef HAVE_FFTW3_H
+		fftw_destroy_plan(RFFTPlForw);
+		fftw_destroy_plan(RFFTPlBackw);
+#else
 		rfftw_destroy_plan(RFFTPlForw);
 		rfftw_destroy_plan(RFFTPlBackw);
+#endif
 		fftw_destroy_plan(FFTPlForw);
 		fftw_destroy_plan(FFTPlBackw);
 
@@ -751,8 +801,13 @@ void CFftPlans::Init(const int iFSi)
 	if (bInitialized)
 	{
 		/* Delete old plans and intermediate buffers */
+#ifdef HAVE_FFTW3_H
+	        fftw_destroy_plan(RFFTPlForw);
+		fftw_destroy_plan(RFFTPlBackw);
+#else
 		rfftw_destroy_plan(RFFTPlForw);
 		rfftw_destroy_plan(RFFTPlBackw);
+#endif
 		fftw_destroy_plan(FFTPlForw);
 		fftw_destroy_plan(FFTPlBackw);
 
@@ -763,15 +818,29 @@ void CFftPlans::Init(const int iFSi)
 	}
 
 	/* Create new plans and intermediate buffers */
+#ifdef HAVE_FFTW3_H
+	pFftwRealIn = new double[iFSi];
+	pFftwRealOut = new double[iFSi];
+#else
 	pFftwRealIn = new fftw_real[iFSi];
 	pFftwRealOut = new fftw_real[iFSi];
+#endif
 	pFftwComplexIn = new fftw_complex[iFSi];
 	pFftwComplexOut = new fftw_complex[iFSi];
 
+#ifdef HAVE_FFTW3_H
+	fftw_n = iFSi;
+
+	RFFTPlForw = NULL;
+	RFFTPlBackw = NULL;
+	FFTPlForw = NULL;
+	FFTPlBackw = NULL;
+#else
 	RFFTPlForw = rfftw_create_plan(iFSi, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
 	RFFTPlBackw = rfftw_create_plan(iFSi, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
 	FFTPlForw = fftw_create_plan(iFSi, FFTW_FORWARD, FFTW_ESTIMATE);
 	FFTPlBackw = fftw_create_plan(iFSi, FFTW_BACKWARD, FFTW_ESTIMATE);
+#endif
 
 	bInitialized = true;
 }

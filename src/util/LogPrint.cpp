@@ -40,7 +40,7 @@ void logStatus(char *format, ...) {
 
 	vsprintf(s, format, args);
 	CLogPrinter::GetInstance()->LogStatus(s);
-}
+} 
 
 void logWarning(char *format, ...) {
 	char s[256];
@@ -49,7 +49,7 @@ void logWarning(char *format, ...) {
 
 	vsprintf(s, format, args);
 	CLogPrinter::GetInstance()->LogWarning(s);
-}
+} 
 
 void logError(char *format, ...) {
 	char s[256];
@@ -58,7 +58,7 @@ void logError(char *format, ...) {
 
 	vsprintf(s, format, args);
 	CLogPrinter::GetInstance()->LogWarning(s);
-}
+} 
 
 CLogPrinter * CLogPrinter::mpFirstInstance = 0;
 CLogPrinter * CLogPrinter::mpNullPrinter = 0;
@@ -86,7 +86,7 @@ CLogPrinter * CLogPrinter::GetNullInstance(void)
 
 CChainingLogPrinter::CChainingLogPrinter()
 {
-	mpNextInstance = GetNullInstance();
+	mpNextInstance = GetNullInstance(); 
 	AddInstance(this);
 }
 

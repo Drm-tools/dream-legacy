@@ -36,37 +36,77 @@
 # include <windows.h>
 #endif
 
+#include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
-#include "../util/Hamlib.h"
-#ifdef QT_GUI_LIB
-# include <QApplication>
-# include <QThread>
-# include <QMessageBox>
-# include <QTranslator>
-# include "TransmitterMainWindow.h"
-# include "RxApp.h"
-#endif
+#include "Rig.h"
+
 #include <iostream>
 
-/* Implementation *************************************************************/
-#ifdef QT_GUI_LIB
+#include <qthread.h>
+#ifdef USE_QT_GUI
+# include <qapplication.h>
+# include <qmessagebox.h>
+# include "fdrmdialog.h"
+# include "TransmDlg.h"
+#endif
+#if QT_VERSION >= 0x040000
+# include <QCoreApplication>
+# include <QTranslator>
+#endif
+
+class CRx: public QThread
+{
+public:
+	CRx(CDRMReceiver& nRx):rx(nRx){}
+	void run();
+private:
+	CDRMReceiver& rx;
+};
+
+void
+CRx::run()
+{
+#ifdef _WIN32
+    /* it doesn't matter what the GUI does, we want to be normal! */
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+#endif
+    qDebug("Working thread started");
+    try
+    {
+        /* Call receiver main routine */
+        rx.Start();
+    }
+    catch (CGenErr GenErr)
+    {
+        ErrorMessage(GenErr.strError);
+    }
+    catch (string strError)
+    {
+        ErrorMessage(strError);
+    }
+    qDebug("Working thread complete");
+}
+
+#ifdef USE_QT_GUI
 /******************************************************************************\
 * Using GUI with QT                                                            *
 \******************************************************************************/
-
 int
 main(int argc, char **argv)
 {
 	/* create app before running Settings.Load to consume platform/QT parameters */
 	QApplication app(argc, argv);
-	RxApp m;
 
 #if defined(__APPLE__)
 	/* find plugins on MacOs when deployed in a bundle */
-	QCoreApplication::addLibraryPath(QCoreApplication::applicationDirPath()+"../PlugIns");
+# if QT_VERSION>0x040000
+	app.addLibraryPath(app.applicationDirPath()+"../PlugIns");
+# else
+	app.setLibraryPaths(app.applicationDirPath()+"../PlugIns");
+# endif
 #endif
 
 	/* Load and install multi-language support (if available) */
@@ -74,8 +114,16 @@ main(int argc, char **argv)
 	if (translator.load("dreamtr"))
 		app.installTranslator(&translator);
 
+	CDRMSimulation DRMSimulation;
+
+	/* Call simulation script. If simulation is activated, application is
+	   automatically exit in that routine. If in the script no simulation is
+	   activated, this function will immediately return */
+	DRMSimulation.SimScript();
+
+	CSettings Settings;
 	/* Parse arguments and load settings from init-file */
-	m.Settings.Load(argc, argv);
+	Settings.Load(argc, argv);
 
 	try
 	{
@@ -84,80 +132,81 @@ main(int argc, char **argv)
 		/* works for both transmit and receive. GUI is low, working is normal.
 		 * the working thread does not need to know what the setting is.
 		 */
-			if (m.Settings.Get("GUI", "processpriority", 1) != 0)
+			if (Settings.Get("GUI", "processpriority", TRUE))
 			{
 				/* Set priority class for this application */
 				SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
 				/* Low priority for GUI thread */
 				SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
-				m.Settings.Put("GUI", "processpriority", 1);
+				Settings.Put("GUI", "processpriority", TRUE);
 			}
 			else
-			{
-				m.Settings.Put("GUI", "processpriority", 0);
-			}
+				Settings.Put("GUI", "processpriority", FALSE);
 #endif
 
-		string strMode = m.Settings.Get("0", "mode", string("RX"));
-
-		bool bShowHelp = m.Settings.Get("command", "help", 0);
-		if(bShowHelp)
+		string mode = Settings.Get("command", "mode", string("receive"));
+		if (mode == "receive")
 		{
-			string strError = m.Settings.Get("command", "error", string(""));
+			CDRMReceiver DRMReceiver;
 
-			string strHelp = m.Settings.UsageArguments(argv);
-			if(strError != "")
+			/* First, initialize the working thread. This should be done in an extra
+			   routine since we cannot 100% assume that the working thread is
+			   ready before the GUI thread */
+
+			CRig rig(DRMReceiver.GetParameters());
+			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
+			DRMReceiver.LoadSettings(Settings);
+
+			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
+
+#ifdef HAVE_LIBHAMLIB
+			DRMReceiver.SetRig(&rig);
+
+			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
 			{
-				strHelp = strError + " is not a valid argument\n" + strHelp;
+				rig.subscribe();
 			}
+#endif
+			FDRMDialog MainDlg(DRMReceiver, Settings, rig);
 
-			QMessageBox::information(0, "Dream", strHelp.c_str());
-			exit(0);
-		}
+			/* Start working thread */
+			CRx rx(DRMReceiver);
+			rx.start();
 
-		if (strMode == "RX")
-		{
-		    rig_set_debug_level(RIG_DEBUG_TRACE);//RIG_DEBUG_VERBOSE);
-		    rig_load_all_backends();
-		    m.Receiver.LoadSettings();
-		    CParameter* Parameters = m.Receiver.GetParameters();
-		    Parameters->RxEvent = ChannelReconfiguration;
-		    m.doNewMainWindow();
-		    m.Receiver.start();
-		    app.exec();
-		    m.Receiver.SaveSettings();
-		}
-		else if (strMode == "TX" || strMode == "ENC" || strMode == "MOD")
-		{
-			CDRMTransmitter DRMTransmitter;
-
-			DRMTransmitter.LoadSettings(m.Settings);
-
-			TransmitterMainWindow MainDlg(DRMTransmitter, m.Settings, NULL, NULL, Qt::WindowMinMaxButtonsHint);
 			/* Set main window */
-			//app.setMainWidget(&MainDlg);
-			//setMainWidget - TODO You need not have a main widget; connecting lastWindowClosed() to quit() is an alternative.
+#if QT_VERSION < 0x040000
+			app.setMainWidget(&MainDlg);
+#endif
+
+			app.exec();
+
+#ifdef HAVE_LIBHAMLIB
+			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
+			{
+				rig.unsubscribe();
+			}
+			rig.SaveSettings(Settings);
+#endif
+			DRMReceiver.SaveSettings(Settings);
+		}
+		else if(mode == "transmit")
+		{
+			TransmDialog MainDlg(Settings);
+
+			/* Set main window */
+#if QT_VERSION < 0x040000
+			app.setMainWidget(&MainDlg);
+#endif
 
 			/* Show dialog */
 			MainDlg.show();
 			app.exec();
-
-			DRMTransmitter.SaveSettings(m.Settings);
-		}
-		else if (strMode == "SIM")
-		{
-
-	    CDRMSimulation DRMSimulation;
-
-	    /* Call simulation script. If simulation is activated, application is
-	       automatically exit in that routine. If in the script no simulation is
-	       activated, this function will immediately return */
-	    DRMSimulation.SimScript();
 		}
 		else
 		{
-			QMessageBox::information(0, "Dream", m.Settings.UsageArguments(argv).c_str());
+			QMessageBox::information(0, "Dream", Settings.UsageArguments(argv).c_str());
+			exit(0);
 		}
 	}
 
@@ -175,7 +224,7 @@ main(int argc, char **argv)
 	}
 
 	/* Save settings to init-file */
-	m.Settings.Save();
+	Settings.Save();
 
 	return 0;
 }
@@ -207,7 +256,7 @@ ErrorMessage(string strErrorString)
 */
 	exit(1);
 }
-#else /* QT_GUI_LIB */
+#else /* USE_QT_GUI */
 /******************************************************************************\
 * No GUI                                                                       *
 \******************************************************************************/
@@ -219,34 +268,36 @@ main(int argc, char **argv)
 	{
 		CSettings Settings;
 		Settings.Load(argc, argv);
-		string strMode = m.Settings.Get("0", "mode", string("RX"));
-		if (strMode == "RX")
+		string mode = Settings.Get("command", "mode", string("receive"));
+		if (mode == "receive")
 		{
-			CDRMReceiver DRMReceiver;
-			DRMReceiver.LoadSettings(Settings);
-			DRMReceiver.Start();
-			DRMReceiver.SaveSettings(Settings);
-		}
-		else if (strMode == "TX" || strMode == "ENC" || strMode == "MOD")
-		{
-			CDRMTransmitter DRMTransmitter;
-			DRMTransmitter.LoadSettings(Settings);
-			DRMTransmitter.Start();
-			DRMTransmitter.SaveSettings(Settings);
-		}
-		else if (strMode == "SIM")
-		{
-
 			CDRMSimulation DRMSimulation;
 			CDRMReceiver DRMReceiver;
+
 			DRMSimulation.SimScript();
-			//DRMReceiver.LoadSettings(Settings);
-			//DRMReceiver.Start();
-			//DRMReceiver.SaveSettings(Settings);
+			DRMReceiver.LoadSettings(Settings);
+			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
+
+#if QT_VERSION >= 0x040000
+			QCoreApplication a(argc, argv);
+			/* Start working thread */
+			CRx rx(DRMReceiver);
+			rx.start();
+			return a.exec();
+#else
+			DRMReceiver.Start();
+#endif
+
+		}
+		else if(mode == "transmit")
+		{
+			CDRMTransmitter DRMTransmitter;
+			DRMTransmitter.Start();
 		}
 		else
 		{
-			ErrorMessage(m.Settings.UsageArguments(argv).c_str());
+			cerr << Settings.UsageArguments(argv) << endl;
+			exit(0);
 		}
 	}
 	catch(CGenErr GenErr)
@@ -262,19 +313,19 @@ ErrorMessage(string strErrorString)
 {
 	perror(strErrorString.c_str());
 }
-#endif /* QT_GUI_LIB */
+#endif /* USE_QT_GUI */
 
 void
 DebugError(const char *pchErDescr, const char *pchPar1Descr,
 		   const double dPar1, const char *pchPar2Descr, const double dPar2)
 {
 	FILE *pFile = fopen("test/DebugError.dat", "a");
-	fprintf(pFile, pchErDescr);
+	fprintf(pFile, "%s", pchErDescr);
 	fprintf(pFile, " ### ");
-	fprintf(pFile, pchPar1Descr);
+	fprintf(pFile, "%s", pchPar1Descr);
 	fprintf(pFile, ": ");
 	fprintf(pFile, "%e ### ", dPar1);
-	fprintf(pFile, pchPar2Descr);
+	fprintf(pFile, "%s", pchPar2Descr);
 	fprintf(pFile, ": ");
 	fprintf(pFile, "%e\n", dPar2);
 	fclose(pFile);

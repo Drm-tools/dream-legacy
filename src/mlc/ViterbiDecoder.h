@@ -93,52 +93,51 @@
 class CViterbiDecoder : public CChannelCode
 {
 public:
-	CViterbiDecoder();
-	virtual ~CViterbiDecoder() {}
+    CViterbiDecoder();
+    virtual ~CViterbiDecoder() {}
 
-	_REAL	Decode(CVector<CDistance>& vecNewDistance,
-				   CVector<_DECISION>& vecOutputBits);
-	void	Init(ECodScheme eNewCodingScheme,
-				 EChanType eNewChannelType, int iN1, int iN2,
-			     int iNewNumOutBitsPartA, int iNewNumOutBitsPartB,
-			     int iPunctPatPartA, int iPunctPatPartB, int iLevel);
+    _REAL	Decode(CVector<CDistance>& vecNewDistance,
+                 CVector<_DECISION>& vecOutputBits);
+    void	Init(ECodScheme eNewCodingScheme,
+              EChanType eNewChannelType, int iN1, int iN2,
+              int iNewNumOutBitsPartA, int iNewNumOutBitsPartB,
+              int iPunctPatPartA, int iPunctPatPartB, int iLevel);
 
 protected:
-	/* Two trellis data vectors are needed for current and old state */
-	_VITMETRTYPE			vecTrelMetric1[MC_NUM_STATES];
-	_VITMETRTYPE			vecTrelMetric2[MC_NUM_STATES];
+    /* Two trellis data vectors are needed for current and old state */
+    _VITMETRTYPE			vecTrelMetric1[MC_NUM_STATES];
+    _VITMETRTYPE			vecTrelMetric2[MC_NUM_STATES];
 
 #ifdef USE_MAX_LOG_MAP
-	CMatrix<_REAL>			matrAlpha;
-	CMatrix<_REAL>			matrMetricSet;
+    CMatrix<_REAL>			matrAlpha;
+    CMatrix<_REAL>			matrMetricSet;
 #else
-	_REAL					vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];
+    _REAL					vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];
 #endif
 
-	CVector<int>			veciTablePuncPat;
+    CVector<int>			veciTablePuncPat;
 
-	int						iNumOutBits;
-	int						iNumOutBitsWithMemory;
+    int						iNumOutBits;
+    int						iNumOutBitsWithMemory;
 
-	CMatrix<_DECISIONTYPE>	matdecDecisions;
+    CMatrix<_DECISIONTYPE>	matdecDecisions;
 
 #ifdef USE_SIMD
-	/* Fields for storing the reodered metrics for MMX trellis */
-	_VITMETRTYPE			chMet1[MC_NUM_STATES / 2];
-	_VITMETRTYPE			chMet2[MC_NUM_STATES / 2];
+    /* Fields for storing the reodered metrics for MMX trellis */
+    _VITMETRTYPE			chMet1[MC_NUM_STATES / 2];
+    _VITMETRTYPE			chMet2[MC_NUM_STATES / 2];
 
 #ifdef USE_MMX
-	void TrellisUpdateMMX
+    void TrellisUpdateMMX(
 #endif
 #ifdef USE_SSE2
-	void TrellisUpdateSSE2
+        void TrellisUpdateSSE2(
 #endif
-	(
-		const _DECISIONTYPE* pCurDec,
-		const _VITMETRTYPE* pCurTrelMetric, const _VITMETRTYPE* pOldTrelMetric,
-		const _VITMETRTYPE* pchMet1, const _VITMETRTYPE* pchMet2);
+            const _DECISIONTYPE* pCurDec,
+            const _VITMETRTYPE* pCurTrelMetric, const _VITMETRTYPE* pOldTrelMetric,
+            const _VITMETRTYPE* pchMet1, const _VITMETRTYPE* pchMet2);
 #endif
-};
+    };
 
 
 #endif // !defined(VITERBI_DECODER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

@@ -29,9 +29,10 @@
 #if !defined(DRMSIMULATION_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMSIMULATION_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
-#include "util/ReceiverModul_impl.h"
-#include "util/SimulationModul_impl.h"
-#include "util/TransmitterModul_impl.h"
+#include <iostream>
+#include "GlobalDefinitions.h"
+#include "Parameter.h"
+#include "util/Buffer.h"
 #include "DataIO.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
@@ -53,103 +54,102 @@
 class CDRMSimulation
 {
 public:
-	CDRMSimulation();
-	virtual ~CDRMSimulation() {}
+    CDRMSimulation();
+    virtual ~CDRMSimulation() {}
 
-	void SimScript();
+    void SimScript();
 
-	CParameter* GetParameters() {return &Param;}
+    CParameter* GetParameters() {
+        return &Param;
+    }
 
 protected:
-	void Run();
-	void Init();
-	string SimFileName(CParameter& Param, string strAddInf, bool bWithSNR);
+    void Run();
+    void Init();
+    string SimFileName(CParameter& Param, string strAddInf, _BOOLEAN bWithSNR);
 
-	int iSimTime;
-	int iSimNumErrors;
-	_REAL rStartSNR, rEndSNR, rStepSNR;
+    int iSimTime;
+    int iSimNumErrors;
+    _REAL rStartSNR, rEndSNR, rStepSNR;
 
-	/* Parameters */
-	CParameter				Param;
-
-
-	/* Buffers -------------------------------------------------------------- */
-	/* If you want to add a new buffer, make sure that it is cleared in the
-	   "Init()" routine! */
-	/* Transmitter buffers */
-	CSingleBuffer<_BINARY>				DataBuf;
-	CSingleBuffer<_COMPLEX>				MLCEncBuf;
-
-	CCyclicBuffer<_COMPLEX>				IntlBuf;
-	CCyclicBuffer<_COMPLEX>				FACMapBuf;
-	CCyclicBuffer<_COMPLEX>				SDCMapBuf;
-	CBuffer<_COMPLEX>*					MSC_FAC_SDC_MapBuf[3];
-
-	CSingleBuffer<_BINARY>				GenFACDataBuf;
-	CSingleBuffer<_BINARY>				GenSDCDataBuf;
-	CSingleBuffer<_COMPLEX>				CarMapBuf;
-	CSingleBuffer<_COMPLEX>				OFDMModBuf;
-
-	/* Simulation */
-	CCyclicBuffer<CChanSimData<_COMPLEX> >	OFDMDemodBufChan2;
-	CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
-	CSingleBuffer<CChanSimData<_COMPLEX> >	ChanEstOutBufChan;
-	CSingleBuffer<CChanSimData<_REAL> >		RecDataBuf;
-	CSingleBuffer<_REAL>				ChanResInBuf;
-
-	/* Receiver buffers */
-	CCyclicBuffer<_REAL>				InpResBuf;
-	CSingleBuffer<_COMPLEX>				FreqSyncAcqBuf;
-	CSingleBuffer<_COMPLEX>				TimeSyncBuf;
-	CSingleBuffer<_COMPLEX>				OFDMDemodBuf;
-	CSingleBuffer<_COMPLEX>				SyncUsingPilBuf;
-	CSingleBuffer<CEquSig>				ChanEstBuf;
-	CCyclicBuffer<CEquSig>				MSCCarDemapBuf;
-	CCyclicBuffer<CEquSig>				FACCarDemapBuf;
-	CCyclicBuffer<CEquSig>				SDCCarDemapBuf;
-	CSingleBuffer<CEquSig>				DeintlBuf;
-	CSingleBuffer<_BINARY>				FACDecBuf;
-	CSingleBuffer<_BINARY>				SDCDecBuf;
-	CSingleBuffer<_BINARY>				MSCMLCDecBuf;
+    /* Parameters */
+    CParameter				Param;
 
 
-	/* Modules -------------------------------------------------------------- */
-	/* Transmitter modules */
-	CGenSimData				GenSimData;
+    /* Buffers -------------------------------------------------------------- */
+    /* If you want to add a new buffer, make sure that it is cleared in the
+       "Init()" routine! */
+    /* Transmitter buffers */
+    CSingleBuffer<_BINARY>				DataBuf;
+    CSingleBuffer<_COMPLEX>				MLCEncBuf;
+    CCyclicBuffer<_COMPLEX>				IntlBuf;
+    CSingleBuffer<_BINARY>				GenFACDataBuf;
+    CCyclicBuffer<_COMPLEX>				FACMapBuf;
+    CSingleBuffer<_BINARY>				GenSDCDataBuf;
+    CCyclicBuffer<_COMPLEX>				SDCMapBuf;
+    CSingleBuffer<_COMPLEX>				CarMapBuf;
+    CSingleBuffer<_COMPLEX>				OFDMModBuf;
 
-	CMLCEncoder				MSCMLCEncoder;
-	CSymbInterleaver		SymbInterleaver;
-	CGenerateFACData		GenerateFACData;
-	CMLCEncoder				FACMLCEncoder;
-	CGenerateSDCData		GenerateSDCData;
-	CMLCEncoder				SDCMLCEncoder;
-	COFDMCellMapping		OFDMCellMapping;
-	COFDMModulation			OFDMModulation;
+    /* Simulation */
+    CCyclicBuffer<CChanSimDataDemod>	OFDMDemodBufChan2;
+    CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
+    CSingleBuffer<CChanSimDataDemod>	ChanEstOutBufChan;
+    CSingleBuffer<CChanSimDataMod>		RecDataBuf;
+    CSingleBuffer<_REAL>				ChanResInBuf;
 
-	/* DRM channel */
-	CDRMChannel				DRMChannel;
+    /* Receiver buffers */
+    CCyclicBuffer<_REAL>				InpResBuf;
+    CSingleBuffer<_COMPLEX>				FreqSyncAcqBuf;
+    CSingleBuffer<_COMPLEX>				TimeSyncBuf;
+    CSingleBuffer<_COMPLEX>				OFDMDemodBuf;
+    CSingleBuffer<_COMPLEX>				SyncUsingPilBuf;
+    CSingleBuffer<CEquSig>				ChanEstBuf;
+    CCyclicBuffer<CEquSig>				MSCCarDemapBuf;
+    CCyclicBuffer<CEquSig>				FACCarDemapBuf;
+    CCyclicBuffer<CEquSig>				SDCCarDemapBuf;
+    CSingleBuffer<CEquSig>				DeintlBuf;
+    CSingleBuffer<_BINARY>				FACDecBuf;
+    CSingleBuffer<_BINARY>				SDCDecBuf;
+    CSingleBuffer<_BINARY>				MSCMLCDecBuf;
 
-	/* Receiver modules */
-	CInputResample			InputResample;
-	CFreqSyncAcq			FreqSyncAcq;
-	CTimeSync				TimeSync;
-	COFDMDemodulation		OFDMDemodulation;
-	CSyncUsingPil			SyncUsingPil;
-	CChannelEstimation		ChannelEstimation;
-	COFDMCellDemapping		OFDMCellDemapping;
-	CMLCDecoder				FACMLCDecoder;
-	CUtilizeFACData			UtilizeFACData;
-	CMLCDecoder				SDCMLCDecoder;
-	CUtilizeSDCData			UtilizeSDCData;
-	CSymbDeinterleaver		SymbDeinterleaver;
-	CMLCDecoder				MSCMLCDecoder;
 
-	/* Simulation modules */
-	CEvaSimData				EvaSimData;
-	COFDMDemodSimulation	OFDMDemodSimulation;
-	CIdealChanEst			IdealChanEst;
+    /* Modules -------------------------------------------------------------- */
+    /* Transmitter modules */
+    CGenSimData				GenSimData;
 
-	CDataConvChanResam		DataConvChanResam;
+    CMSCMLCEncoder			MSCMLCEncoder;
+    CSymbInterleaver		SymbInterleaver;
+    CGenerateFACData		GenerateFACData;
+    CFACMLCEncoder			FACMLCEncoder;
+    CGenerateSDCData		GenerateSDCData;
+    CSDCMLCEncoder			SDCMLCEncoder;
+    COFDMCellMapping		OFDMCellMapping;
+    COFDMModulation			OFDMModulation;
+
+    /* DRM channel */
+    CDRMChannel				DRMChannel;
+
+    /* Receiver modules */
+    CInputResample			InputResample;
+    CFreqSyncAcq			FreqSyncAcq;
+    CTimeSync				TimeSync;
+    COFDMDemodulation		OFDMDemodulation;
+    CSyncUsingPil			SyncUsingPil;
+    CChannelEstimation		ChannelEstimation;
+    COFDMCellDemapping		OFDMCellDemapping;
+    CFACMLCDecoder			FACMLCDecoder;
+    CUtilizeFACData			UtilizeFACData;
+    CSDCMLCDecoder			SDCMLCDecoder;
+    CUtilizeSDCData			UtilizeSDCData;
+    CSymbDeinterleaver		SymbDeinterleaver;
+    CMSCMLCDecoder			MSCMLCDecoder;
+
+    /* Simulation modules */
+    CEvaSimData				EvaSimData;
+    COFDMDemodSimulation	OFDMDemodSimulation;
+    CIdealChanEst			IdealChanEst;
+
+    CDataConvChanResam		DataConvChanResam;
 
 };
 

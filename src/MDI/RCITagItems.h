@@ -43,16 +43,7 @@ protected:
 class CTagItemGeneratorCdmo : public CTagItemGenerator /* cdmo tag */
 {
 public:
-	void GenTag(const EModulationType eMode);
-protected:
-	string GetTagName(void);
-	string GetProfiles(void) { return ""; }
-};
-
-class CTagItemGeneratorCser : public CTagItemGenerator /* cser tag */
-{
-public:
-	void GenTag(const int iServiceID);
+	void GenTag(const ERecMode eMode);
 protected:
 	string GetTagName(void);
 	string GetProfiles(void) { return ""; }

@@ -3,10 +3,10 @@
 * Copyright (c) 2001-2007
 *
 * Author(s):
-*gVolker Fischer, Andrew Murphy, Andrea Russo
+* Volker Fischer, Andrew Murphy, Andrea Russo
 *
 * Description:
-*gLogging to a file
+* Logging to a file
 *
 *******************************************************************************
 *
@@ -34,75 +34,84 @@
 
 class CReceptLog
 {
-  public:
-	CReceptLog(CParameter & p):Parameters(p), File(),
-        bHeaderNeeded(true), bLogActivated(false),
-		bRxlEnabled(false), bPositionEnabled(false),
-		iSecDelLogStart(0), iFrequency(0)
-	{
-	}
-	virtual ~CReceptLog()
-	{
-	}
-	void Start(const string & filename);
-	void Stop();
-	void Update();
+public:
+    CReceptLog(CParameter & p);
+    virtual ~CReceptLog()
+    {
+    }
+    void Start(const string & filename);
+    void Stop();
+    void Update();
 
-	void SetRxlEnabled(const bool b) { bRxlEnabled = b; }
-	bool GetRxlEnabled() { return bRxlEnabled; }
+    void SetRxlEnabled(const _BOOLEAN b) {
+        bRxlEnabled = b;
+    }
+    _BOOLEAN GetRxlEnabled() {
+        return bRxlEnabled;
+    }
 
-	void SetPositionEnabled(const bool b) { bPositionEnabled = b; }
-	bool GetPositionEnabled() { return bPositionEnabled; }
-	bool GetLoggingActivated() { return bLogActivated; }
+    void SetPositionEnabled(const _BOOLEAN b) {
+        bPositionEnabled = b;
+    }
+    _BOOLEAN GetPositionEnabled() {
+        return bPositionEnabled;
+    }
+    _BOOLEAN GetLoggingActivated() {
+        return bLogActivated;
+    }
 
-	void SetDelLogStart(const int iSecDel) { iSecDelLogStart = iSecDel; }
+    void SetDelLogStart(const int iSecDel) {
+        iSecDelLogStart = iSecDel;
+    }
 
-	int GetDelLogStart() { return iSecDelLogStart; }
+    int GetDelLogStart() {
+        return iSecDelLogStart;
+    }
 
-	void SetLogFrequency(int iNew);
+protected:
+    virtual void init() = 0;
+    virtual void writeParameters() = 0;
+    virtual void writeHeader() = 0;
+    virtual void writeTrailer() = 0;
+    char GetRobModeStr();
+    void asDM(string& pos, double d, char n, char p) const;
 
-  protected:
-	virtual void init() = 0;
-	virtual void writeParameters() = 0;
-	virtual void writeHeader() = 0;
-	virtual void writeTrailer() = 0;
-	char GetRobModeStr();
 
-	string strdate(time_t);
-	string strtime(time_t);
+    string strdate(time_t);
+    string strtime(time_t);
 
-	CParameter & Parameters;
-	ofstream File;
-	bool bHeaderNeeded;
-	bool bLogActivated;
-	bool bLogEnabled;
-	bool bRxlEnabled;
-	bool bPositionEnabled;
-	int iSecDelLogStart;
-	int iFrequency;
+    CParameter & Parameters;
+    ofstream File;
+    _BOOLEAN bLogActivated;
+    _BOOLEAN bLogEnabled;
+    _BOOLEAN bRxlEnabled;
+    _BOOLEAN bPositionEnabled;
+    int iSecDelLogStart;
+    int iFrequency;
+    double latitude,longitude;
 };
 
 class CShortLog: public CReceptLog
 {
-  public:
-	CShortLog(CParameter& p):CReceptLog(p) {}
-  protected:
-	virtual void init();
-	virtual void writeParameters();
-	virtual void writeHeader();
-	virtual void writeTrailer();
-	int iCount;
+public:
+    CShortLog(CParameter& p):CReceptLog(p) {}
+protected:
+    virtual void init();
+    virtual void writeParameters();
+    virtual void writeHeader();
+    virtual void writeTrailer();
+    int iCount;
 };
 
 class CLongLog: public CReceptLog
 {
-  public:
-	CLongLog(CParameter& p):CReceptLog(p) {}
-  protected:
-	virtual void init();
-	virtual void writeParameters();
-	virtual void writeHeader();
-	virtual void writeTrailer();
+public:
+    CLongLog(CParameter& p):CReceptLog(p) {}
+protected:
+    virtual void init();
+    virtual void writeParameters();
+    virtual void writeHeader();
+    virtual void writeTrailer();
 };
 
 #endif

@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *
+ *	
  *
  ******************************************************************************
  *
@@ -101,7 +101,7 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Set symbol number for output vector */
-	(*pvecOutputData).GetExData().iSymbolID =
+	(*pvecOutputData).GetExData().iSymbolID = 
 		(*pvecInputData).GetExData().iSymbolID;
 }
 
@@ -125,7 +125,7 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	}
 	else
 	{
-		if (ReceiverParam.Channel.eRobustness == RM_ROBUSTNESS_MODE_A)
+		if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
 		{
 			iNumDCCarriers = 3;
 			iStartDCCar = abs(ReceiverParam.CellMappingTable.iCarrierKmin) - 1;
@@ -144,7 +144,7 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	iStartCnt = 20;
 
 	/* Additional delay from long interleaving has to be considered */
-	if (ReceiverParam.Channel.eInterleaverDepth == SI_LONG)
+	if (ReceiverParam.GetInterleaverDepth() == CParameter::SI_LONG)
 		iStartCnt += ReceiverParam.CellMappingTable.iNumSymPerFrame * D_LENGTH_LONG_INTERL;
 
 

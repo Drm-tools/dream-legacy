@@ -30,14 +30,29 @@
 #ifndef _EPGDLG_H
 #define _EPGDLG_H
 
+#include <qwidget.h>
+#include <qdatetime.h>
+#include <qpushbutton.h>
+#include <qspinbox.h>
+#include <qcombobox.h>
+#include <qstringlist.h>
+#include <qmessagebox.h>
+#include <qlabel.h>
+#include <qtimer.h>
+#include <qpixmap.h>
+#include <map>
+#if QT_VERSION < 0x040000
+# include <qlistview.h>
+# include "EPGDlgbase.h"
+#else
+# include <QTreeWidget>
+# include <QDialog>
+# include "ui_EPGDlgbase.h"
+#endif
+
+#include "../DrmReceiver.h"
 #include "../datadecoding/epg/EPG.h"
 #include "../util/Settings.h"
-#include "../ReceiverInterface.h"
-
-#include "ui_EPGDlg.h"
-#include <QTimer>
-#include <QAbstractTableModel>
-#include <QSortFilterProxyModel>
 
 /* Definitions ****************************************************************/
 #define COL_NAME	1
@@ -52,59 +67,95 @@
 #define	COL_DESCRIPTION	3
 #define COL_DURATION	4
 
-class EPGModel : public EPG, public QAbstractTableModel
-{
-public:
-    EPGModel(CParameter& p);
-    virtual ~EPGModel() {}
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-    QVariant headerData ( int section, Qt::Orientation orientation, int role) const;
-
-    void select (const uint32_t, const QDate&);
-    bool IsActive(const QString& start, const QString& duration, const tm& now);
-
-    QPixmap BitmCubeGreen;
-};
-
 /* Classes ********************************************************************/
-class EPGDlg : public QDialog, public Ui_EPGDlg
+#if QT_VERSION < 0x040000
+class EPGListViewItem : public QListViewItem
 {
-	Q_OBJECT
+    public:
+        EPGListViewItem(QListView * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
+            QListViewItem(parent,a,b,c,d,e),start(s),duration(dr) {}
+        _BOOLEAN IsActive();
+
+        time_t start;
+        int duration;
+};
+#endif
+
+#if QT_VERSION >= 0x040000
+class CEPGDlgbase : public QDialog, public Ui_CEPGDlgbase
+{
+public:
+    CEPGDlgbase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
+        QDialog(parent,f) {
+        setupUi(this);
+    }
+    virtual ~CEPGDlgbase() {}
+};
+#endif
+class EPGDlg : public CEPGDlgbase
+{
+    Q_OBJECT
 
 public:
 
-	EPGDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0, Qt::WFlags f = 0);
-	virtual ~EPGDlg();
-	/* dummy assignment operator to help MSVC8 */
-	EPGDlg& operator=(const EPGDlg&)
-	{ throw "should not happen"; return *this;}
+    EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+           bool modal = FALSE, Qt::WFlags f = 0);
+    virtual ~EPGDlg();
+    /* dummy assignment operator to help MSVC8 */
+    EPGDlg& operator=(const EPGDlg&)
+    {
+        throw "should not happen";
+        return *this;
+    }
 
     void select();
 
 protected:
 
-    void showEvent(QShowEvent *e);
-    void hideEvent(QHideEvent* pEvent);
-    void updateXML(const QDate& date, uint32_t sid, bool advanced);
+    virtual void showEvent(QShowEvent *e);
+    virtual void hideEvent(QHideEvent* pEvent);
+#if QT_VERSION < 0x040000
+    void setActive(QListViewItem*);
+#else
+    void setActive(QTreeWidgetItem*);
+    bool isActive(QTreeWidgetItem*);
+#endif
 
-    QDate           date;
-    EPGModel        epg;
-	ReceiverInterface&	DRMReceiver;
-	CSettings&		Settings;
-	QTimer			Timer;
-	uint32_t        currentSID;
-    QSortFilterProxyModel* 	proxyModel;
+    virtual QString getFileName(const QDate& date, uint32_t sid, bool bAdvanced);
+    virtual QString getFileName_etsi(const QDate& date, uint32_t sid, bool bAdvanced);
+    virtual QDomDocument* getFile (const QString&);
+    virtual QDomDocument* getFile (const QDate& date, uint32_t sid, bool bAdvanced);
+
+    bool do_updates;
+    EPG epg;
+    CDRMReceiver&	DRMReceiver;
+    CSettings&		Settings;
+    QTimer		Timer;
+    map<QString,uint32_t> sids;
+#if QT_VERSION < 0x040000
+    void setDate();
+    QDate date;
+    QPixmap		BitmCubeGreen;
+    QListViewItem*	next;
+#else
+    QIcon		greenCube;
+    QTreeWidgetItem*	next;
+#endif
+
+signals:
+    void NowNext(QString);
 
 public slots:
-    void setDate(const QDate&);
-    void selectChannel(const QString &);
-    void OnPrev();
-    void OnNext();
+    void selectChannel(const QString&);
     void OnTimer();
-    void OnClearCache();
-    void OnSave();
+#if QT_VERSION < 0x040000
+    void nextDay();
+    void previousDay();
+    void setDay(int);
+    void setMonth(int);
+    void setYear(int);
+#endif
+    void on_dateChanged(const QDate&);
 };
 
 #endif

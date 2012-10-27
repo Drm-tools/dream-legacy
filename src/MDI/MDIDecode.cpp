@@ -3,7 +3,7 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Oliver Haffenden, Julian Cable
+ *	Volker Fischer, Julian Cable
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
@@ -37,112 +37,72 @@
 \******************************************************************************/
 
 #include "MDIDecode.h"
-#include "../SDC/SDCReceive.h"
-#include <iostream>
 
-void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
-				CVectorEx<_BINARY>* pvecInputData,
-				CVectorEx<_BINARY>* pvecOutputData,
-				CVectorEx<_BINARY>* pvecOutputData2,
-				vector<CVectorEx<_BINARY>*>& vecpvecOutputData,
-				int& iOutputBlockSize,
-				int& iOutputBlockSize2,
-				vector<int>& veciOutputBlockSize
-				)
+void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	// pass receiver parameter structure to all the decoders that need it
-	TagPacketDecoder.SetParameterPtr(&Parameters);
+	TagPacketDecoderMDI.SetParameterPtr(&ReceiverParam);
 
-	CTagPacketDecoder::Error err = TagPacketDecoder.DecodeAFPacket(*pvecInputData);
+	CTagPacketDecoder::Error err = TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
 
-	Parameters.Lock();
-
-	if(err == CTagPacketDecoder::E_OK)
+	if(err != CTagPacketDecoder::E_OK)
 	{
-		Parameters.ReceiveStatus.Interface.SetStatus(RX_OK);
-	}
-	else
-	{
-		Parameters.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
-		Parameters.Unlock();
+		ReceiverParam.Lock();
+		ReceiverParam.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
+		ReceiverParam.Unlock();
 		return;
 	}
 
-	if (TagPacketDecoder.TagItemDecoderRobMod.IsReady())
-		Parameters.Channel.eRobustness = TagPacketDecoder.TagItemDecoderRobMod.eRobMode;
+	if (TagPacketDecoderMDI.TagItemDecoderLoFrCnt.IsReady()) {
+		uint32_t dlfc = TagPacketDecoderMDI.TagItemDecoderLoFrCnt.dlfc;
+		if(dlfc == last_dlfc)
+			return; // duplicate packet - might be a network thing, not an error but don't process again.
+		if(dlfc < last_dlfc) {
+			if( (last_dlfc - dlfc) < 10 )
+				return; // recent packet - could be out of order or duplicate, not interested
+		}
+		// if we get here, dlfc is newer, or much older, than last_dlfc, assume its OK
+		// this includes the case where last_dlfc has not been initialised yet.
+		last_dlfc = dlfc;
+	}
 
-	Parameters.Unlock();
+	ReceiverParam.Lock();
 
-	CVector<_BINARY>& vecbiFACData = TagPacketDecoder.TagItemDecoderFAC.vecbidata;
-	CVector<_BINARY>& vecbiSDCData = TagPacketDecoder.TagItemDecoderSDC.vecbidata;
+	ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
+
+	if (TagPacketDecoderMDI.TagItemDecoderRobMod.IsReady())
+		ReceiverParam.SetWaveMode(TagPacketDecoderMDI.TagItemDecoderRobMod.eRobMode);
+	CVector<_BINARY>& vecbiFACData = TagPacketDecoderMDI.TagItemDecoderFAC.vecbidata;
+	CVector<_BINARY>& vecbiSDCData = TagPacketDecoderMDI.TagItemDecoderSDC.vecbidata;
 	pvecOutputData->Reset(0);
-	if (TagPacketDecoder.TagItemDecoderFAC.IsReady() && vecbiFACData.Size() > 0)
+	if (TagPacketDecoderMDI.TagItemDecoderFAC.IsReady() && vecbiFACData.Size() > 0)
 	{
 		/* Copy incoming MDI FAC data */
 		pvecOutputData->ResetBitAccess();
 		vecbiFACData.ResetBitAccess();
 
-		if(pvecOutputData->Size() != 72)
-		{
-			cout << "FAC not initialised?" << endl;
-/*
-			return;
-*/
-		}
-
 		/* FAC data is always 72 bits long which is 9 bytes, copy data
 		   byte-wise */
-		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / BITS_BINARY; i++)
+		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
 		{
-			pvecOutputData->Enqueue(vecbiFACData.Separate(BITS_BINARY), BITS_BINARY);
+			pvecOutputData->Enqueue(vecbiFACData.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 		}
 		iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	}
 	else
 	{
 		iOutputBlockSize = 0;
-		Parameters.Lock();
-		Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
-		Parameters.Unlock();
-	}
-
-	if (TagPacketDecoder.TagItemDecoderSDCChanInf.IsReady())
-	{
-		CVector<_BINARY>& vecbisdciData = TagPacketDecoder.TagItemDecoderSDCChanInf.vecbidata;
-        int iLengthOfBody = (vecbisdciData.Size()-8) / BITS_BINARY;
-        CMSCParameters msc;
-        vecbisdciData.ResetBitAccess();
-        (void)vecbisdciData.Separate(4);
-
-        CSDCReceive sdc;
-        bool bError = sdc.DataEntityType0(
-            &vecbisdciData, iLengthOfBody, Parameters, false);
-		if(bError==false)
-		{
-			Parameters.Lock();
-			if(Parameters.MSCParameters != Parameters.NextConfig.MSCParameters)
-			{
-				Parameters.MSCParameters = Parameters.NextConfig.MSCParameters;
-				Parameters.RxEvent = ServiceReconfiguration;
-			}
-			Parameters.Unlock();
-		}
+		ReceiverParam.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
 	}
 
 	pvecOutputData2->Reset(0);
 	const int iLenBitsMDISDCdata = vecbiSDCData.Size();
-	if (TagPacketDecoder.TagItemDecoderSDC.IsReady() && iLenBitsMDISDCdata > 0)
+	if (TagPacketDecoderMDI.TagItemDecoderSDC.IsReady() && iLenBitsMDISDCdata > 0)
 	{
 		/* If receiver is correctly initialized, the input vector should be
 		   large enough for the SDC data */
 		const int iLenSDCDataBits = pvecOutputData2->Size();
-		if(Parameters.iNumSDCBitsPerSuperFrame != iLenBitsMDISDCdata)
-		{
-			Parameters.Lock();
-			Parameters.iNumSDCBitsPerSuperFrame = iLenBitsMDISDCdata;
-			Parameters.RxEvent = ChannelReconfiguration;
-			Parameters.Unlock();
-		}
+		ReceiverParam.SetNumDecodedBitsSDC(iLenBitsMDISDCdata);
 
 		if (iLenSDCDataBits >= iLenBitsMDISDCdata)
 		{
@@ -157,22 +117,15 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 
 			iOutputBlockSize2 = iLenBitsMDISDCdata;
 		}
-		else
-		{
-			cout << "SDC not properly initialised ready for " << iLenSDCDataBits << " bits, got " << iLenBitsMDISDCdata << "bits" << endl;
-		}
 		iFramesSinceSDC = 0;
 	}
 	else
 	{
+
 		pvecOutputData2->Reset(0);
 		iOutputBlockSize2 = 0;
 		if(iFramesSinceSDC>2)
-		{
-			Parameters.Lock();
-			Parameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
-			Parameters.Unlock();
-		}
+			ReceiverParam.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
 		else
 			iFramesSinceSDC++;
    }
@@ -180,7 +133,7 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 	/* Get stream data from received RSCI / MDI packets */
 	for(size_t i=0; i<vecpvecOutputData.size(); i++)
 	{
-		CVector<_BINARY>& vecbiStr = TagPacketDecoder.TagItemDecoderStr[i].vecbidata;
+		CVector<_BINARY>& vecbiStr = TagPacketDecoderMDI.TagItemDecoderStr[i].vecbidata;
 		CVector<_BINARY>* pvecOutputData = vecpvecOutputData[i];
 		/* Now check length of data vector */
 		const int iLen = pvecOutputData->Size();
@@ -192,25 +145,20 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 			pvecOutputData->ResetBitAccess();
 
 			/* Data is always a multiple of 8 -> copy bytes */
-			for (int j = 0; j < iStreamLen / BITS_BINARY; j++)
+			for (int j = 0; j < iStreamLen / SIZEOF__BYTE; j++)
 			{
 				pvecOutputData->Enqueue(
-					vecbiStr.Separate(BITS_BINARY), BITS_BINARY);
+					vecbiStr.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 			}
 			veciOutputBlockSize[i] = iStreamLen;
 		}
-		else
-		{
-			cerr << "MSC str" << i << " not properly initialised can accept " << iLen << " got " << iStreamLen << endl;
-		}
     }
 
-	if (TagPacketDecoder.TagItemDecoderRxDemodMode.IsReady()
-		&& TagPacketDecoder.TagItemDecoderAMAudio.IsReady()
-		&& TagPacketDecoder.TagItemDecoderRxDemodMode.eMode != DRM
-		&& TagPacketDecoder.TagItemDecoderRxDemodMode.eMode != NONE)
+	if (TagPacketDecoderMDI.TagItemDecoderRxDemodMode.IsReady() &&
+		TagPacketDecoderMDI.TagItemDecoderAMAudio.IsReady() &&
+		TagPacketDecoderMDI.TagItemDecoderRxDemodMode.eMode == RM_AM)
 	{
-		CVector<_BINARY>& vecbiAMAudio = TagPacketDecoder.TagItemDecoderAMAudio.vecbidata;
+		CVector<_BINARY>& vecbiAMAudio = TagPacketDecoderMDI.TagItemDecoderAMAudio.vecbidata;
 		CVector<_BINARY>* pvecOutputData = vecpvecOutputData[0];
 		// Now check length of data vector
 		const int iLen = pvecOutputData->Size();
@@ -221,106 +169,60 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 			vecbiAMAudio.ResetBitAccess();
 			pvecOutputData->ResetBitAccess();
 			// Data is always a multiple of 8 -> copy bytes
-			for (int j = 0; j < iStreamLen / BITS_BINARY; j++)
+			for (int j = 0; j < iStreamLen / SIZEOF__BYTE; j++)
 			{
 				pvecOutputData->Enqueue(
-				vecbiAMAudio.Separate(BITS_BINARY), BITS_BINARY);
+				vecbiAMAudio.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 			}
 			veciOutputBlockSize[0] = iStreamLen;
 		}
+		//if (iLen != 0)
+		//{
+			/* Get the audio parameters for decoding the coded AM */
+			CAudioParam AudioParam = TagPacketDecoderMDI.TagItemDecoderAMAudio.AudioParams;
+			/* Write the audio settings into the parameter object
+			 * CParameter takes care of keeping separate data for AM and DRM
+			 */
+			AudioParam.iStreamID = 0;
 
-		/* Get the audio parameters for decoding the coded AM */
-		CAudioParam AudioParam = TagPacketDecoder.TagItemDecoderAMAudio.AudioParams;
-		/* Write the audio settings into the parameter object
-		 */
-		Parameters.Lock();
-		Parameters.AudioParam[0] = AudioParam;
+			ReceiverParam.SetAudioParam(0, AudioParam);
 
-		Parameters.MSCParameters.Stream[0].iLenPartA = 0;
-		Parameters.MSCParameters.Stream[0].iLenPartB = iStreamLen/BITS_BINARY;
-		Parameters.iNumDecodedBitsMSC = iStreamLen; // is this necessary?
+			ReceiverParam.SetStreamLen(0, 0, iStreamLen/SIZEOF__BYTE);
+			ReceiverParam.SetNumOfServices(1,0);
+			ReceiverParam.SetCurSelAudioService(0);
+			ReceiverParam.SetNumDecodedBitsMSC(iStreamLen); // is this necessary?
+		//}
 
-		Parameters.FACParameters.iNumAudioServices = 1;
-		Parameters.FACParameters.iNumDataServices = 0;
-		Parameters.Service[0].iAudioStream = 0;
-		Parameters.SetCurSelAudioService(0);
-
-		Parameters.Service[0].strLabel = "";
-		Parameters.Service[0].strCountryCode = "";
-		Parameters.Service[0].iLanguage = 0;
-		Parameters.Service[0].strLanguageCode = "";
-		Parameters.Service[0].iServiceDescr = 0;
-		Parameters.Service[0].iServiceID = 0;
-
-		Parameters.Unlock();
+		ReceiverParam.Service[0].strLabel = "";
+		ReceiverParam.Service[0].strCountryCode = "";
+		ReceiverParam.Service[0].iLanguage = 0;
+		ReceiverParam.Service[0].strLanguageCode = "";
+		ReceiverParam.Service[0].iServiceDescr = 0;
+		ReceiverParam.Service[0].iServiceID = 0;
 	}
+
+	// TODO RSCI Data Items, MER, etc.
+
+	ReceiverParam.Unlock();
 }
 
-void CDecodeRSIMDI::Init(CParameter&)
+void CDecodeRSIMDI::InitInternal(CParameter& ReceiverParam)
 {
-	iFramesSinceSDC = 3;
-}
+	ReceiverParam.Lock();
 
-void CDecodeRSI::InitInternal(CParameter& Parameters)
-{
-	Decoder.Init(Parameters);
-	Parameters.Lock();
-
-	/* set sensible values if Parameters not properly initialised */
 	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
-	iOutputBlockSize2 = 0;
+	//iOutputBlockSize2 = ReceiverParam.iNumSDCBitsPerSFrame;
 	iMaxOutputBlockSize2 = 1024;
-	/*
-	iOutputBlockSize2 = Parameters.iNumSDCBitsPerSuperFrame;
-	if(iOutputBlockSize2 == 0)
-		iMaxOutputBlockSize2 = 1024;
-	*/
-	veciOutputBlockSize.resize(MAX_NUM_STREAMS);
-	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+	size_t numstreams = ReceiverParam.Stream.size();
+	//vecpvecOutputData.resize(numstreams);
+	for(size_t i=0; i<numstreams; i++)
 	{
-		int streamlen = Parameters.GetStreamLen(i);
-		if(streamlen == 0)
-			streamlen = 2048;
-		veciOutputBlockSize[i] = streamlen*BITS_BINARY;
+		int streamlen = ReceiverParam.Stream[i].iLenPartA;
+		streamlen += ReceiverParam.Stream[i].iLenPartB;
+		//veciMaxOutputBlockSize[i] = 16384;
+		veciOutputBlockSize[i] = streamlen*SIZEOF__BYTE;
 	}
+	iFramesSinceSDC = 3;
 
-	Parameters.Unlock();
-}
-
-void CDecodeRSI::ProcessDataInternal(CParameter& Parameters)
-{
-	Decoder.ProcessData(Parameters, pvecInputData,
-		pvecOutputData, pvecOutputData2, vecpvecOutputData,
-		iOutputBlockSize, iOutputBlockSize2, veciOutputBlockSize
-		);
-}
-
-void CDecodeMDI::InitInternal(CParameter& Parameters)
-{
-	size_t i;
-	Decoder.Init(Parameters);
-	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
-	iOutputBlockSize2 = 0;
-	iMaxOutputBlockSize2 = 1500*BITS_BINARY;
-	veciOutputBlockSize.resize(MAX_NUM_STREAMS);
-	veciMaxOutputBlockSize.resize(MAX_NUM_STREAMS);
-	vecpvecOutputData.resize(MAX_NUM_STREAMS);
-	for(i=0; i<MAX_NUM_STREAMS; i++)
-	{
-		veciOutputBlockSize[i] = 0;
-		veciMaxOutputBlockSize[i] = 1500*BITS_BINARY;
-	}
-	iInputBlockSize = 1; // something
-}
-
-void CDecodeMDI::Expect(int n)
-{
-	iInputBlockSize = n;
-}
-
-void CDecodeMDI::ProcessDataInternal(CParameter& Parameters)
-{
-	Decoder.ProcessData(Parameters, pvecInputData,
-			pvecOutputData, pvecOutputData2, vecpvecOutputData,
-		iOutputBlockSize, iOutputBlockSize2, veciOutputBlockSize);
+	ReceiverParam.Unlock();
 }

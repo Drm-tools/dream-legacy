@@ -11,22 +11,22 @@
  *	0: Green
  *	1: Yellow
  *	2: Red
- *
+ *	
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation; either version 2 of the License, or (at your option) any later 
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -34,9 +34,9 @@
 #if !defined(AFX_MULTCOLORLED_H__FD6B49B5_87DF_48DD_A873_804E1606C2AC__INCLUDED_)
 #define AFX_MULTCOLORLED_H__FD6B49B5_87DF_48DD_A873_804E1606C2AC__INCLUDED_
 
-#include <QLabel>
-#include <QPixmap>
-#include <QTimer>
+#include <qlabel.h>
+#include <qpixmap.h>
+#include <qtimer.h>
 
 
 /* Definitions ****************************************************************/
@@ -53,20 +53,15 @@ class CMultColorLED : public QLabel
 
 public:
 	enum ELightColor {RL_GREY, RL_RED, RL_GREEN, RL_YELLOW};
+
 	CMultColorLED(QWidget* parent, const char * name = 0, Qt::WFlags f = 0);
 	virtual ~CMultColorLED() {}
 
-	void SetUpdateTime(int iNUTi);
-	void SetLight(int iNewStatus);
+	void SetUpdateTime(int);
+	void SetLight(ELightColor);
 	void Reset();
 
-
 protected:
-
-	QPixmap			BitmCubeGreen;
-	QPixmap			BitmCubeYellow;
-	QPixmap			BitmCubeRed;
-	QPixmap			BitmCubeGrey;
 
 	ELightColor		eColorFlag;
 
@@ -78,7 +73,12 @@ protected:
 	bool			bFlagGreenLi;
 	bool			bFlagYellowLi;
 
-	int				iUpdateTime;
+	int			iUpdateTime;
+
+	QPixmap			green;
+	QPixmap			yellow;
+	QPixmap			red;
+	QPixmap			grey;
 
 	void			UpdateColor();
 

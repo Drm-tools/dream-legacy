@@ -27,201 +27,280 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#ifdef _WIN32
-# include <winsock2.h>
-#else
-# include <arpa/inet.h> // for ntohs, ntohl
-#endif
 
 #include "PacketSourceFile.h"
 #include <iostream>
-#include <errno.h>
-#include <QTimer>
-#include <QStringList>
-#include <pcap.h>
+#include <cstdlib>
+#include <cerrno>
+
+#ifdef _WIN32
+/* Always include winsock2.h before windows.h */
+/* winsock2.h is already included into libpcap */
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <windows.h>
+#else
+# include <netinet/in.h>
+# include <arpa/inet.h>
+/* Some defines needed for compatibility when using Linux, Darwin, ... */
+typedef int SOCKET;
+# define SOCKET_ERROR				(-1)
+# define INVALID_SOCKET				(-1)
+#endif
+
+#include "../util/Pacer.h"
+
+#ifdef HAVE_LIBPCAP
+# include <pcap.h>
+#endif
 
 const size_t iMaxPacketSize = 4096;
 const size_t iAFHeaderLen = 10;
 const size_t iAFCRCLen = 2;
 
 CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
-pacer(NULL), last_packet_time(0),
- pf(NULL), bRaw(true)
+    last_packet_time(0),pacer(NULL),
+    pF(NULL), wanted_dest_port(-1), eFileType(pcap)
 {
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+	pacer = new CPacer(400000000);
+#else
+	pacer = new CPacer(400000000ULL);
+#endif
 }
 
-bool
-CPacketSourceFile::SetOrigin(const string& str)
+void CPacketSourceFile::poll()
 {
-	if(str.rfind(".pcap") == str.length()-5)
-	{
-	    char errbuf[PCAP_ERRBUF_SIZE];
-	    pf = pcap_open_offline(str.c_str(), errbuf);
-	    bRaw = false;
-	}
-	else
-	{
-	    pf = fopen(str.c_str(), "rb");
-	}
-	if ( pf != NULL)
-	{
-	    pacer = new CPacer(uint64_t(400000000));
-	}
-	return pf != NULL;
+    pacer->wait();
+    vector<_BYTE> vecbydata (iMaxPacketSize);
+    int interval;
+    if(pF)
+    {
+        vecbydata.resize(0); // in case we don't find anything
+        switch(eFileType)
+        {
+        case pcap:
+            readPcap(vecbydata, interval);
+            break;
+        case ff:
+            readFF(vecbydata, interval);
+            break;
+        case af:
+            readRawAF(vecbydata, interval);
+            break;
+        case pf:
+            readRawPFT(vecbydata, interval);
+            break;
+        }
+
+        /* Decode the incoming packet */
+        if (pPacketSink != NULL)
+            pPacketSink->SendPacket(vecbydata);
+    }
+}
+
+_BOOLEAN
+CPacketSourceFile::SetOrigin(const string& origin)
+{
+    string str = origin;
+    size_t p = str.find_last_of('#');
+    if(p!=string::npos)
+    {
+        wanted_dest_port = atoi(str.substr(p+1).c_str());
+        str = str.substr(0, p);
+    }
+    if(str.rfind(".pcap") == str.length()-5)
+    {
+#ifdef HAVE_LIBPCAP
+        char errbuf[PCAP_ERRBUF_SIZE];
+        pF = pcap_open_offline(str.c_str(), errbuf);
+#endif
+        eFileType = pcap;
+    }
+    else
+    {
+        pF = fopen(str.c_str(), "rb");
+    }
+    if ( pF != NULL)
+    {
+        char c;
+        (void)fread(&c, sizeof(c), 1, (FILE *) pF);
+        fseek ( (FILE *) pF , 0 , SEEK_SET );
+        if(c=='A') eFileType = af;
+        if(c=='P') eFileType = pf;
+        if(c=='f') eFileType = ff;
+    }
+    return pF != NULL;
 }
 
 CPacketSourceFile::~CPacketSourceFile()
 {
-	if(bRaw && pf)
-		fclose((FILE*)pf);
-	else if(pf)
-	{
-		pcap_close((pcap_t*)pf);
-	}
+    if(eFileType != pcap && pF)
+        fclose((FILE*)pF);
+    else if(pF)
+    {
+#ifdef HAVE_LIBPCAP
+        pcap_close((pcap_t*)pF);
+#endif
+    }
+    pF = 0;
 }
 
 // Set the sink which will receive the packets
 void
 CPacketSourceFile::SetPacketSink(CPacketSink * pSink)
 {
-	pPacketSink = pSink;
+    pPacketSink = pSink;
 }
 
 // Stop sending packets to the sink
 void
 CPacketSourceFile::ResetPacketSink()
 {
-	pPacketSink = NULL;
-}
-
-bool
-CPacketSourceFile::Poll()
-{
-    if(pf==NULL)
-	    return false;
-    if(pacer) pacer->wait();
-    vector<_BYTE> vecbydata (iMaxPacketSize);
-    int interval;
-    if(bRaw)
-	     readRawOrFF(vecbydata, interval);
-    else
-	     readPcap(vecbydata, interval);
-
-    /* Decode the incoming packet */
-    if (pPacketSink != NULL)
-    {
-	    pPacketSink->SendPacket(vecbydata);
-    }
-    return true;
+    pPacketSink = NULL;
 }
 
 void
-CPacketSourceFile::readRawOrFF(vector<_BYTE>& vecbydata, int& interval)
+CPacketSourceFile::readTagPacketHeader(string& tag, uint32_t& len)
 {
-    char header[8];
-    size_t len2;
+    uint32_t bytes;
+    size_t n;
 
-    vecbydata.resize(0); // in case we don't find anything
-
-    // get the sync bytes
-    fread(header, sizeof(header), 1, (FILE *) pf);
-    // guess file framing
-    size_t len = ntohl(*(uint32_t*)&header[4])/8;
-    char c = header[4];
-    header[4]=0;
-    if(strcmp("fio_", header)==0)
+    tag = "";
+    for(int i=0; i<4; i++)
     {
-	 fread(header, sizeof(header), 1, (FILE *) pf);
-	 len2 = ntohl(*(uint32_t*)&header[4])/8;
-	 header[4]=0;
-	 if(strcmp("time", header)==0)
-	 {
-	    if(len2 != 8)
-	    {
-		cout << "weird length in FF " << len2 << " expected 8" << endl;
-		fclose((FILE *) pf);
-		pf = 0;
-		return;
-	    }
-	    len -= 16;
-	    // read the time tag packet payload
-	    fread(header, sizeof(header), 1, (FILE *) pf);
-	    // read the next tag packet header
-	    fread(header, sizeof(header), 1, (FILE *) pf);
-	    len2 = ntohl(*(uint32_t*)&header[4])/8;
-	    header[4]=0;
-	 }
-
-	 if(strcmp("afpf", header)==0)
-	 {
-	    // get the first 8 bytes of the payload
-	    fread(header, sizeof(header), 1, (FILE *) pf);
-	    len -= 8;
-	    len -= len2;
-	 }
-	 else
-	 {
-	    cout << "bad tag packet in FF " << header << endl;
-	    fclose((FILE *) pf);
-	    pf = 0;
-	    return;
-	 }
-    }
-    else
-    {
-	 len = 0;
-	 header[4]=c;
-    }
-    // if we get here, either its not FF or we read the FF headers
-    // TODO: add PF and re-synch on AF bytes
-    if (header[0] != 'A' || header[1] != 'F') // Not an AF file - return.
-    {
-	 fclose((FILE *) pf);
-	 pf = 0;
-	 return;
+        char c;
+        n = fread(&c, sizeof(char), 1, (FILE *) pF);
+        tag += c;
     }
 
+    n = fread(&bytes, sizeof(bytes), 1, (FILE *) pF);
+    len = ntohl(bytes)/8;
+}
+
+void
+CPacketSourceFile::readFF(vector<_BYTE>& vecbydata, int& interval)
+{
+
+    string tag;
+    uint32_t fflen,len;
+    readTagPacketHeader(tag, fflen);
+
+    interval = 400;
+
+    if(tag != "fio_")
+    {
+        fclose((FILE *) pF);
+        pF = 0;
+        return;
+    }
+
+    long remaining = fflen; // use a signed muber here to help loop exit
+    while(remaining>0)
+    {
+        readTagPacketHeader(tag, len);
+	remaining -= 64; // 4*8 nits tag, 4*8 bytes length;
+	remaining -= len;
+
+        if(tag=="time")
+        {
+            if(len != 8)
+            {
+                cout << "weird length in FF " << int(len) << " expected 8" << endl;
+                fclose((FILE *) pF);
+                pF = 0;
+                return;
+            }
+            // read the time tag packet payload
+            uint32_t s,ns;
+            size_t n = fread(&s, sizeof(s), 1, (FILE *) pF);
+            n = fread(&ns, sizeof(ns), 1, (FILE *) pF);
+	    //TODO update last packet and interval times
+        }
+
+        if(tag=="afpf")
+        {
+            readRawAF(vecbydata, interval);
+        }
+        else
+        {
+            cout << "unkown tag packet in FF " << tag << endl;
+            fseek((FILE*)pF, len, SEEK_CUR);
+        }
+    }
+}
+
+void
+CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
+{
+    char sync[2];
+    uint32_t bytes;
+
+    interval = 400;
+
+    size_t n = fread(sync, 2, 1, (FILE *) pF);
+    n = fread(&bytes, 4, 1, (FILE *) pF);
+    fseek((FILE*)pF, -6, SEEK_CUR);
+
+    if (sync[0] != 'A' || sync[1] != 'F')
+    {
+        // throw?
+        fclose((FILE *) pF);
+        pF = 0;
+        return;
+    }
     // get the length
-    size_t iAFPayloadLen = ntohl(*(uint32_t*)&header[2]);
-    size_t iAFPacketLen = iAFPayloadLen + iAFHeaderLen + iAFCRCLen;
+    size_t iAFPacketLen = iAFHeaderLen + ntohl(bytes) + iAFCRCLen;
 
     if (iAFPacketLen > iMaxPacketSize)
     {
-	 // throw?
-	 fclose((FILE *) pf);
-	 pf = 0;
-	 return;
+        // throw?
+        fclose((FILE *) pF);
+        pF = 0;
+        return;
     }
 
     // initialise the output vector
     vecbydata.resize(iAFPacketLen);
 
-    size_t i;
+    n = fread(&vecbydata[0], 1, iAFPacketLen, (FILE *)pF);
 
-    // Copy header into output vector
-    for (i=0; i<sizeof(header); i++)
-    {
-	 vecbydata[i] = header[i];
-    }
+    last_packet_time += interval;
+}
 
-    // Copy payload into output vector
-    _BYTE data;
-    for (i=sizeof(header); i<iAFPacketLen; i++)
-    {
-	 fread(&data, 1, sizeof(_BYTE), (FILE *)pf);
-	 vecbydata[i] = data;
-    }
-    // skip any other nested tag packets (e.g. time)
-    while(len > 0)
-    {
-	 fread(header, 8, sizeof(_BYTE), (FILE *) pf);
-	 len2 = ntohl(*(uint32_t*)&header[4])/8;
-	 header[4] = 0;
-	 fseek((FILE*)pf, len2, SEEK_CUR);
-	 if(len>len2+8)
-	    len -= len2+8;
-    }
+// not robust against the sync characters appearing in the payload!!!!
+void
+CPacketSourceFile::readRawPFT(vector<_BYTE>& vecbydata, int& interval)
+{
+    char sync[2];
+
     interval = 400;
+
+    size_t n = fread(sync, 2, 1, (FILE *) pF);
+    if (sync[0] != 'P' || sync[1] != 'F')
+    {
+        // throw?
+        fclose((FILE *) pF);
+        pF = 0;
+        return;
+    }
+    vecbydata.resize(0); 
+    vecbydata.push_back(sync[0]);
+    vecbydata.push_back(sync[1]);
+    char prev = '\0';;
+    while(true)
+    {
+	char c;
+        n = fread(&c, 1, 1, (FILE *) pF);
+	if(prev == 'P' && c == 'F')
+	{
+    	    fseek((FILE*)pF, -2, SEEK_CUR);
+	    vecbydata.pop_back();
+	    break;
+	}
+	prev = c;
+    	vecbydata.push_back(c);
+    }
 }
 
 void
@@ -230,53 +309,66 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
     int link_len = 0;
     const _BYTE* pkt_data = NULL;
     timeval packet_time = { 0, 0 };
-    struct pcap_pkthdr *header;
-    int res;
-    const u_char* data;
-    /* Retrieve the packet from the file */
-    if((res = pcap_next_ex( (pcap_t*)pf, &header, &data)) != 1)
+    while(true)
     {
-	 pcap_close((pcap_t*)pf);
-	 pf = NULL;
-	 return;
-    }
-    int lt = pcap_datalink((pcap_t*)pf);
-    pkt_data = (_BYTE*)data;
-    /* 14 bytes ethernet header */
-    if(lt==DLT_EN10MB)
-    {
-	link_len=14;
-    }
-    /* raw IP header ? */
-    if(lt==DLT_RAW)
-    {
-	link_len=0;
-    }
-    packet_time = header->ts;
-    if(pkt_data == NULL)
-	    return;
+#ifdef HAVE_LIBPCAP
+        struct pcap_pkthdr *header;
+        int res;
+        const u_char* data;
+        /* Retrieve the packet from the file */
+        if((res = pcap_next_ex( (pcap_t*)pF, &header, &data)) != 1)
+        {
+            pcap_close((pcap_t*)pF);
+            pF = NULL;
+            return;
+        }
+        int lt = pcap_datalink((pcap_t*)pF);
+        pkt_data = (_BYTE*)data;
+        /* 14 bytes ethernet header */
+        if(lt==DLT_EN10MB)
+        {
+            link_len=14;
+        }
+        /* linux cooked */
+        if(lt==DLT_LINUX_SLL)
+        {
+            link_len=16;
+        }
+        /* raw IP header ? */
+        if(lt==DLT_RAW)
+        {
+            link_len=0;
+        }
+        packet_time = header->ts;
+#endif
+        if(pkt_data == NULL)
+            return;
 
-    /* 4n bytes IP header, 8 bytes UDP header */
-    uint8_t proto = pkt_data[link_len+9];
-    if(proto != 0x11) // UDP
-    {
-	 /* not a UDP datagram, skip it */
-	 return;
+        /* 4n bytes IP header, 8 bytes UDP header */
+        uint8_t proto = pkt_data[link_len+9];
+        if(proto == 0x11) // UDP
+        {
+            int udp_ip_hdr_len = 4*(pkt_data[link_len] & 0x0f) + 8;
+            int ip_packet_len = ntohs(*(uint16_t*)&pkt_data[link_len+2]);
+            int dest_port = ntohs(*(uint16_t*)&pkt_data[link_len+udp_ip_hdr_len-6]);
+            if((wanted_dest_port==-1) || (dest_port == wanted_dest_port)) // wanted port
+            {
+                int data_len = ip_packet_len - udp_ip_hdr_len;
+                vecbydata.resize (data_len);
+                for(int i=0; i<data_len; i++)
+                    vecbydata[i] = pkt_data[link_len+udp_ip_hdr_len+i];
+                break;
+            }
+        }
     }
-    int udp_ip_hdr_len = 4*(pkt_data[link_len] & 0x0f) + 8;
-    int ip_packet_len = ntohs(*(uint16_t*)&pkt_data[link_len+2]);
-    int data_len = ip_packet_len - udp_ip_hdr_len;
-    vecbydata.resize (data_len);
-    for(int i=0; i<data_len; i++)
-	vecbydata[i] = pkt_data[link_len+udp_ip_hdr_len+i];
+    if(last_packet_time == 0)
+    {
+        last_packet_time = 1000*uint64_t(packet_time.tv_sec);
+        last_packet_time += uint64_t(packet_time.tv_usec)/1000;
+    }
     uint64_t pt;
     pt = 1000*uint64_t(packet_time.tv_sec);
     pt += uint64_t(packet_time.tv_usec)/1000;
-    if(last_packet_time == 0)
-    {
-	 last_packet_time = pt - 400;
-    }
-    //pacer->changeInterval(1000000ULL*(pt - last_packet_time));
     interval = pt - last_packet_time;
     last_packet_time = pt;
 }

@@ -49,7 +49,7 @@ void CCRC::Reset(const int iNewDegree)
 
 void CCRC::AddByte(const _BYTE byNewInput)
 {
-	for (int i = 0; i < BITS_BINARY; i++)
+	for (int i = 0; i < SIZEOF__BYTE; i++)
 	{
 		/* Shift bits in shift-register for transistion */
 		iStateShiftReg <<= 1;
@@ -61,7 +61,7 @@ void CCRC::AddByte(const _BYTE byNewInput)
 			iStateShiftReg |= 1;
 
 		/* Add new data bit to the LSB */
-		if ((byNewInput & (1 << (BITS_BINARY - i - 1))) > 0)
+		if ((byNewInput & (1 << (SIZEOF__BYTE - i - 1))) > 0)
 			iStateShiftReg ^= 1;
 
 		/* Add mask to shift-register if first bit is true */
@@ -99,12 +99,12 @@ uint32_t CCRC::GetCRC()
 	return iStateShiftReg & (iBitOutPosMask - 1);
 }
 
-bool CCRC::CheckCRC(const uint32_t iCRC)
+_BOOLEAN CCRC::CheckCRC(const uint32_t iCRC)
 {
 	if (iCRC == GetCRC())
-		return true;
+		return TRUE;
 	else
-		return false;
+		return FALSE;
 }
 
 CCRC::CCRC()

@@ -35,7 +35,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "CellMappingTable.h"
-#include "../matlib/MatlibSigProToolbox.h"
+
 
 /* Implementation *************************************************************/
 void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
@@ -58,6 +58,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	const int*		piTableFAC=NULL;
 	const int*		piTableTimePilots=NULL;
 	const int*		piTableFreqPilots=NULL;
+
 
 	/* Set Parameters and pointers to the tables ******************************/
 	switch (eNewSpectOccup)
@@ -93,7 +94,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	case RM_ROBUSTNESS_MODE_A:
 		iCarrierKmin = iTableCarrierKmin[iSpecOccArrayIndex][0];
 		iCarrierKmax = iTableCarrierKmax[iSpecOccArrayIndex][0];
-
+		
 		iFFTSizeN = RMA_FFT_SIZE_N;
 		RatioTgTu.iEnum = RMA_ENUM_TG_TU;
 		RatioTgTu.iDenom = RMA_DENOM_TG_TU;
@@ -231,6 +232,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	else
 		iNumIntpFreqPil = iNumCarrier;
 
+
 	/* Allocate memory for vectors and matrices ----------------------------- */
 	/* Allocate memory for mapping table (Matrix) */
 	matiMapTab.Init(iNumSymbolsPerSuperframe, iNumCarrier);
@@ -240,9 +242,9 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
 	/* Allocate memory for vectors with number of certain cells */
-	veciNumMSCSym.resize(iNumSymbolsPerSuperframe);
-	veciNumFACSym.resize(iNumSymbolsPerSuperframe);
-	veciNumSDCSym.resize(iNumSymbolsPerSuperframe);
+	veciNumMSCSym.Init(iNumSymbolsPerSuperframe);
+	veciNumFACSym.Init(iNumSymbolsPerSuperframe);
+	veciNumSDCSym.Init(iNumSymbolsPerSuperframe);
 
 
 	/* Build table ************************************************************/
@@ -366,12 +368,12 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				/* Gain calculation and applying of complex value ----------- */
 				/* Test, if current carrier-index is one of the "boosted pilots"
 				   position */
-				bool bIsBoostedPilot = false;
+				_BOOLEAN bIsBoostedPilot = FALSE;
 				for (i = 0; i < NUM_BOOSTED_SCAT_PILOTS; i++)
 				{
 					/* In case of match set flag */
 					if (ScatPilots.piGainTable[i] == iCar)
-						bIsBoostedPilot = true;
+						bIsBoostedPilot = TRUE;
 				}
 
 				/* Boosted pilot: Gain = 2, Regular pilot: Gain = sqrt(2) */
@@ -437,7 +439,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 				/* Set complex value for this pilot */
 				/* Test for "special case" defined in drm-standard */
-				bool bIsFreqPilSpeciCase = false;
+				_BOOLEAN bIsFreqPilSpeciCase = FALSE;
 				if (eNewRobustnessMode == RM_ROBUSTNESS_MODE_D)
 				{
 					/* For robustness mode D, carriers 7 and 21 (Means: first
@@ -446,7 +448,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 					{
 						/* Test for odd values of "s" (iSym) */
 						if ((iFrameSym % 2) == 1)
-							bIsFreqPilSpeciCase = true;
+							bIsFreqPilSpeciCase = TRUE;
 					}
 				}
 
@@ -485,7 +487,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			{
 				if ((iCar == -1) || (iCar == 1))
 					matiMapTab[iSym][iCarArrInd] = CM_DC;
-			}
+			} 
 		}
 	}
 
@@ -534,7 +536,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			}
 
 			/* Calculations for average power per symbol (needed for SNR
-			   estimation and simulation). DC carrier is zero (does not contribute
+			   estimation and simulation). DC carrier is zero (contributes not
 			   to the average power) */
 			if (!_IsDC(matiMapTab[iSym][iCar]))
 			{
@@ -578,7 +580,6 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		/* MSC */
 		if (iMaxNumMSCSym < veciNumMSCSym[iSym])
 			iMaxNumMSCSym = veciNumMSCSym[iSym];
-
 	}
 
 	/* Set number of useful MSC cells */
@@ -597,23 +598,31 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	rAvScatPilPow /= iScatPilotCellCnt;
 
 
+/* ########################################################################## */
 #ifdef _DEBUG_
-	FILE* pFile = fopen("test/CarMapTable.dat", "w");
-	if(pFile)
-	{
-		fprintf(pFile, "Robustness mode %c / Spectrum occupancy %d\n\n", int(eNewRobustnessMode)+'A', iSpecOccArrayIndex);
-		fclose(pFile);
-		dump_carriers("test/CarMapTable.dat");
-		dump_pilots("test/PilotCells.dat");
-	}
-#endif
-}
-
 /* Save table in file */
-void CCellMappingTable::dump_carriers(const string& file)
-{
-FILE* pFile = fopen(file.c_str(), "a");
+FILE* pFile = fopen("test/CarMapTable.dat", "w");
 
+/* Title */
+fprintf(pFile, "Robustness mode ");
+switch (eNewRobustnessMode)
+{
+case RM_ROBUSTNESS_MODE_A:
+	fprintf(pFile, "A");
+	break;
+case RM_ROBUSTNESS_MODE_B:
+	fprintf(pFile, "B");
+	break;
+case RM_ROBUSTNESS_MODE_C:
+	fprintf(pFile, "C");
+	break;
+case RM_ROBUSTNESS_MODE_D:
+	fprintf(pFile, "D");
+	break;
+}
+fprintf(pFile, " / Spectrum occupancy %d\n\n", iSpecOccArrayIndex);
+
+/* Actual table */
 for (int i = 0; i < iNumSymbolsPerSuperframe; i++)
 {
 	for (int j = 0; j < iNumCarrier; j++)
@@ -663,33 +672,32 @@ for (int i = 0; i < iNumSymbolsPerSuperframe; i++)
 
 /* Legend */
 fprintf(pFile, "\n------------------>\n subcarrier index");
-fprintf(pFile, "\n\n\nLegend:\n\t: DC-carrier\n\t. MSC cells\n\tS SDC cells");
+fprintf(pFile, "\n\n\nLegend:\n\t: DC-carrier\n\t. MCS cells\n\tS SDC cells");
 fprintf(pFile, "\n\tX FAC cells\n\tT time pilots\n\tf frequency pilots");
 fprintf(pFile, "\n\t0 scattered pilots\n\t* boosted scattered pilots\n");
 
 fclose(pFile);
-}
 
 /* Save pilot values in file */
 /* Use following command to plot pilot complex values in Matlab:
 
 	clear all;close all;load PilotCells.dat;subplot(211),mesh(abs(complex(PilotCells(:,1:2:end), PilotCells(:,2:2:end))));subplot(212),mesh(angle(complex(PilotCells(:,1:2:end), PilotCells(:,2:2:end))))
 
-(It plots the absolute of the pilots in the upper plot and angle in
+(It plots the absolute of the pilots in the upper plot and angle in 
 the lower plot.)
 */
-void CCellMappingTable::dump_pilots(const string& file)
+pFile = fopen("test/PilotCells.dat", "w");
+for (int z = 0; z < iNumSymbolsPerSuperframe; z++)
 {
-	FILE* pFile = fopen(file.c_str(), "w");
-	for (int z = 0; z < iNumSymbolsPerSuperframe; z++)
-	{
-		for (int v = 0; v < iNumCarrier; v++)
-			fprintf(pFile, "%e %e ", matcPilotCells[z][v].real(),
-				matcPilotCells[z][v].imag());
+	for (int v = 0; v < iNumCarrier; v++)
+		fprintf(pFile, "%e %e ", matcPilotCells[z][v].real(),
+			matcPilotCells[z][v].imag());
 
-		fprintf(pFile, "\n");
-	}
-	fclose(pFile);
+	fprintf(pFile, "\n");
+}
+fclose(pFile);
+#endif
+/* ########################################################################## */
 }
 
 _COMPLEX CCellMappingTable::Polar2Cart(const _REAL rAbsolute,

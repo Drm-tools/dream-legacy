@@ -3,7 +3,7 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Oliver Haffenden, Julian Cable
+ *	Volker Fischer, Oliver Haffenden
  *
  * Description:
  *	see MDIInBuffer.cpp
@@ -30,56 +30,25 @@
 #define MDIDECODE_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
-#include "../util/ReceiverModul.h"
-#include "../util/TransmitterModul.h"
+#include "../Parameter.h"
+#include "../util/Modul.h"
 #include "MDIDefinitions.h"
 #include "TagPacketDecoderMDI.h"
 
-class CDecodeRSIMDI
+class CDecodeRSIMDI : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CDecodeRSIMDI():TagPacketDecoder() {}
+	CDecodeRSIMDI():TagPacketDecoderMDI() {}
 	virtual ~CDecodeRSIMDI() {}
-	virtual void Init(CParameter& Parameters);
-	virtual void ProcessData(CParameter& Parameters,
-				CVectorEx<_BINARY>* vecInputData,
-				CVectorEx<_BINARY>* vecfac_Data,
-				CVectorEx<_BINARY>* vecsdc_Data,
-				vector<CVectorEx<_BINARY>* >& vecpvecData,
-				int& iOutputBlockSize,
-				int& iOutputBlockSize2,
-				vector<int>& veciOutputBlockSize
-				);
 
 protected:
-	CTagPacketDecoderMDI TagPacketDecoder;
+
+	virtual void InitInternal(CParameter& ReceiverParam);
+	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+
+	CTagPacketDecoderMDI TagPacketDecoderMDI;
 	int iFramesSinceSDC;
-};
-
-class CDecodeRSI : public CReceiverModul<_BINARY, _BINARY>
-{
-public:
-	CDecodeRSI():Decoder() {}
-	virtual ~CDecodeRSI() {}
-protected:
-	virtual void InitInternal(CParameter& Parameters);
-	virtual void ProcessDataInternal(CParameter& Parameters);
-
-	CDecodeRSIMDI Decoder;
-};
-
-//class CDecodeMDI : public CTransmitterModul<_BINARY, _BINARY, 1, 2+MAX_NUM_STREAMS>
-class CDecodeMDI : public CTransmitterModul<_BINARY, _BINARY>
-{
-public:
-	CDecodeMDI():Decoder() {}
-	virtual ~CDecodeMDI() {}
-	void Expect(int);
-protected:
-	virtual void InitInternal(CParameter& Parameters);
-	virtual void ProcessDataInternal(CParameter& Parameters);
-
-	CDecodeRSIMDI Decoder;
+	uint32_t last_dlfc;
 };
 
 #endif

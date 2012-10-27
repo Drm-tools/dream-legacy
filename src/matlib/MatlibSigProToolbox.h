@@ -11,16 +11,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation; either version 2 of the License, or (at your option) any later 
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -31,8 +31,6 @@
 #include "Matlib.h"
 #include "MatlibStdToolbox.h"
 #include <cstdlib>
-
-const _REAL crPi = _REAL(3.14159265358979323846);
 
 
 /* Helpfunctions **************************************************************/
@@ -57,16 +55,16 @@ CReal					Besseli(const CReal rNu, const CReal rZ);
 
 
 /* Filter data with a recursive (IIR) or nonrecursive (FIR) filter */
-CMatlibVector<CReal>	Filter(const CMatlibVector<CReal>& fvB,
-							   const CMatlibVector<CReal>& fvA,
-							   const CMatlibVector<CReal>& fvX,
+CMatlibVector<CReal>	Filter(const CMatlibVector<CReal>& fvB, 
+							   const CMatlibVector<CReal>& fvA, 
+							   const CMatlibVector<CReal>& fvX, 
 							   CMatlibVector<CReal>& fvZ);
 
 
 /* Levinson durbin recursion */
-CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal>& vecrRx,
+CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal>& vecrRx, 
 								 const CMatlibVector<CReal>& vecrB);
-CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx,
+CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx, 
 								 const CMatlibVector<CComplex>& veccB);
 
 
@@ -75,7 +73,7 @@ inline CReal			Sinc(const CReal& rI)
 							{return rI == (CReal) 0.0 ? (CReal) 1.0 : sin(crPi * rI) / (crPi * rI);}
 inline
 CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI)
-							{_VECOP(CReal, fvI.Size(), Sinc(fvI[i]));}
+							{_VECOP(CReal, fvI.GetSize(), Sinc(fvI[i]));}
 
 
 /* My own functions --------------------------------------------------------- */
@@ -102,10 +100,10 @@ inline CReal			SqMag(const CReal& rI)
 							{return rI * rI;}
 inline
 CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
-							{_VECOP(CReal, veccI.Size(), SqMag(veccI[i]));}
+							{_VECOP(CReal, veccI.GetSize(), SqMag(veccI[i]));}
 inline
 CMatlibVector<CReal>	SqMag(const CMatlibVector<CReal>& vecrI)
-							{_VECOP(CReal, vecrI.Size(), SqMag(vecrI[i]));}
+							{_VECOP(CReal, vecrI.GetSize(), SqMag(vecrI[i]));}
 
 /* One pole recursion (first order IIR)
    y_n = lambda * y_{n - 1} + (1 - lambda) * x_n */
@@ -119,7 +117,7 @@ inline void				IIR1(CMatlibVector<CReal>& rY,
 							 const CMatlibVector<CReal>& rX,
 							 const CReal rLambda)
 {
-	const int iSize = rY.Size();
+	const int iSize = rY.GetSize();
 
 	for (int i = 0; i < iSize; i++)
 		IIR1(rY[i], rX[i], rLambda);

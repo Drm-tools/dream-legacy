@@ -30,9 +30,7 @@
 #ifndef _EPGDEC_H
 #define _EPGDEC_H
 #include "../../GlobalDefinitions.h"
-#ifdef QT_XML_LIB
-# include <qdom.h>
-#endif
+#include <qdom.h>
 #include <vector>
 using namespace std;
 
@@ -58,13 +56,12 @@ public:
 class CEPGDecoder
 {
   public:
-    CEPGDecoder ()
+    CEPGDecoder ():doc()
     {
     }
     void decode (const vector<_BYTE>&);
 
-#ifdef QT_XML_LIB
     QDomDocument doc;
-#endif
+
 };
 #endif

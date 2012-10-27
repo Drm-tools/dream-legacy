@@ -33,27 +33,27 @@
 #include "../tables/TableQAMMapping.h"
 #include "../util/Vector.h"
 #include "../Parameter.h"
-#include "ChannelCode.h"
+
 
 /* Classes ********************************************************************/
 class CQAMMapping
 {
 public:
-	CQAMMapping() {}
-	virtual ~CQAMMapping() {}
+    CQAMMapping() {}
+    virtual ~CQAMMapping() {}
 
-	void Map(CVector<_DECISION>& vecInputData1,
-			 CVector<_DECISION>& vecInputData2,
-			 CVector<_DECISION>& vecInputData3,
-			 CVector<_DECISION>& vecInputData4,
-			 CVector<_DECISION>& vecInputData5,
-			 CVector<_DECISION>& vecInputData6,
-			 CVector<_COMPLEX>* pcOutputData);
-	void Init(int iNewOutputBlockSize, ECodScheme eNewCodingScheme);
+    void Map(CVector<_DECISION>& vecInputData1,
+             CVector<_DECISION>& vecInputData2,
+             CVector<_DECISION>& vecInputData3,
+             CVector<_DECISION>& vecInputData4,
+             CVector<_DECISION>& vecInputData5,
+             CVector<_DECISION>& vecInputData6,
+             CVector<_COMPLEX>* pcOutputData);
+    void Init(int iNewOutputBlockSize, ECodScheme eNewCodingScheme);
 
 protected:
-	int						iOutputBlockSize;
-	ECodScheme	eMapType;
+    int						iOutputBlockSize;
+    ECodScheme	eMapType;
 };
 
 

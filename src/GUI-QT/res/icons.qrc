@@ -1,6 +1,10 @@
 <RCC>
   <qresource prefix="/icons" >
-    <file>Home.png</file>
+    <file>greenCube.png</file>
+    <file>smallGreenCube.png</file>
+    <file>redCube.png</file>
+    <file>pinkCube.png</file>
+    <file>orangeCube.png</file>
     <file>CSAudSNRHist.png</file>
     <file>CSChannel.png</file>
     <file>CSConstellation.png</file>

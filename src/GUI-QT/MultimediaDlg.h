@@ -29,12 +29,43 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
-#include <QTextDocument>
-#include <vector>
-#include <map>
-#include "ui_MultimediaDlg.h"
+#include <qstring.h>
+#include <qmime.h>
+#include <qimage.h>
+#include <qtimer.h>
+#include <qpushbutton.h>
+#include <qlabel.h>
+#include <qmenubar.h>
+#include <qlayout.h>
+#include <qdatetime.h>
+#include <qregexp.h>
+#include <qtooltip.h>
+#include <qfileinfo.h>
+#include <qdir.h>
+#include <qmessagebox.h>
+#include <qfontdialog.h>
+#include <qfont.h>
+#if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
+# include "MultimediaDlgbase.h"
+#else
+# include <QMenu>
+# include <QDialog>
+# include "ui_MultimediaDlgbase.h"
+#endif
+
+#include "MultColorLED.h"
+#include "DialogUtil.h"
+#include "../GlobalDefinitions.h"
+
+#ifdef HAVE_LIBFREEIMAGE
+# include <FreeImage.h>
+#endif
+
+#include "../DrmReceiver.h"
 #include "../datadecoding/DABMOT.h"
-#include "../datadecoding/DataDecoder.h"
+#include "../datadecoding/Journaline.h"
+#include "../util/Settings.h"
 
 /* Definitions ****************************************************************/
 /* Maximum number of levels. A maximum of 20 hierarchy levels is set
@@ -42,11 +73,6 @@
 #define MAX_NUM_LEV_JOURNALINE			20
 
 /* Classes ********************************************************************/
-class CDRMReceiver;
-class CParameter;
-class CSettings;
-class Q3PopupMenu;
-
 class CNewIDHistory
 {
 public:
@@ -73,21 +99,29 @@ public:
 	void Reset() {iNumHist = 0;}
 
 protected:
-	std::vector<int> veciNewsID;
+	CVector<int>	veciNewsID;
 	int				iNumHist;
 };
 
-class MultimediaDlg : public QDialog, Ui_MultimediaDlg
+#if QT_VERSION >= 0x040000
+class MultimediaDlgBase : public QMainWindow, public Ui_MultimediaDlgBase
+{
+public:
+	MultimediaDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QMainWindow(parent,name,f){(void)name;(void)modal;setupUi(this);}
+	virtual ~MultimediaDlgBase() {}
+};
+#endif
+class MultimediaDlg : public MultimediaDlgBase
 {
 	Q_OBJECT
 
 public:
 	MultimediaDlg(CDRMReceiver&, QWidget* parent = 0,
-		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
+
 	virtual ~MultimediaDlg();
-	/* dummy assignment operator to help MSVC8 */
-	MultimediaDlg& operator=(const MultimediaDlg&)
-	{ throw "should not happen"; return *this;}
 
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
@@ -96,48 +130,55 @@ protected:
 
 	CParameter&				Parameters;
 	CDataDecoder&			DataDecoder;
+	CJournaline				JournalineDecoder;
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
-	Q3PopupMenu*			pFileMenu;
-	QTextDocument           document;
-	vector<QImage>          vecImages;
-	vector<QString>         vecImageNames;
+#if QT_VERSION < 0x040000
+	QPopupMenu*				pFileMenu;
+#else
+	QMenu*					pFileMenu;
+#endif
+	virtual void			showEvent(QShowEvent* pEvent);
+	virtual void			hideEvent(QHideEvent* pEvent);
+	CVector<CMOTObject>		vecRawImages;
 	int						iCurImagePos;
 	QString					strFhGIISText;
 	QString					strJournalineHeadText;
 	int						iCurJourObjID;
-	EAppType	            eAppType;
+	CDataDecoder::EAppType	eAppType;
 	CNewIDHistory			NewIDHistory;
 	QString					strCurrentSavePath;
-	QString					strDirMOTCache;
 	QString					strBWSHomePage;
 	QFont					fontTextBrowser;
 	QFont					fontDefault;
-	bool				    bAddRefresh;
+	_BOOLEAN				bAddRefresh;
 	int						iRefresh;
+	bool					bGetFromFile;
 
-	virtual void			showEvent(QShowEvent* pEvent);
-	virtual void			hideEvent(QHideEvent* pEvent);
 	void SetSlideShowPicture();
 	void SetJournalineText();
 	void UpdateAccButtonsSlideShow();
+	int GetIDLastPicture() {return vecRawImages.Size() - 1;}
 	void SaveMOTObject(const CVector<_BYTE>& vecbRawData, const QString& strFileName);
 	void CreateDirectories(const QString& filename);
 	void ClearAllSlideShow();
 
-	void InitApplication(EAppType eNewAppType);
+	void InitApplication(CDataDecoder::EAppType eNewAppType);
 
 	void InitNotSupported();
 	void InitMOTSlideShow();
 	void InitJournaline();
 	void InitBroadcastWebSite();
 
-	void ExtractJournalineBody(const int iCurJourID, const bool bHTMLExport,
+	void JpgToPng(CMOTObject& NewPic);
+
+	void ExtractJournalineBody(const int iCurJourID, const _BOOLEAN bHTMLExport,
 		QString &strTitle, QString &strItems);
 
-	void SetCurrentSavePath(const QString strFileName);
 	void AddRefreshHeader(const QString& strFileName);
+
+	_BOOLEAN openBrowser(QWidget *widget, const QString &filename);
 
 public slots:
 	void OnTimer();
@@ -145,6 +186,7 @@ public slots:
 	void OnButtonStepForw();
 	void OnButtonJumpBegin();
 	void OnButtonJumpEnd();
+	void OnLoad();
 	void OnSave();
 	void OnSaveAll();
 	void OnClearAll() {ClearAllSlideShow();}

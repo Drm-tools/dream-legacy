@@ -31,7 +31,7 @@
 
 #include <QTextDocument>
 #include "ui_JLViewer.h"
-#include <../ReceiverInterface.h>
+#include "../DrmReceiver.h"
 #include <string>
 
 class CSettings;
@@ -41,7 +41,7 @@ class JLViewer : public QMainWindow, Ui_JLViewer
 	Q_OBJECT
 
 public:
-	JLViewer(ReceiverInterface&, CSettings&, QWidget* parent = 0,
+	JLViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0);
 	virtual ~JLViewer();
 
@@ -50,7 +50,7 @@ protected:
     QTimer Timer;
 	QTextDocument           document;
 	std::string             strCurrentSavePath;
-	ReceiverInterface&  receiver;
+	CDRMReceiver&			receiver;
 	CSettings&              settings;
 	bool                    decoderSet;
 

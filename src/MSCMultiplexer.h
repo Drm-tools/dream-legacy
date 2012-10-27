@@ -30,32 +30,35 @@
 #define MSCMUX_H__3B0BA660_JLBVEOUB239485BB2B_23E7A0D31912__INCLUDED_
 
 #include "GlobalDefinitions.h"
-#include "util/ReceiverModul.h"
+#include "Parameter.h"
+#include "util/Buffer.h"
+#include "util/Modul.h"
+#include "util/Vector.h"
 
 /* Classes ********************************************************************/
 class CMSCDemultiplexer : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CMSCDemultiplexer() {}
-	virtual ~CMSCDemultiplexer() {}
+    CMSCDemultiplexer() {}
+    virtual ~CMSCDemultiplexer() {}
 
 protected:
-	struct SStreamPos
-	{
-		int	iOffsetLow;
-		int	iOffsetHigh;
-		int	iLenLow;
-		int	iLenHigh;
-	};
+    struct SStreamPos
+    {
+        int	iOffsetLow;
+        int	iOffsetHigh;
+        int	iLenLow;
+        int	iLenHigh;
+    };
 
-	SStreamPos			StreamPos[4];
+    SStreamPos			StreamPos[4];
 
-	SStreamPos GetStreamPos(CParameter& Param, const int iStreamID);
-	void ExtractData(CVectorEx<_BINARY>& vecIn, CVectorEx<_BINARY>& vecOut,
-					 SStreamPos& StrPos);
+    SStreamPos GetStreamPos(CParameter& Param, const int iStreamID);
+    void ExtractData(CVectorEx<_BINARY>& vecIn, CVectorEx<_BINARY>& vecOut,
+                     SStreamPos& StrPos);
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 

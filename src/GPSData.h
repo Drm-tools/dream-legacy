@@ -34,114 +34,117 @@
 class CGPSData
 {
 public:
-	CGPSData();
-	~CGPSData();
+    CGPSData()
+    {
+        Reset();
+    }
+    ~CGPSData() {}
 
-	enum EFix { MODE_NO_FIX, MODE_2D, MODE_3D };
+    enum EFix { MODE_NO_FIX, MODE_2D, MODE_3D };
 
-	enum EStatus { GPS_RX_NOT_CONNECTED, GPS_RX_NO_DATA, GPS_RX_DATA_AVAILABLE };
+    enum EStatus { GPS_RX_NOT_CONNECTED, GPS_RX_NO_DATA, GPS_RX_DATA_AVAILABLE };
 
-	enum EGPSSource
-	{ GPS_SOURCE_INVALID, GPS_SOURCE_GPS_RECEIVER,
-		GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER, GPS_SOURCE_MANUAL_ENTRY,
-		GPS_SOURCE_NOT_AVAILABLE
-	};
+    enum EGPSSource
+    { GPS_SOURCE_INVALID, GPS_SOURCE_GPS_RECEIVER,
+      GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER, GPS_SOURCE_MANUAL_ENTRY,
+      GPS_SOURCE_NOT_AVAILABLE
+    };
 
-	/////////
+    /////////
 
-	EGPSSource GetGPSSource() const;
-	void SetGPSSource(EGPSSource eNewSource);
+    EGPSSource GetGPSSource() const;
+    void SetGPSSource(EGPSSource eNewSource);
 
-	/////////
+    /////////
 
-	void SetSatellitesVisibleAvailable(bool bNew);
-	bool GetSatellitesVisibleAvailable() const;
+    void SetSatellitesVisibleAvailable(_BOOLEAN bNew);
+    _BOOLEAN GetSatellitesVisibleAvailable() const;
 
-	void SetSatellitesVisible(uint16_t usSatellitesVisible);
-	uint16_t GetSatellitesVisible() const;
+    void SetSatellitesVisible(uint16_t usSatellitesVisible);
+    uint16_t GetSatellitesVisible() const;
 
-	/////////
+    /////////
 
-	void SetPositionAvailable(bool bNew);
-	bool GetPositionAvailable() const;
+    void SetPositionAvailable(_BOOLEAN bNew);
+    _BOOLEAN GetPositionAvailable() const;
 
-	void SetLatLongDegrees(double fLatitudeDegrees, double fLongitudeDegrees);
-	void GetLatLongDegrees(double& fLatitudeDegrees, double& fLongitudeDegrees) const;
+    void SetLatLongDegrees(double fLatitudeDegrees, double fLongitudeDegrees);
+    void GetLatLongDegrees(double& fLatitudeDegrees, double& fLongitudeDegrees) const;
 
-	void GetLatLongDegrees(string& latitude, string& longitude) const;
+    void GetLatLongDegrees(string& latitude, string& longitude) const;
 
-	unsigned int ExtractMinutes(double dblDeg) const;
-	void asDM(string& lat, string& lng) const;
-	void asDM(string& pos, double d, char n, char p) const;
+    unsigned int ExtractMinutes(double dblDeg) const;
+    void asDM(string& lat, string& lng) const;
+    void asDM(string& pos, double d, char n, char p) const;
 
-	/////////
+    /////////
 
-	void SetSpeedAvailable(bool bNew);
-	bool GetSpeedAvailable() const;
+    void SetSpeedAvailable(_BOOLEAN bNew);
+    _BOOLEAN GetSpeedAvailable() const;
 
-	void SetSpeedMetresPerSecond(double fSpeedMetresPerSecond);
-	double GetSpeedMetresPerSecond() const;
+    void SetSpeedMetresPerSecond(double fSpeedMetresPerSecond);
+    double GetSpeedMetresPerSecond() const;
 
-	/////////
+    /////////
 
-	void SetHeadingAvailable(bool bNew);
-	bool GetHeadingAvailable() const;
+    void SetHeadingAvailable(_BOOLEAN bNew);
+    _BOOLEAN GetHeadingAvailable() const;
 
-	void SetHeadingDegrees(uint16_t usHeadingDegrees);
-	unsigned short GetHeadingDegrees() const;
+    void SetHeadingDegrees(uint16_t usHeadingDegrees);
+    unsigned short GetHeadingDegrees() const;
 
-	/////////
+    /////////
 
-	void SetTimeAndDateAvailable(bool bNew);
-	bool GetTimeAndDateAvailable() const;
+    void SetTimeAndDateAvailable(_BOOLEAN bNew);
+    _BOOLEAN GetTimeAndDateAvailable() const;
 
-	void SetTimeSecondsSince1970(uint32_t ulTimeSecondsSince1970);
-	uint32_t GetTimeSecondsSince1970() const;
-	string GetTimeDate() const;
-	void GetTimeDate(uint32_t& year, uint8_t& month, uint8_t& day, uint8_t& hour, uint8_t& minute, uint8_t& second) const;
+    void SetTimeSecondsSince1970(uint32_t ulTimeSecondsSince1970);
+    uint32_t GetTimeSecondsSince1970() const;
+    string GetTimeDate() const;
+    void GetTimeDate(uint32_t& year, uint8_t& month, uint8_t& day, uint8_t& hour, uint8_t& minute, uint8_t& second) const;
 
-	/////////
+    /////////
 
-	void SetAltitudeAvailable(bool bNew);
-	bool GetAltitudeAvailable() const;
+    void SetAltitudeAvailable(_BOOLEAN bNew);
+    _BOOLEAN GetAltitudeAvailable() const;
 
-	void SetAltitudeMetres(double fAltitudeMetres);
-	double GetAltitudeMetres() const;
+    void SetAltitudeMetres(double fAltitudeMetres);
+    double GetAltitudeMetres() const;
 
-	/////////
+    /////////
 
-	void SetFix(EFix Fix);
-	EFix GetFix() const;
+    void SetFix(EFix Fix);
+    EFix GetFix() const;
 
-	/////////
+    /////////
 
-	void SetStatus(EStatus eStatus);
-	EStatus GetStatus() const;
+    void SetStatus(EStatus eStatus);
+    EStatus GetStatus() const;
 
 private:
-	bool m_bSatellitesVisibleAvailable;
-	uint16_t m_usSatellitesVisible;
+    _BOOLEAN m_bSatellitesVisibleAvailable;
+    uint16_t m_usSatellitesVisible;
 
-	bool m_bPositionAvailable;
-	double	m_fLatitudeDegrees;
-	double	m_fLongitudeDegrees;
+    _BOOLEAN m_bPositionAvailable;
+    double	m_fLatitudeDegrees;
+    double	m_fLongitudeDegrees;
 
-	bool m_bSpeedAvailable;
-	double	m_fSpeedMetresPerSecond;
+    _BOOLEAN m_bSpeedAvailable;
+    double	m_fSpeedMetresPerSecond;
 
-	bool m_bHeadingAvailable;
-	uint16_t	m_usHeadingDegrees;
+    _BOOLEAN m_bHeadingAvailable;
+    uint16_t	m_usHeadingDegrees;
 
-	bool m_bTimeAndDateAvailable;
-	uint32_t m_ulTimeSecondsSince1970;
+    _BOOLEAN m_bTimeAndDateAvailable;
+    uint32_t m_ulTimeSecondsSince1970;
 
-	bool m_bAltitudeAvailable;
-	double m_fAltitudeMetres;
+    _BOOLEAN m_bAltitudeAvailable;
+    double m_fAltitudeMetres;
 
-	EFix	m_eFix;
-	EStatus m_eStatus;
-	EGPSSource eGPSSource;
+    EFix	m_eFix;
+    EStatus m_eStatus;
+    EGPSSource eGPSSource;
 
-	void Reset();
+    void Reset();
 };
 #endif

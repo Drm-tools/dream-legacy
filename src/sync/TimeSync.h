@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation; either version 2 of the License, or (at your option) any later 
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -29,7 +29,9 @@
 #if !defined(TIMESYNC_H__3B0BEVJBN872345NBEROUEBGF4344_BB27912__INCLUDED_)
 #define TIMESYNC_H__3B0BEVJBN872345NBEROUEBGF4344_BB27912__INCLUDED_
 
-#include "../util/ReceiverModul.h"
+#include "../Parameter.h"
+#include "../util/Modul.h"
+#include "../util/Vector.h"
 #include "../matlib/Matlib.h"
 #include "TimeSyncFilter.h"
 
@@ -82,11 +84,11 @@ public:
 	virtual ~CTimeSync() {}
 
 	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(const bool bNewS) {bSyncInput = bNewS;}
+	void SetSyncInput(const _BOOLEAN bNewS) {bSyncInput = bNewS;}
 
 	void StartAcquisition();
-	void StopTimingAcqu() {bTimingAcqu = false;}
-	void StopRMDetAcqu() {bRobModAcqu = false;}
+	void StopTimingAcqu() {bTimingAcqu = FALSE;}
+	void StopRMDetAcqu() {bRobModAcqu = FALSE;}
 
 protected:
 	int							iCorrCounter;
@@ -116,12 +118,12 @@ protected:
 
 	int							iCenterOfBuf;
 
-	bool					bSyncInput;
+	_BOOLEAN					bSyncInput;
 
-	bool					bInitTimingAcqu;
-	bool					bTimingAcqu;
-	bool					bRobModAcqu;
-	bool					bAcqWasActive;
+	_BOOLEAN					bInitTimingAcqu;
+	_BOOLEAN					bTimingAcqu;
+	_BOOLEAN					bRobModAcqu;
+	_BOOLEAN					bAcqWasActive;
 
 	int							iTiSyncInitCnt;
 	int							iRobModInitCnt;

@@ -38,13 +38,18 @@ bool BWSBrowser::changed()
 	if(decoder==NULL)
         return false;
 
-
+#if 0
     TTransportID tid = decoder->GetNextTid();
     if (tid>=0)
     {
-        CMOTObject obj = decoder->GetObject(tid);
+        CMOTObject	obj = decoder->GetObject(tid);
+#else
+	if(decoder->NewObjectAvailable())
+	{
+	    CMOTObject	obj;
+		decoder->GetNextObject(obj);
+#endif
         pages[obj.strName.c_str()] = obj;
-//cerr << tid << " " << obj.strName << endl;
         CMOTDirectory MOTDir;
 
         decoder->GetDirectory(MOTDir);
@@ -65,8 +70,9 @@ bool BWSBrowser::changed()
                     shomeUrl = MOTDir.DirectoryIndex[BASIC_PROFILE].c_str();
             }
         }
+		return true;
     }
-    return tid>=0;
+    return false;
 }
 
 QVariant BWSBrowser::loadResource( int, const QUrl & name )

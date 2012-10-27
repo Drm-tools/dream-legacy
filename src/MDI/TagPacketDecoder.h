@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "MDIDefinitions.h"
-#include <vector>
+#include "../util/Vector.h"
 #include "PacketInOut.h"
 
 class CTagItemDecoder;
@@ -57,7 +57,8 @@ protected:
 
 	void InitTagItemDecoders(void);
 private:
-	vector<CTagItemDecoder *> vecpTagItemDecoders;
+	CVector<CTagItemDecoder *> vecpTagItemDecoders;
+	uint16_t iSeqNumber;
 };
 
 #endif

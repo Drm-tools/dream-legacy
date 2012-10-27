@@ -43,4 +43,70 @@
 #define NUM_BITS_HEADER_SDC			12
 
 
+/* Classes ********************************************************************/
+class CSDCTransmit
+{
+public:
+    CSDCTransmit() {}
+    virtual ~CSDCTransmit() {}
+
+    void SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
+
+protected:
+    void DataEntityType0(CVector<_BINARY>& vecbiData, CParameter& Parameter);
+    void DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
+                         CParameter& Parameter);
+// ...
+    void DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID,
+                         CParameter& Parameter);
+// ...
+    void DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
+                         CParameter& Parameter);
+
+    CCRC CRCObject;
+};
+
+class CSDCReceive
+{
+public:
+    enum ERetStatus {SR_OK, SR_BAD_CRC, SR_BAD_DATA};
+    enum ESDCType {SDC_DRM, SDC_AMSS};
+    CSDCReceive() : eSDCType(SDC_DRM) {}
+    virtual ~CSDCReceive() {}
+
+    ERetStatus SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
+    void SetSDCType(ESDCType sdcType) {
+        eSDCType = sdcType;
+    }
+
+protected:
+    _BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const _BOOLEAN bVersion);
+    _BOOLEAN DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter);
+// ...
+    _BOOLEAN DataEntityType3(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const _BOOLEAN bVersion);
+    _BOOLEAN DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const _BOOLEAN bVersion);
+    _BOOLEAN DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const _BOOLEAN bVersion);
+// ...
+    _BOOLEAN DataEntityType7(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const _BOOLEAN bVersion);
+    _BOOLEAN DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter);
+    _BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const _BOOLEAN bVersion);
+// ...
+    _BOOLEAN DataEntityType11(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                              CParameter& Parameter, const _BOOLEAN bVersion);
+    _BOOLEAN DataEntityType12(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                              CParameter& Parameter);
+
+    CCRC		CRCObject;
+    ESDCType	eSDCType;
+};
+
+
 #endif // !defined(SDC_H__3B0BA660_CA63SDBOJKEWROBNER89NE877A0D312__INCLUDED_)

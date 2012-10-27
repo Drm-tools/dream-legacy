@@ -49,7 +49,7 @@ public:
 	vector<CDCPProtocol> protocols;
 };
 
-class CTagItemDecoderLoFrCnt : public CTagItemDecoder
+class CTagItemDecoderLoFrCnt : public CTagItemDecoder   
 {
 public:
 	CTagItemDecoderLoFrCnt(){}
@@ -58,7 +58,7 @@ public:
 	uint32_t dlfc;
 };
 
-class CTagItemDecoderFAC : public CTagItemDecoder
+class CTagItemDecoderFAC : public CTagItemDecoder       
 {
 public:
 	CTagItemDecoderFAC(){}
@@ -67,7 +67,7 @@ public:
 	CVector<_BINARY> vecbidata;
 };
 
-class CTagItemDecoderSDC : public CTagItemDecoder
+class CTagItemDecoderSDC : public CTagItemDecoder       
 {
 public:
 	CTagItemDecoderSDC(){}
@@ -76,7 +76,7 @@ public:
 	CVector<_BINARY> vecbidata;
 };
 
-class CTagItemDecoderRobMod : public CTagItemDecoder
+class CTagItemDecoderRobMod : public CTagItemDecoder    
 {
 public:
 	CTagItemDecoderRobMod(){}
@@ -86,7 +86,7 @@ public:
 	ERobMode	eRobMode;
 };
 
-class CTagItemDecoderStr : public CTagItemDecoder
+class CTagItemDecoderStr : public CTagItemDecoder       
 {
 public:
 	CTagItemDecoderStr() : vecbidata(),iStreamNumber(0) {}
@@ -105,7 +105,7 @@ public:
 	CVector<_BINARY> vecbidata;
 };
 
-class CTagItemDecoderInfo : public CTagItemDecoder
+class CTagItemDecoderInfo : public CTagItemDecoder      
 {
 public:
 	CTagItemDecoderInfo(){}
@@ -117,10 +117,10 @@ public:
 class CTagItemDecoderRxDemodMode : public CTagItemDecoder
 {
 public:
-		CTagItemDecoderRxDemodMode() : eMode(DRM){}
+		CTagItemDecoderRxDemodMode() : eMode(RM_DRM){}
 		virtual string GetTagName(void);
 		virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-		EModulationType eMode;
+		ERecMode eMode;
 };
 
 class CTagItemDecoderAMAudio : public CTagItemDecoder
@@ -132,6 +132,5 @@ public:
 		CVector<_BINARY> vecbidata;
 		CAudioParam AudioParams;
 };
-
 
 #endif

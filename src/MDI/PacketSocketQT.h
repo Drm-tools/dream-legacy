@@ -33,9 +33,22 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 
-#include <QUdpSocket>
-#include <QSocketNotifier>
-#include <QDateTime>
+#if QT_VERSION < 0x040000
+# include <qsocketdevice.h>
+# include <qsocketnotifier.h> 
+# include <qstringlist.h>
+#else
+# include <QUdpSocket>
+# include <QTcpSocket>
+# include <QHostAddress>
+# if QT_VERSION >= 0x040200
+#   include <QNetworkInterface>
+# endif
+# if QT_VERSION >= 0x040800
+#  include <QNetworkAddressEntry>
+# endif
+#endif
+#include <qdatetime.h>
 
 /* Maximum number of bytes received from the network interface. Maximum data
    rate of DRM is approx. 80 kbps. One MDI packet must be sent each DRM frame
@@ -45,10 +58,15 @@
 
 #include "PacketInOut.h"
 
-class CPacketSocketQT : public QObject, public CPacketSocket
+class CPacketSocketQT :
+#if QT_VERSION < 0x040000
+	public QObject,
+#endif
+	public CPacketSocket
 {
+#if QT_VERSION < 0x040000
 	Q_OBJECT
-
+#endif
 public:
 	CPacketSocketQT();
 	virtual ~CPacketSocketQT();
@@ -60,23 +78,39 @@ public:
 	// Send packet to the socket
 	void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	virtual bool SetDestination(const string& str);
-	virtual bool SetOrigin(const string& str);
+	virtual _BOOLEAN SetDestination(const string& str);
+	virtual _BOOLEAN SetOrigin(const string& str);
 
-	virtual bool GetDestination(string& str);
-	virtual bool Poll() { return false; } // not used
+	virtual _BOOLEAN GetDestination(string& str);
+
+	void poll();
 
 private:
+	void pollStream();
+	void pollDatagram();
+
+	QStringList parseDest(const string & strNewAddr);
+	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int, QHostAddress);
+#if QT_VERSION >= 0x040200
+	QNetworkInterface GetInterface(QHostAddress AddrInterface);
+#endif
 	CPacketSink *pPacketSink;
 
-	QHostAddress			HostAddrOut;
-	int						iHostPortOut;
+	uint32_t	sourceAddr;
+	QHostAddress	HostAddrOut;
+	int		iHostPortOut;
+	vector<_BYTE>	writeBuf;
+	bool udp;
 
-	QUdpSocket				Socket;
-
-public slots:
-	void readPendingDatagrams();
-
+#if QT_VERSION < 0x040000
+	QSocketDevice* pSocketDevice;
+	QSocketNotifier* pSn;
+private slots:
+	void OnActivated();
+#else
+	QUdpSocket* udpSocket;
+	QTcpSocket* tcpSocket;
+#endif
 };
 
 #endif

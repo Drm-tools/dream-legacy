@@ -55,7 +55,7 @@
 /// @file       NML.h
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.h,v 1.1.2.3 2008/12/26 20:31:17 jcable Exp $
+/// $Id: NML.h,v 1.3 2008/12/26 20:04:53 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///

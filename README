@@ -1,10 +1,15 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Fachbereich Uebertragungstechnik
- * (c) 2001-2003
+ * Parts (c) 2001-2003 Technische Universitaet Darmstadt, Institut fuer 
+ * Nachrichtentechnik Fachbereich Uebertragungstechnik
+ * Parts Copyright (c) 2003, 2004 Fraunhofer IIS, Erlangen, Germany
+ * Parts Copyright (c) 2004 - 2009 British Broadcasting Corporation
  *
- * Author(s):
+ * Originally written by:
  *  Volker Fischer, Alexander Kurpiers
+ *
+ * Additional contributions by:
+ * Stephane Fillod, Andrea Russo, Julian Cable, Andrew Murphy, Oliver Haffenden,
+ * Tomi Manninen, Robert Kesterson
  *
  ******************************************************************************
  *
@@ -28,11 +33,14 @@
 Introduction
 ------------
 
-Digital Radio Mondiale (DRM) is a new digital radio standard for the long-,
-medium- and short-wave ranges. The standard was formed by a consortium in
-co-operation with the International Telecommunication Union (ITU). The new
-system offers the radio stations and new service providers access to the
-multimedia age with small bit rates for large target areas and long distances.
+Digital Radio Mondiale (DRM) is the digital radio standard for the long-,
+medium- and short-wave bands. The system is defined by ES 201 980 which
+is freely downloadable from the European Telecommunications Standards Insitute
+(ETSI). The system was designed by a consortium in co-operation with the 
+International Telecommunication Union (ITU). It offers radio stations and
+new service providers access to the multimedia age with small bit rates for 
+large target areas and long distances.
+
 For more information, visit www.drm.org. 
 
 
@@ -58,13 +66,13 @@ results on an existing system, whereby the synchronization and channel
 estimation is of special interest. 
 
 
-The programming-language is C++. The final release is intended to run under 
-Microsoft Windows and Linux. Start of the project was June 2001. 
+The programming-language is C++. Start of the project was June 2001. The
+software runs on Microsoft Windows, Linux and OSX
 
 
-Although this software is going to be distributed as free software under the 
-terms of the GPL this does not mean that its use is free of rights of others. 
-The use may infringe third party IP and thus may not be legal in some countries.
+Although this software is distributed as free software under the terms of the
+GPL this does not mean that its use is free of rights of others. The use may
+infringe third party IP and thus may not be legal in some countries.
 
 
 The intended audience of the Dream software are people who are interested in

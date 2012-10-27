@@ -29,42 +29,83 @@
 #if !defined(DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_)
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
-#include <QMenu>
-#include <QWhatsThis>
-#include <QCheckBox>
-
-#include "ui_AboutDlg.h"
+#include "../Parameter.h"
 #include "../selectioninterface.h"
-#include "../ReceiverInterface.h"
+
+#include<map>
+
+#include <qthread.h>
+#if QT_VERSION < 0x040000
+# include <qaction.h>
+# include <qpopupmenu.h>
+# include "AboutDlgbase.h"
+#else
+# include "ui_AboutDlgbase.h"
+# include <QDialog>
+# include <QMenu>
+# include <QSignalMapper>
+# include <QAction>
+# include <QActionGroup>
+#endif
+
+inline string toStdString(QString s)
+{
+#if QT_VERSION < 0x040000
+	return s.latin1();
+#else
+	return s.toUtf8().constData();
+#endif
+}
+
+inline QString asHex(long n)
+{
+#if QT_VERSION < 0x040000
+	return QString().setNum(n, 16).upper();
+#else
+	return QString().setNum(n, 16).toUpper();
+#endif
+}
+
+class CRig;
+typedef int rig_model_t;
 
 /* Definitions ****************************************************************/
 
+/* Definition for Courier font */
+#ifdef _WIN32
+	#define FONT_COURIER    "Courier New"
+#else
+	#define FONT_COURIER    "Courier"
+#endif
 /* Classes ********************************************************************/
-/* DRM events --------------------------------------------------------------- */
-class DRMEvent : public QEvent
-{
-public:
-	DRMEvent(const int iNewMeTy, const int iNewSt) :
-		QEvent(Type(QEvent::User + 11)), iMessType(iNewMeTy), iStatus(iNewSt) {}
-
-	int iMessType;
-	int iStatus;
-};
-
 
 /* About dialog ------------------------------------------------------------- */
-class CAboutDlg : public QDialog, public Ui_AboutDlg
+#if QT_VERSION >= 0x040000
+class CAboutDlgBase : public QDialog, public Ui_CAboutDlgBase
+{
+public:
+	CAboutDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f):
+		QDialog(parent,f){setupUi(this);}
+	virtual ~CAboutDlgBase() {}
+};
+#endif
+class CAboutDlg : public CAboutDlgBase
 {
 	Q_OBJECT
 
 public:
-	CAboutDlg(QWidget* parent = 0, const char* name = 0, bool modal = false,
+	CAboutDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		Qt::WFlags f = 0);
 };
 
+#if QT_VERSION >= 0x040000
+typedef QMenu MyMenu;
+#else
+typedef QPopupMenu MyMenu;
+#endif
 
 /* Help menu ---------------------------------------------------------------- */
-class CDreamHelpMenu : public QMenu
+class CDreamHelpMenu : public MyMenu
 {
 	Q_OBJECT
 
@@ -75,30 +116,39 @@ protected:
 	CAboutDlg AboutDlg;
 
 public slots:
-	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
+	void OnHelpWhatsThis();
 	void OnHelpAbout() {AboutDlg.exec();}
 };
 
 
 /* Sound card selection menu ------------------------------------------------ */
-class CSoundCardSelMenu : public QMenu
+class CSoundCardSelMenu : public MyMenu
 {
 	Q_OBJECT
 
 public:
-	CSoundCardSelMenu(CSelectionInterface* pNS, QWidget* parent = 0);
-    void showEvent(QShowEvent* pEvent);
+	CSoundCardSelMenu(CSelectionInterface* pNSIn,
+		CSelectionInterface* pNSOut, QWidget* parent = 0);
 
 protected:
-	CSelectionInterface*	pSoundIF;
-	vector<string>			vecNames;
-	int						iNumDev;
-	QActionGroup*			group;
+	CSelectionInterface*	pSoundInIF;
+	CSelectionInterface*	pSoundOutIF;
+
+#if QT_VERSION >= 0x040000
+	QSignalMapper* Init(const QString& text, CSelectionInterface* intf);
+#else
+        vector<string>          vecSoundInNames;
+        vector<string>          vecSoundOutNames;
+        int                     iNumSoundInDev;
+        int                     iNumSoundOutDev;
+        QPopupMenu*             pSoundInMenu;
+        QPopupMenu*             pSoundOutMenu;
+#endif
 
 public slots:
-	void OnSoundDevice(QAction*);
+	void OnSoundInDevice(int id);
+	void OnSoundOutDevice(int id);
 };
-
 
 /* GUI help functions ------------------------------------------------------- */
 /* Converts from RGB to integer and back */
@@ -122,6 +172,56 @@ public:
 	}
 };
 
-void OnSaveAudio(QWidget*, QCheckBox*, ReceiverInterface&);
+
+inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
+{
+#if QT_VERSION < 0x030000
+	/* Under Windows QT only sets the caption if a "Qt" is
+	   present in the name. Make a little "trick" to display our desired
+	   name without seeing the "Qt" (by Andrea Russo) */
+	QString sTitle = "";
+#ifdef _MSC_VER
+	sTitle.fill(' ', 10000);
+	sTitle += "Qt";
+#endif
+	pDlg->setCaption(sCap + sTitle);
+#else
+# if QT_VERSION < 0x040000
+	pDlg->setCaption(sCap);
+# else
+	pDlg->setWindowTitle(sCap);
+# endif
+#endif
+}
+
+class RemoteMenu : public QObject
+{
+	Q_OBJECT
+
+public:
+	RemoteMenu(QWidget*, CRig&);
+	MyMenu* menu(){ return pRemoteMenu; }
+
+public slots:
+	void OnModRigMenu(int iID);
+	void OnRemoteMenu(int iID);
+	void OnComPortMenu(QAction* action);
+
+signals:
+	void SMeterAvailable();
+
+protected:
+#ifdef HAVE_LIBHAMLIB
+	struct Rigmenu {std::string mfr; MyMenu* pMenu;};
+	std::map<int,Rigmenu> rigmenus;
+	std::vector<rig_model_t> specials;
+	CRig&	rig;
+#endif
+	MyMenu* pRemoteMenu;
+	MyMenu* pRemoteMenuOther;
+};
+
+#define OTHER_MENU_ID (666)
+#define SMETER_MENU_ID (667)
 
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_

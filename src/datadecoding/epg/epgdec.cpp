@@ -35,71 +35,16 @@
 #include "../DABMOT.h"
 #include "../../util/Utilities.h"
 
-#ifdef QT_XML_LIB
 static QDomElement element(QDomDocument& doc, const tag_length_value& tlv);
-#else
-
-class DomDocument;
-
-struct DomNode
-{
-    void appendChild(const DomNode& n)
-    {
-        children.push_back(n);
-    }
-    enum { document,element,text} nodeType;
-    DomDocument* doc;
-    vector<DomNode> children;
-};
-
-struct DomElement: public DomNode
-{
-    void setAttribute (const string& n, const string& v)
-    {
-        attributes[n]=v;
-    }
-    map<string, string> attributes;
-    string name;
-};
-
-struct DomText : public DomNode
-{
-    string text;
-};
-
-struct DomDocument: public DomNode
-{
-    DomElement createElement(const string& name)
-    {
-        DomElement* n = new DomElement;
-        n->doc = this;
-        n->name = name;
-        return *n;
-    }
-    DomText createTextNode(const string& text)
-    {
-        DomText* n = new DomText;
-        n->doc = this;
-        n->text = text;
-        return *n;
-    }
-};
-
-static DomElement element(DomDocument& doc, const tag_length_value& tlv);
-#endif
 
 void
 CEPGDecoder::decode (const vector<_BYTE>& vecData)
 {
     /* clear the doc, allowing re-use */
-#ifdef QT_XML_LIB
     doc.setContent (QString (""));
-#endif
     tag_length_value tlv(&vecData[0]);
     if(tlv.is_epg()) {
-#ifdef QT_XML_LIB
       doc.appendChild (element(doc, tlv));
-#endif
     }
 }
 
@@ -358,19 +303,11 @@ tag_length_value::tag_length_value(const _BYTE* q)
   value = p;
 }
 
-#ifdef QT_XML_LIB
 static QDomElement
 element(QDomDocument& doc, const tag_length_value& tlv)
 {
   QString name (element_tables[tlv.tag].element_name);
   QDomElement e = doc.createElement (name);
-#else
-static DomElement
-element(DomDocument& doc, const tag_length_value& tlv)
-{
-  string name (element_tables[tlv.tag].element_name);
-  DomElement e = doc.createElement (name);
-#endif
   map<string,string> attr;
   _BYTE* end = tlv.value+tlv.length;
   dectab* at = element_tables[tlv.tag].tags;
@@ -390,13 +327,7 @@ element(DomDocument& doc, const tag_length_value& tlv)
       a = b;
   }
   for(map<string,string>::iterator i = attr.begin(); i != attr.end(); i++)
-  {
-#ifdef QT_XML_LIB
     e.setAttribute (QString(i->first.c_str()), QString().fromUtf8(i->second.c_str()));
-#else
-    e.setAttribute (i->first, i->second);
-#endif
-  }
   _BYTE* p = a.value;
   while(p<end)
   {
@@ -411,11 +342,7 @@ element(DomDocument& doc, const tag_length_value& tlv)
 	}
       else if(a.is_cdata()) {
           string value = decode_string(a.value, a.length);
-#ifdef QT_XML_LIB
 	  QDomText t = doc.createTextNode (QString ().fromUtf8 (value.c_str()));
-#else
-	  DomText t = doc.createTextNode (value);
-#endif
 	  e.appendChild (t);
       }
       p = a.value+a.length;
@@ -499,7 +426,7 @@ decode_dateandtime(const _BYTE* p)
     uint32_t mjd;
     uint32_t h = p[0], m = p[1], l = p[2];
     uint16_t n, year;
-    _BYTE month, day;
+    int month, day;
     int hours, minutes, seconds = 0;
     int utc_flag, lto_flag, sign = 0, lto = 0;
     mjd = (((((h << 8) | m) << 8) | l) >> 6) & 0x1ffff;
@@ -514,6 +441,7 @@ decode_dateandtime(const _BYTE* p)
     	seconds = p[n] >> 2;
     	n += 2;
     }
+    //cerr << mjd << " " << hours << ":" << minutes;
     stringstream out;
     string tz = "Z";
     if (lto_flag)
@@ -521,7 +449,7 @@ decode_dateandtime(const _BYTE* p)
     	sign = p[n] & 0x20;
     	lto = p[n] & 0x3f;
     	int mins = 60*hours+minutes;
-//    	cerr << mjd << " " << hours << ":" << minutes << " " << mins << " " << sign << " " << lto << endl;
+	//cerr << " lto: " << sign << " " << lto;
     	if(sign)
     	{
 	    mins -= 30*lto;
@@ -572,6 +500,7 @@ decode_dateandtime(const _BYTE* p)
     out << minutes << ':';
     if(seconds<10) out << '0';
     out << seconds << tz;
+    //cerr << " -> " << out.str() << endl;
     return out.str();
 }
 
@@ -677,9 +606,15 @@ static void attribute(map<string,string>& out, _BYTE element_tag, tag_length_val
     string name = decode_attribute_name(tab);
     string value;
     if(tab.decode == enum_attr) {
+		// TODO if MSVC6 has ptrdiff_t then remove the int version.
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+		int index = tlv.value[0];
+		int num_vals = reinterpret_cast<int>(tab.vals[0]);
+#else
 		/* needed for 64 bit compatibility */
 		ptrdiff_t index = tlv.value[0];
 		ptrdiff_t num_vals = (tab.vals[0] - (const char*)0);
+#endif
 		if(index<=num_vals && index>0)
 			value = tab.vals[index];
 		else

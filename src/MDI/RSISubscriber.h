@@ -37,16 +37,8 @@
 #include "AFPacketGenerator.h"
 
 class CPacketSink;
-class ReceiverInterface;
+class CDRMReceiver;
 class CTagPacketGenerator;
-
-class CRSIPreset
-{
-public:
-	CRSIPreset (const char c = '0', const int i = 1) {cProfile = c; iSubsamplingFactor = i;}
-	char	cProfile;
-	char	iSubsamplingFactor;
-};
 
 class CRSISubscriber : public CPacketSink
 {
@@ -55,54 +47,40 @@ public:
 
 	/* provide a pointer to the receiver for incoming RCI commands */
 	/* leave it set to NULL if you want incoming commands to be ignored */
-	void SetReceiver(ReceiverInterface *pReceiver);
+	void SetReceiver(CDRMReceiver *pReceiver);
+
+	virtual _BOOLEAN SetOrigin(const string&){return FALSE;} // only relevant for network subscribers
 
 	/* Set the profile for this subscriber - could be different for different subscribers */
 	void SetProfile(const char c);
 	char GetProfile(void) const {return cProfile;}
-
-	void SetService(int);
-	void SetRSIRecording(bool, char);
-	void SetIQRecording(bool);
-	void EnableReceiver(bool);
-	void SetFrequency(int);
-	void SetMode(string);
-
-	/* Each subscriber can also do subsampling, i.e. only transmit one in N frames. This sets the ratio */
-	void SetSubsamplingFactor(const int i);
-
-	/* Store a profile and subsampling factor in a preset 1-9 */
-	void DefinePreset(const int iPresetNum, const int cPro, const int iFactor);
 
 	void SetPFTFragmentSize(const int iFrag=-1);
 
 	/* Generate and send a packet */
 	void TransmitPacket(CTagPacketGenerator& Generator);
 
-	void SetAFPktCRC(const bool bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
+	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
 
 
 	/* from CPacketSink interface */
 	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
+	/* from CPacketSource, but we really want it for RSCI control */
+	virtual void poll()=0;
+
 protected:
 	CPacketSink *pPacketSink;
 	char cProfile;
-	int iSubsamplingFactor;
-	bool bNeedPft;
-	size_t fragment_size;
-
+	_BOOLEAN bNeedPft;
+    size_t fragment_size;
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
-
-	map<int, CRSIPreset> mapPresets;
-
 private:
-	ReceiverInterface *pDRMReceiver;
+	CDRMReceiver *pDRMReceiver;
 	CAFPacketGenerator AFPacketGenerator;
 
-	bool bUseAFCRC;
+	_BOOLEAN bUseAFCRC;
 	uint16_t sequence_counter;
-	int iSubsamplingCounter;
 };
 
 
@@ -112,9 +90,10 @@ public:
 	CRSISubscriberSocket(CPacketSink *pSink = NULL);
 	virtual ~CRSISubscriberSocket();
 
-	bool SetOrigin(const string& str);
-	bool SetDestination(const string& str);
-	bool GetDestination(string& addr);
+	_BOOLEAN SetOrigin(const string& str);
+	_BOOLEAN SetDestination(const string& str);
+	_BOOLEAN GetDestination(string& addr);
+	void poll();
 
 private:
 	CPacketSocket* pSocket;
@@ -129,11 +108,12 @@ class CRSISubscriberFile : public CRSISubscriber
 public:
 	CRSISubscriberFile();
 
-	bool SetDestination(const string& strFName);
+	_BOOLEAN SetDestination(const string& strFName);
 	void StartRecording();
 	void StopRecording();
+	void poll() {} // Do Nothing
 
-	bool GetDestination(string& addr);
+	_BOOLEAN GetDestination(string& addr);
 private:
 	CPacketSinkFile* pPacketSinkFile;
 };

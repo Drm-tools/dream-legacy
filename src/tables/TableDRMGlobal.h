@@ -91,7 +91,7 @@
    to harmonize CELP and AAC frame lengths and thus to allow the
    combination of an integer number of audio frames to build an audio
    super frame of 400 ms duration */
-#define AUD_DEC_TRANSFORM_LENGTH		960
+#define AUD_DEC_TRANSFROM_LENGTH		960
 
 /* Number of DRM frames per minute */
 #define NUM_DRM_FRAMES_PER_MIN			150

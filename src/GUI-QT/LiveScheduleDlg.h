@@ -25,15 +25,33 @@
  *
 \******************************************************************************/
 
-#include "DialogUtil.h"
-#include "../util/Settings.h"
-#include "../Parameter.h"
-#include <../ReceiverInterface.h>
+#ifndef __LiveScheduleDlg_H
+#define LiveScheduleDlg_H
 
-#include "ui_LiveScheduleDlg.h"
-#include <QTimer>
-#include <QAbstractTableModel>
-#include <QSortFilterProxyModel>
+#include "../DrmReceiver.h"
+#include "../util/Settings.h"
+#include "DialogUtil.h"
+#include <vector>
+#if QT_VERSION < 0x040000
+# include "LiveScheduleDlgbase.h"
+# include <qpopupmenu.h>
+# include <qurloperator.h>
+# include <qlistview.h>
+#else
+# include <QDialog>
+# include <QTreeWidget>
+# include "ui_LiveScheduleWindow.h"
+#endif
+#include <qpixmap.h>
+#include <qradiobutton.h>
+#include <qtimer.h>
+#include <qmessagebox.h>
+#include <qmenubar.h>
+#include <qlayout.h>
+#include <qlabel.h>
+#include <qcheckbox.h>
+#include <qthread.h>
+
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
@@ -56,65 +74,53 @@
 #define CHR_ACTIVE_DAY_MARKER			'1'
 
 /* Classes ********************************************************************/
-
 class CLiveScheduleItem
 {
 public:
 	CLiveScheduleItem() : strFreq(""), strTarget(""), iServiceID(SERV_ID_NOT_USED),
-	strSystem("") {}
-	virtual ~CLiveScheduleItem() {}
+	strSystem(""), bInsideTargetArea(FALSE) {}
 
-	enum State {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
+	_BOOLEAN IsActive(const time_t ltime);
 
-	void			updateState(const time_t ltime, int iPreview);
-	QString			ExtractDaysFlagString() const;
-	QString			ExtractTime() const;
-
-	string			strFreq;
-	string			strTarget;
-	string			strStation;
-	uint32_t		iServiceID;
-	string			strSystem;
-	CAltFreqSched 	schedule;
-
-	State			state;
-	bool			InsideTargetArea;
+	string		strFreq;
+	string		strTarget;
+	uint32_t	iServiceID;
+	string		strSystem;
+	_BOOLEAN	bInsideTargetArea;
+	CAltFreqSched Schedule;
 };
 
-class CDRMLiveSchedule: public QAbstractTableModel
+class CDRMLiveSchedule
 {
 public:
-	CDRMLiveSchedule();
+	CDRMLiveSchedule():StationsTable(),iSecondsPreview(0),
+	dReceiverLatitude(0),dReceiverLongitude(0)
+	{}
 
 	virtual ~CDRMLiveSchedule() {}
 
+	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
+	int GetStationNumber() {return StationsTable.size();}
+	CLiveScheduleItem& GetItem(const int iPos) {return StationsTable[iPos];}
+	StationState CheckState(const int iPos);
 
-	int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
-	int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
-	QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
-	QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
-
-	void LoadAFSInformation(
-		const map <uint32_t,CServiceInformation>& ServiceInformation);
+	void LoadAFSInformations(const CAltFreqSign& AltFreqSign);
 
 	void LoadServiceDefinition(const CServiceDefinition& service,
-			const CServiceInformation& ServiceInformation);
-
-	void update();
+			const CAltFreqSign& AltFreqSign, const uint32_t iServiceID=SERV_ID_NOT_USED);
 
 	void DecodeTargets(const vector<CAltFreqRegion> vecAltFreqRegions,
-		string& strRegions , bool& bIntoTargetArea);
+		string& strRegions , _BOOLEAN& bIntoTargetArea);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
 
 	void SetReceiverCoordinates(double latitude, double longitude);
 
-	QString toHTML(const QString& StationName);
-
 protected:
+	_BOOLEAN IsActive(const int iPos, const time_t ltime);
 
-	vector<CLiveScheduleItem>	ScheduleTable;
+	vector<CLiveScheduleItem>	StationsTable;
 
 	/* Minutes for stations preview in seconds if zero then no active */
 	int			iSecondsPreview;
@@ -122,58 +128,120 @@ protected:
 	/* receiver coordinates */
 	double		dReceiverLatitude;
 	double		dReceiverLongitude;
-
-	QPixmap		BitmCubeGreen;
-	QPixmap		BitmCubeGreenLittle;
-	QPixmap		BitmCubeYellow;
-	QPixmap		BitmCubeRed;
-	QPixmap		BitmCubeOrange;
-	QPixmap		BitmCubePink;
 };
 
-class LiveScheduleDlg : public QDialog, public Ui_LiveScheduleDlg
+#if QT_VERSION < 0x040000
+class MyListLiveViewItem : public QListViewItem
+{
+public:
+	MyListLiveViewItem(QListView* parent, QString s1, QString s2 = QString::null,
+		QString s3 = QString::null, QString s4 = QString::null,
+		QString s5 = QString::null, QString s6 = QString::null,
+		QString s7 = QString::null, QString s8 = QString::null) :
+	QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8)
+	{}
+
+	/* Custom "key()" function for correct sorting behaviour */
+	virtual QString key(int column, bool ascending) const;
+};
+#else
+class MyListLiveViewItem : public QTreeWidgetItem
+{
+public:
+	MyListLiveViewItem(QTreeWidget* parent, QString s1, QString s2 = QString::null,
+		QString s3 = QString::null, QString s4 = QString::null,
+		QString s5 = QString::null, QString s6 = QString::null,
+		QString s7 = QString::null, QString s8 = QString::null) :	
+	QTreeWidgetItem(parent, QStringList() << s1 << s2 << s3 << s4 << s5 << s6 << s7 << s8)
+	{}
+
+	/* Custom "key()" function for correct sorting behaviour */
+	virtual QString key(int column, bool ascending) const;
+	void setPixmap(int col, QPixmap p) { setIcon(col, p); }
+};
+#endif
+
+#if QT_VERSION >= 0x040000
+class CLiveScheduleDlgBase : public QMainWindow, public Ui_LiveScheduleWindow
+{
+public:
+	CLiveScheduleDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
+		QMainWindow(parent,f){}
+	virtual ~CLiveScheduleDlgBase() {}
+};
+#endif
+class LiveScheduleDlg : public CLiveScheduleDlgBase
 {
 	Q_OBJECT
 
 public:
 
-	LiveScheduleDlg(ReceiverInterface&, CSettings& s,
+	LiveScheduleDlg(CDRMReceiver&,
 		QWidget* parent = 0,
-		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~LiveScheduleDlg();
-	/* dummy assignment operator to help MSVC8 */
-	LiveScheduleDlg& operator=(const LiveScheduleDlg&)
-	{ throw "should not happen"; return *this;}
 
-	void					LoadSchedule();
+	void LoadSchedule();
+	void LoadSettings(const CSettings&);
+	void SaveSettings(CSettings&);
 
-	int						iCurrentSortColumn;
-	bool				    bCurrentSortAscending;
+	int			iCurrentSortColumn;
+	_BOOLEAN		bCurrentSortAscending;
 
 protected:
-	void					SetStationsView();
-	void					AddWhatsThisHelp();
-	void					showEvent(QShowEvent* pEvent);
-	void					hideEvent(QHideEvent* pEvent);
+	void			SetStationsView();
+	void			AddWhatsThisHelp();
+	void			SetUTCTimeLabel();
+	void			showEvent(QShowEvent* pEvent);
+	void			hideEvent(QHideEvent* pEvent);
+	QString			ExtractDaysFlagString(const int iDayCode);
+	QString			ExtractTime(const CAltFreqSched& schedule);
+	_BOOLEAN		showAll();
+	int			currentSortColumn();
 
-	ReceiverInterface&		DRMReceiver;
-	CSettings&				Settings;
-	CDRMLiveSchedule		Schedule;
-	QTimer					TimerList;
-	QTimer					TimerUTCLabel;
-	bool					bShowAll;
+	CDRMReceiver&		DRMReceiver;
+	CDRMLiveSchedule	DRMSchedule;
+	QTimer			TimerList;
+	QTimer			TimerUTCLabel;
+#if QT_VERSION < 0x040000
+	QPixmap			BitmCubeGreen;
+	QPixmap			BitmCubeGreenLittle;
+	QPixmap			BitmCubeYellow;
+	QPixmap			BitmCubeRed;
+	QPixmap			BitmCubeOrange;
+	QPixmap			BitmCubePink;
+	QPopupMenu*		pViewMenu;
+	QPopupMenu*		pPreviewMenu;
+	QPopupMenu*		pFileMenu;
+	int			showActiveViewMenuItem;
+	int			showAllViewMenuItem;
+	void setupUi(QWidget*);
+#else
+	QIcon	smallGreenCube;
+	QIcon	greenCube;
+	QIcon	redCube;
+	QIcon	orangeCube;
+	QIcon	pinkCube;
+	QSignalMapper* previewMapper;
+	QActionGroup* previewGroup;
+	QSignalMapper* showMapper;
+	QActionGroup* showGroup;
+#endif
 
-	QMutex					ListItemsMutex;
-	QString					strCurrentSavePath;
-    QSortFilterProxyModel* 	proxyModel;
+	vector<MyListLiveViewItem*>	vecpListItems;
+	QMutex		ListItemsMutex;
+	QString		strCurrentSavePath;
+	int		iColStationID;
+	int		iWidthColStationID;
 
 public slots:
 	void OnTimerList();
-	void OnTimerUTCLabel();
+	void OnTimerUTCLabel() {SetUTCTimeLabel();}
+	void OnShowStationsMenu(int iID);
+	void OnShowPreviewMenu(int iID);
+	void OnHeaderClicked(int c);
 	void OnSave();
 	void OnCheckFreeze();
-	void OnFilterChanged(const QString&);
-	void OnItemClicked(const QModelIndex&);
-	void OnShowActive(int);
-	void OnSelectPreview(int);
 };
+
+#endif

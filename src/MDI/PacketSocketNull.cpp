@@ -47,17 +47,17 @@ void CPacketSocketNull::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 {
 }
 
-bool CPacketSocketNull::SetOrigin(const string&)
+_BOOLEAN CPacketSocketNull::SetOrigin(const string&)
 {
-	return false;
+	return TRUE;
 }
 
-bool CPacketSocketNull::SetDestination(const string&)
+_BOOLEAN CPacketSocketNull::SetDestination(const string&)
 {
-	return false;
+	return TRUE;
 }
 
-bool CPacketSocketNull::GetDestination(string&)
+_BOOLEAN CPacketSocketNull::GetDestination(string&)
 {
-	return false;
+	return TRUE;
 }

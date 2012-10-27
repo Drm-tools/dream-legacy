@@ -29,7 +29,6 @@
 #define MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Parameter.h"
 #include "../util/Vector.h"
 #include "DABMOT.h"
 
@@ -39,11 +38,10 @@
 class CMOTSlideShowEncoder
 {
   public:
-    CMOTSlideShowEncoder ():MOTDAB(),vecPicFileNames(),
-    iPictureCnt(0), strCurObjName("")
+    CMOTSlideShowEncoder ():vecPicFileNames (0)
     {
     }
-    virtual ~CMOTSlideShowEncoder()
+    virtual ~ CMOTSlideShowEncoder ()
     {
     }
 
@@ -52,20 +50,23 @@ class CMOTSlideShowEncoder
     void GetDataUnit (CVector < _BINARY > &vecbiNewData);
 
     void AddFileName (const string & strFileName, const string & strFormat);
-    void ClearAllFileNames () { vecPicFileNames.clear();}
-    bool GetTransStat (string & strCurPict, _REAL & rCurPerc);
+    void ClearAllFileNames ()
+    {
+	vecPicFileNames.Init (0);
+    }
+    _BOOLEAN GetTransStat (string & strCurPict, _REAL & rCurPerc) const;
 
   protected:
     struct SPicDescr
     {
-		string strName, strFormat;
+	string strName, strFormat;
     };
     void AddNextPicture ();
 
     CMOTDABEnc MOTDAB;
 
-    vector <SPicDescr> vecPicFileNames;
-    size_t iPictureCnt;
+    CVector < SPicDescr > vecPicFileNames;
+    int iPictureCnt;
 
     string strCurObjName;
 };

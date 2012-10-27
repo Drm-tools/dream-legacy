@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -31,7 +31,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#ifdef WIN32
+#ifdef _WIN32
 #include <io.h>
 #include <direct.h>
 #else
@@ -54,7 +54,7 @@ mkdirs (const string & path)
 	      return;
 	  string dir = path.substr (p, q - p);
 	  left += sep + dir;
-#ifdef WIN32
+#ifdef _WIN32
 	  sep = "\\";
 	  _mkdir (left.c_str ());
 #else
@@ -65,6 +65,7 @@ mkdirs (const string & path)
       }
 }
 
+// this is the old dream one
 string
 epgFilename (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
 {
@@ -73,7 +74,6 @@ epgFilename (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
     s << setfill ('0') << setw (4) << date.year;
     s << setw (2) << int (date.month) << setw(2) << int (date.day);
     s << hex << setw (4) << ((unsigned long) sid);
-    string fileName;
     switch (type)
       {
       case 0:
@@ -86,6 +86,38 @@ epgFilename (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
 	  s << 'G';
 	  break;
       }
+    if (advanced)
+	s << ".EHA";
+    else
+	s << ".EHB";
+    return s.str ();
+}
+
+string
+epgFilename_etsi (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
+{
+    (void)type;
+    string name;
+    ostringstream s (name);
+    s << "w" << setfill ('0') << setw (4) << date.year;
+    s << setw (2) << int (date.month) << setw(2) << int (date.day);
+    s << "d" << hex << setw (4) << ((unsigned long) sid);
+    if (advanced)
+	s << ".EHA";
+    else
+	s << ".EHB";
+    return s.str ();
+}
+
+string
+epgFilename_dab (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
+{
+    (void)type;
+    string name;
+    ostringstream s (name);
+    s << "w" << setfill ('0') << setw (4) << date.year;
+    s << setw (2) << int (date.month) << setw(2) << int (date.day);
+    s << "d" << hex << setw (6) << ((unsigned long) sid);
     if (advanced)
 	s << ".EHA";
     else

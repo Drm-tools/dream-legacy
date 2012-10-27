@@ -41,7 +41,7 @@ public:
     ~JLBrowser() {}
     QVariant loadResource ( int type, const QUrl & name );
     bool changed();
-    void setDecoder(CJournaline*d) { decoder = d; }
+    void setDecoder(CJournaline* d);
 
 protected:
 

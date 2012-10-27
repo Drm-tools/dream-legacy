@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -41,7 +41,7 @@
 
 /* iTableNumOfServices[a][b]
    a: Number of audio services
-   b: Number of data services 
+   b: Number of data services
    (6.3.4) */
 extern const int iTableNumOfServices[5][5];
 
@@ -58,16 +58,16 @@ extern const string strTableProgTypCod[LEN_TABLE_PROG_TYPE_CODE_TOT];
 
 /* Country code table according to ISO 3166 */
 
-#define LEN_TABLE_COUNTRY_CODE			246
+#define LEN_TABLE_COUNTRY_CODE			244
 
 #define LEN_COUNTRY_CODE				2
 #define MAX_LEN_DESC_COUNTRY_CODE		44
 
 struct elCountry {
-	char	strcode [LEN_COUNTRY_CODE+1];
-	char	strDesc [MAX_LEN_DESC_COUNTRY_CODE+1];
-	};
- 
+    char	strcode [LEN_COUNTRY_CODE+1];
+    char	strDesc [MAX_LEN_DESC_COUNTRY_CODE+1];
+};
+
 extern const struct elCountry TableCountryCode[LEN_TABLE_COUNTRY_CODE];
 
 /* Get country name from ISO 3166 A2 */
@@ -82,10 +82,10 @@ string GetISOCountryName(const string strA2);
 #define MAX_LEN_DESC_ISO_LANGUAGE_CODE		44
 
 struct elLanguage {
-	char	strISOCode [LEN_ISO_LANGUAGE_CODE+1];
-	char	strDesc [MAX_LEN_DESC_ISO_LANGUAGE_CODE+1];
-	};
- 
+    char	strISOCode [LEN_ISO_LANGUAGE_CODE+1];
+    char	strDesc [MAX_LEN_DESC_ISO_LANGUAGE_CODE+1];
+};
+
 extern const struct elLanguage TableISOLanguageCode[LEN_TABLE_ISO_LANGUAGE_CODE];
 
 /* Get language name from ISO 3166 */

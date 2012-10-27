@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation; either version 2 of the License, or (at your option) any later 
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -29,12 +29,13 @@
 #if !defined(FREQSYNC_H__3B0BA660EDOINBEROUEBGF4344_BB2B_23E7912__INCLUDED_)
 #define FREQSYNC_H__3B0BA660EDOINBEROUEBGF4344_BB2B_23E7912__INCLUDED_
 
-#include "../util/ReceiverModul.h"
+#include "../Parameter.h"
+#include "../util/Modul.h"
 #include "../matlib/Matlib.h"
 #include "../util/Utilities.h"
 
 /* Definitions ****************************************************************/
-/* Bound for peak detection between filtered signal (in frequency direction)
+/* Bound for peak detection between filtered signal (in frequency direction) 
    and the unfiltered signal. Define different bounds for different relative
    search window sizes */
 #define PEAK_BOUND_FILT2SIGNAL_1		((CReal) 9)
@@ -71,27 +72,27 @@
 class CFreqSyncAcq : public CReceiverModul<_REAL, _COMPLEX>
 {
 public:
-	CFreqSyncAcq() :
+	CFreqSyncAcq() : 
 		veciTableFreqPilots(3), /* 3 frequency pilots */
-		bAquisition(false), bSyncInput(false),
+		bAquisition(FALSE), bSyncInput(FALSE),
 		rCenterFreq((_REAL) SOUNDCRD_SAMPLE_RATE / 4),
 		rWinSize((_REAL) SOUNDCRD_SAMPLE_RATE / 2),
-		bUseRecFilter(false)
+		bUseRecFilter(FALSE)
 		{}
 	virtual ~CFreqSyncAcq() {}
 
 	void SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize);
 
 	void StartAcquisition();
-	void StopAcquisition() {bAquisition = false;}
-	bool GetAcquisition() {return bAquisition;}
+	void StopAcquisition() {bAquisition = FALSE;}
+	_BOOLEAN GetAcquisition() {return bAquisition;}
 
-	void SetRecFilter(const bool bNewF) {bUseRecFilter = bNewF;}
-	bool GetRecFilter() {return bUseRecFilter;}
-	bool GetUnlockedFrameBoundary() {return iFreeSymbolCounter==0;}
+	void SetRecFilter(const _BOOLEAN bNewF) {bUseRecFilter = bNewF;}
+	_BOOLEAN GetRecFilter() {return bUseRecFilter;}
+	_BOOLEAN GetUnlockedFrameBoundary() {return iFreeSymbolCounter==0;}
 
 	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(bool bNewS) {bSyncInput = bNewS;}
+	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
 
 protected:
 	CVector<int>				veciTableFreqPilots;
@@ -108,12 +109,12 @@ protected:
 
 	int							iFFTSize;
 
-	bool					bAquisition;
+	_BOOLEAN					bAquisition;
 
 	int							iAquisitionCounter;
 	int							iAverageCounter;
 
-	bool					bSyncInput;
+	_BOOLEAN					bSyncInput;
 
 	_REAL						rCenterFreq;
 	_REAL						rWinSize;
@@ -133,7 +134,7 @@ protected:
 	_REAL						rInternIFNorm;
 
 	CDRMBandpassFilt			BPFilter;
-	bool					bUseRecFilter;
+	_BOOLEAN					bUseRecFilter;
 
 	/* OPH: counter to count symbols within a frame in order to generate */
 	/* RSCI output even when unlocked */

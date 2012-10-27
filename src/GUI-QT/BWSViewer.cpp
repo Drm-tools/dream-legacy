@@ -30,9 +30,7 @@
 #include "../util/Settings.h"
 #include "../datadecoding/DataDecoder.h"
 
-BWSViewer::BWSViewer(ReceiverInterface& rec, CSettings& s,
-        QWidget* parent,
-		const char* name, Qt::WFlags f):
+BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& s,QWidget* parent, Qt::WFlags f):
 		QMainWindow(parent, f), Ui_BWSViewer(), Timer(),
 		receiver(rec), settings(s), homeUrl(""), decoderSet(false)
 {
@@ -78,7 +76,7 @@ void BWSViewer::OnTimer()
     if(!decoderSet)
     {
         CDataDecoder* dec = receiver.GetDataDecoder();
-        CMOTDABDec *decoder = (CMOTDABDec*)dec->getApplication(service.iPacketID);
+        CMOTDABDec *decoder = (CMOTDABDec*)dec->getApplication(service.DataParam.iPacketID);
 
         if(decoder)
         {
@@ -90,19 +88,19 @@ void BWSViewer::OnTimer()
 	switch(status)
 	{
 	case NOT_PRESENT:
-		LEDStatus->Reset(); /* GREY */
+		LEDStatus->Reset();
 		break;
 
 	case CRC_ERROR:
-		LEDStatus->SetLight(CMultColorLED::RL_RED); /* RED */
+		LEDStatus->SetLight(CMultColorLED::RL_RED);
 		break;
 
 	case DATA_ERROR:
-		LEDStatus->SetLight(CMultColorLED::RL_YELLOW); /* YELLOW */
+		LEDStatus->SetLight(CMultColorLED::RL_YELLOW);
 		break;
 
 	case RX_OK:
-		LEDStatus->SetLight(CMultColorLED::RL_GREEN); /* GREEN */
+		LEDStatus->SetLight(CMultColorLED::RL_GREEN);
 		break;
 	}
 

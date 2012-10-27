@@ -35,24 +35,24 @@
 class CSoundInInterface : public CSelectionInterface
 {
 public:
-	virtual 		~CSoundInInterface() {}
+    virtual 			~CSoundInInterface() {}
 
-	/* sound card interface - used by ReadData */
-	virtual void		Init(int iNewBufferSize, bool bNewBlocking=true, int iChannels=2)=0;
-	virtual bool		Read(vector<_SAMPLE>& data)=0;
-	virtual void		Close()=0;
+    /* sound card interface - used by ReadData */
+    virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE)=0;
+    virtual _BOOLEAN	Read(CVector<short>& psData)=0;
+    virtual void		Close()=0;
 
 };
 
 class CSoundOutInterface : public CSelectionInterface
 {
 public:
-	virtual 		~CSoundOutInterface() {}
+    virtual 			~CSoundOutInterface() {}
 
-	/* sound card interface - used by WriteData */
-	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2)=0;
-	virtual bool		Write(vector<_SAMPLE>& data)=0;
-	virtual void		Close()=0;
+    /* sound card interface - used by WriteData */
+    virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE)=0;
+    virtual _BOOLEAN	Write(CVector<short>& psData)=0;
+    virtual void		Close()=0;
 };
 
 #endif

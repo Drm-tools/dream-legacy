@@ -28,291 +28,304 @@
 \******************************************************************************/
 
 #include "GPSReceiver.h"
+
 #include <sstream>
 #include <iomanip>
 using namespace std;
 
 const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 30;
 
-CGPSReceiver::CGPSReceiver(CParameter& p, const string& host, int port):
-	Parameters(p),m_iCounter(0),
-	m_sHost(host),m_iPort(port)
+CGPSReceiver::CGPSReceiver(CParameter& p, CSettings& s):
+        Parameters(p),m_Settings(s),m_pSocket(NULL),m_iCounter(0),
+        m_sHost("localhost"),m_iPort(2947)
 {
-#ifdef QT_NETWORK_LIB
-	m_pSocket = NULL;
-	m_pTimer = new QTimer(this);
-	m_pTimerDataTimeout = new QTimer(this);
-#endif
-	open();
+    m_pTimer = new QTimer(this);
+    m_pTimerDataTimeout = new QTimer(this);
+
+    m_sHost = m_Settings.Get("GPS", "host", m_sHost);
+    m_iPort = m_Settings.Get("GPS", "port", m_iPort);
+
+    open();
 }
 
 CGPSReceiver::~CGPSReceiver()
 {
-	close();
+    close();
 }
 
 void CGPSReceiver::open()
 {
-	Parameters.Lock();
-	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
-	Parameters.Unlock();
-#ifdef QT_NETWORK_LIB
-	if(m_pSocket == NULL)
-	{
-		m_pSocket = new QTcpSocket();
-		if(m_pSocket == NULL)
-			return;
-
-		connect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
-		connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
-		connect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
-	}
-
-	m_pSocket->connectToHost(m_sHost.c_str(), m_iPort);
+    Parameters.Lock();
+    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
+    Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
+    Parameters.Unlock();
+    if (m_pSocket == NULL)
+    {
+#if QT_VERSION < 0x040000
+        m_pSocket = new QSocket();
+#else
+        m_pSocket = new QTcpSocket();
 #endif
+        if (m_pSocket == NULL)
+            return;
+
+        connect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
+        connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
+        connect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
+    }
+
+    m_pSocket->connectToHost(m_sHost.c_str(), m_iPort);
 }
 
 void CGPSReceiver::close()
 {
-#ifdef QT_NETWORK_LIB
-	if(m_pSocket == NULL)
-		return;
+    if (m_pSocket == NULL)
+        return;
 
-	Parameters.Lock();
-	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
-	Parameters.Unlock();
+    Parameters.Lock();
+    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+    Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
+    Parameters.Unlock();
 
-	m_pSocket->close();
-	disconnect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
-	disconnect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
-	disconnect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
-	delete m_pSocket;
-	m_pSocket = NULL;
-#endif
+    m_pSocket->close();
+    disconnect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
+    disconnect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
+    disconnect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
+    delete m_pSocket;
+    m_pSocket = NULL;
 }
 
 void CGPSReceiver::DecodeGPSDReply(string Reply)
 {
-	string TotalReply;
+qDebug("DecodeGPSDReply");
+    string TotalReply;
 
-	TotalReply = Reply;
+    TotalReply = Reply;
 
-	//GPSD\n\r
-	//GPSD,F=1,A=?\n\r
+    //GPSD\n\r
+    //GPSD,F=1,A=?\n\r
 
-	size_t GPSDPos=0;
+    size_t GPSDPos=0;
 
-	Parameters.Lock();
-	while ((GPSDPos = TotalReply.find("GPSD",0)) != string::npos)
-	{
-		TotalReply=TotalReply.substr(GPSDPos+5,TotalReply.length()-(5+GPSDPos));
+    while ((GPSDPos = TotalReply.find("GPSD",0)) != string::npos)
+    {
+        TotalReply=TotalReply.substr(GPSDPos+5,TotalReply.length()-(5+GPSDPos));
 
-		bool finished = false;
+        _BOOLEAN finished = FALSE;
 
-		while (!finished)		// while not all of message has been consumed
-		{
-			size_t CurrentPos = 0;
-			for (size_t i=0; i < TotalReply.length(); i++)
-			{
-				if (TotalReply[i] == ',' || TotalReply[i] == '\r' || TotalReply[i] == '\n')
-				{
-					char Command = (char) TotalReply[0];
-					string Value = TotalReply.substr(CurrentPos+2,i-CurrentPos);	// 2 to allow for equals sign
+        while (!finished)		// while not all of message has been consumed
+        {
+            size_t CurrentPos = 0;
+            for (size_t i=0; i < TotalReply.length(); i++)
+            {
+                if (TotalReply[i] == ',' || TotalReply[i] == '\r' || TotalReply[i] == '\n')
+                {
+                    char Command = (char) TotalReply[0];
+                    string Value = TotalReply.substr(CurrentPos+2,i-CurrentPos);	// 2 to allow for equals sign
 
-					DecodeString(Command,Value);
+                    DecodeString(Command,Value);
 
-					CurrentPos = i;
+                    CurrentPos = i;
 
-					if (TotalReply[i] == '\r' || TotalReply[i] == '\n')		// end of line
-					{
-						finished = true;
-						break;
-					}
-				}
-			}
-		}
-	}
-	Parameters.Unlock();
+                    if (TotalReply[i] == '\r' || TotalReply[i] == '\n')		// end of line
+                    {
+                        finished = TRUE;
+                        break;
+                    }
+                }
+            }
+        }
+    }
 }
 
 //decode gpsd strings
 void CGPSReceiver::DecodeString(char Command, string Value)
 {
-		switch (Command)
-		{
-			case 'O':
-				DecodeO(Value);
-				break;
-			case 'Y':
-				DecodeY(Value);
-				break;
-			case 'X':		// online/offline status
-				break;
-		default:
-				//do nowt
-			break;
-		}
+    switch (Command)
+    {
+    case 'O':
+        DecodeO(Value);
+        break;
+    case 'Y':
+        DecodeY(Value);
+        break;
+    case 'X':		// online/offline status
+        break;
+    default:
+        //do nowt
+        break;
+    }
 }
 
 void CGPSReceiver::DecodeO(string Value)
 {
-	if (Value[0] == '?')
-	{
-		Parameters.GPSData.SetPositionAvailable(false);
-		Parameters.GPSData.SetAltitudeAvailable(false);
-		Parameters.GPSData.SetTimeAndDateAvailable(false);
-		Parameters.GPSData.SetHeadingAvailable(false);
-		Parameters.GPSData.SetSpeedAvailable(false);
-		return;
-	}
+    Parameters.Lock();
+    if (Value[0] == '?')
+    {
+        Parameters.GPSData.SetPositionAvailable(FALSE);
+        Parameters.GPSData.SetAltitudeAvailable(FALSE);
+        Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
+        Parameters.GPSData.SetHeadingAvailable(FALSE);
+        Parameters.GPSData.SetSpeedAvailable(FALSE);
+	Parameters.Unlock();
+        return;
+    }
 
-	string sTag, sTime, sTimeError;
-	double fLatitude, fLongitude;
-	string sAltitude, sErrorHoriz, sErrorVert;
-	string sHeading, sSpeed, sClimb, sHeadingError, sSpeedError, sClimbError;
+    string sTag, sTime, sTimeError;
+    double fLatitude, fLongitude;
+    string sAltitude, sErrorHoriz, sErrorVert;
+    string sHeading, sSpeed, sClimb, sHeadingError, sSpeedError, sClimbError;
 
-	stringstream ssValue(Value);
+    stringstream ssValue(Value);
 
-	ssValue >> sTag >> sTime >> sTimeError >> fLatitude >> fLongitude >> sAltitude;
-	ssValue >> sErrorHoriz >> sErrorVert >> sHeading >> sSpeed >> sClimb >> sHeadingError;
-	ssValue >> sSpeedError >> sClimbError;
+    ssValue >> sTag >> sTime >> sTimeError >> fLatitude >> fLongitude >> sAltitude;
+    ssValue >> sErrorHoriz >> sErrorVert >> sHeading >> sSpeed >> sClimb >> sHeadingError;
+    ssValue >> sSpeedError >> sClimbError;
 
-	Parameters.GPSData.SetLatLongDegrees(fLatitude, fLongitude);
-	Parameters.GPSData.SetPositionAvailable(true);
+    Parameters.GPSData.SetLatLongDegrees(fLatitude, fLongitude);
+    Parameters.GPSData.SetPositionAvailable(TRUE);
+    m_Settings.Put("Logfile", "latitude", fLatitude);
+    m_Settings.Put("Logfile", "longitude", fLongitude);
 
-	if (sTime.find('?') == string::npos)
-	{
-		stringstream ssTime(sTime);
-		unsigned long ulTime;
-		ssTime >> ulTime;
-		Parameters.GPSData.SetTimeSecondsSince1970(ulTime);
-		Parameters.GPSData.SetTimeAndDateAvailable(true);
-	}
-	else
-	{
-		Parameters.GPSData.SetTimeAndDateAvailable(false);
-	}
+    if (sTime.find('?') == string::npos)
+    {
+        stringstream ssTime(sTime);
+        unsigned long ulTime;
+        ssTime >> ulTime;
+        Parameters.GPSData.SetTimeSecondsSince1970(ulTime);
+        Parameters.GPSData.SetTimeAndDateAvailable(TRUE);
+    }
+    else
+    {
+        Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
+    }
 
-	if (sAltitude.find('?') == string::npos)	// if '?' not found..
-	{
-		Parameters.GPSData.SetAltitudeAvailable(true);
-		Parameters.GPSData.SetAltitudeMetres(atof(sAltitude.c_str()));
-	}
-	else
-		Parameters.GPSData.SetAltitudeAvailable(false);
+    if (sAltitude.find('?') == string::npos)	// if '?' not found..
+    {
+        Parameters.GPSData.SetAltitudeAvailable(TRUE);
+        Parameters.GPSData.SetAltitudeMetres(atof(sAltitude.c_str()));
+    }
+    else
+        Parameters.GPSData.SetAltitudeAvailable(FALSE);
 
-	if (sHeading.find('?') == string::npos)
-	{
-		Parameters.GPSData.SetHeadingAvailable(true);
-		Parameters.GPSData.SetHeadingDegrees((unsigned short) atof(sHeading.c_str()));
-	}
-	else
-		Parameters.GPSData.SetHeadingAvailable(false);
+    if (sHeading.find('?') == string::npos)
+    {
+        Parameters.GPSData.SetHeadingAvailable(TRUE);
+        Parameters.GPSData.SetHeadingDegrees((unsigned short) atof(sHeading.c_str()));
+    }
+    else
+        Parameters.GPSData.SetHeadingAvailable(FALSE);
 
-	if (sSpeed.find('?') == string::npos)
-	{
-		Parameters.GPSData.SetSpeedAvailable(true);
-		Parameters.GPSData.SetSpeedMetresPerSecond(atof(sSpeed.c_str()));
-	}
-	else
-		Parameters.GPSData.SetSpeedAvailable(false);
+    if (sSpeed.find('?') == string::npos)
+    {
+        Parameters.GPSData.SetSpeedAvailable(TRUE);
+        Parameters.GPSData.SetSpeedMetresPerSecond(atof(sSpeed.c_str()));
+    }
+    else
+        Parameters.GPSData.SetSpeedAvailable(FALSE);
+    Parameters.Unlock();
 
 }
 
 void CGPSReceiver::DecodeY(string Value)
 {
-	if (Value[0] == '?')
-	{
-		Parameters.GPSData.SetSatellitesVisibleAvailable(false);
-		Parameters.GPSData.SetTimeAndDateAvailable(false);
-		return;
-	}
+    Parameters.Lock();
+    if (Value[0] == '?')
+    {
+        Parameters.GPSData.SetSatellitesVisibleAvailable(FALSE);
+        Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
+	Parameters.Unlock();
+        return;
+    }
 
-	string sTag, sTimestamp;
-	unsigned short usSatellites;
-	stringstream ssValue(Value);
+    string sTag, sTimestamp;
+    unsigned short usSatellites;
+    stringstream ssValue(Value);
 
-	ssValue >> sTag >> sTimestamp >> usSatellites;
+    ssValue >> sTag >> sTimestamp >> usSatellites;
 
-	Parameters.GPSData.SetSatellitesVisible(usSatellites);
-	Parameters.GPSData.SetSatellitesVisibleAvailable(true);
+    Parameters.GPSData.SetSatellitesVisible(usSatellites);
+    Parameters.GPSData.SetSatellitesVisibleAvailable(TRUE);
 
-	//todo - timestamp//
+    //todo - timestamp//
 
+    Parameters.Unlock();
 }
 
 void CGPSReceiver::slotInit()
 {
-#ifdef QT_NETWORK_LIB
-	close();
-	//disconnect(m_pTimer);
-	m_pTimer->stop();
-	open();
-#endif
+qDebug("slotInit");
+    close();
+    //disconnect(m_pTimer);
+    m_pTimer->stop();
+    open();
 }
 
 void CGPSReceiver::slotConnected()
 {
-	m_iCounter = 0;
-	Parameters.Lock();
-	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
-	Parameters.Unlock();
-	// clear current buffer
-#ifdef QT_NETWORK_LIB
-	while(m_pSocket->canReadLine())
-		m_pSocket->readLine();
+qDebug("slotConnected");
+    m_iCounter = 0;
+    Parameters.Lock();
+    Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
+    Parameters.Unlock();
+    // clear current buffer
+    while (m_pSocket->canReadLine())
+        m_pSocket->readLine();
 
-	m_pSocket->write("W1\n",2);	// try to force gpsd into watcher mode
-
-	disconnect(m_pTimerDataTimeout, 0, 0, 0);	// disconnect everything connected from the timer
-	connect( m_pTimerDataTimeout, SIGNAL(timeout()), SLOT(slotTimeout()) );
-	m_pTimerDataTimeout->start(c_usReconnectIntervalSeconds*1000);
+#if QT_VERSION < 0x040000
+    m_pSocket->writeBlock("W1\n",2);	// try to force gpsd into watcher mode
+#else
+	m_pSocket->write("W1\n");
 #endif
+    disconnect(m_pTimerDataTimeout, 0, 0, 0);	// disconnect everything connected from the timer
+    connect( m_pTimerDataTimeout, SIGNAL(timeout()), SLOT(slotTimeout()) );
+    m_pTimerDataTimeout->start(c_usReconnectIntervalSeconds*1000);
 }
 
 void CGPSReceiver::slotTimeout()
 {
-	m_iCounter--;
+qDebug("slotTimeout");
+    m_iCounter--;
 
-	if(m_iCounter<=0)
-	{
-		if (m_iCounter < 0) // to stop it wrapping round (eventually)
-			m_iCounter = 1;
-#ifdef QT_NETWORK_LIB
-		m_pTimerDataTimeout->stop();
-		//disconnect(m_pTimerDataTimeout);
-		close();
-		open();
-#endif
-	}
-	else
-	{
-		Parameters.Lock();
-		Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
-		Parameters.Unlock();
-	}
+    if (m_iCounter<=0)
+    {
+        if (m_iCounter < 0) // to stop it wrapping round (eventually)
+            m_iCounter = 1;
+
+        m_pTimerDataTimeout->stop();
+        //disconnect(m_pTimerDataTimeout);
+        close();
+        open();
+    }
+    else
+    {
+        Parameters.Lock();
+        Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
+        Parameters.Unlock();
+    }
 }
 
 void CGPSReceiver::slotReadyRead()
 {
-	m_iCounter = c_usReconnectIntervalSeconds/5;
-	Parameters.Lock();
-	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
-	Parameters.Unlock();
-#ifdef QT_NETWORK_LIB
-	while (m_pSocket->canReadLine())
-		DecodeGPSDReply((const char*) m_pSocket->readLine());
-	m_pTimerDataTimeout->start(5*1000); // if no data in 5 seconds signal GPS_RX_NO_DATA
-#endif
+qDebug("slotReadyRead");
+    m_iCounter = c_usReconnectIntervalSeconds/5;
+    Parameters.Lock();
+    Parameters.GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
+    Parameters.Unlock();
+    while (m_pSocket->canReadLine())
+        DecodeGPSDReply((const char*) m_pSocket->readLine());
+    m_pTimerDataTimeout->start(5*1000); // if no data in 5 seconds signal GPS_RX_NO_DATA
 }
 
 void CGPSReceiver::slotSocketError(int)
 {
-#ifdef QT_NETWORK_LIB
+qDebug("slotSocketError");
 //	close()
-	disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
-	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );
-	m_pTimer->setSingleShot(true);
-	m_pTimer->start(c_usReconnectIntervalSeconds*1000);
+    disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
+    connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );
+#if QT_VERSION < 0x040000
+    m_pTimer->start(c_usReconnectIntervalSeconds*1000, TRUE);
+#else
+    m_pTimer->start(c_usReconnectIntervalSeconds*1000);
 #endif
 }

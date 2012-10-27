@@ -52,16 +52,16 @@
 /* Implementation *************************************************************/
 #ifdef USE_MMX
 void CViterbiDecoder::TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
-		const _VITMETRTYPE* pCurTrelMetric, const _VITMETRTYPE* pOldTrelMetric,
-		const _VITMETRTYPE* pchMet1, const _VITMETRTYPE* pchMet2)
+                                       const _VITMETRTYPE* pCurTrelMetric, const _VITMETRTYPE* pOldTrelMetric,
+                                       const _VITMETRTYPE* pchMet1, const _VITMETRTYPE* pchMet2)
 {
 #ifdef _WIN32
-	/**************************************************************************\
-	* Windows                                                                  *
-	\**************************************************************************/
-	__asm
-	{
-		/* Each invocation of BFLY() will do 8 butterflies in parallel */
+    /**************************************************************************\
+    * Windows                                                                  *
+    \**************************************************************************/
+    __asm
+    {
+        /* Each invocation of BFLY() will do 8 butterflies in parallel */
 #		define BFLY(GROUP) \
 		{ \
 			/* Compute branch metrics */ \
@@ -92,54 +92,54 @@ void CViterbiDecoder::TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
 			__asm pcmpeqb mm4, mm3 /* mm4 = second set of decisions */ \
 			\
 			/* live registers 1 2 4 5 6 7. Select survivors. Avoid jumps
-			   -> mask results with AND and ANDN. then OR */ \
-			__asm movq mm3, mm5 \
-			__asm movq mm0, mm4 \
-			__asm pand mm2, mm5 \
-			__asm pand mm7, mm4 \
-			__asm pandn mm3, mm1 \
-			__asm pandn mm0, mm6 \
-			__asm por mm2, mm3 /* mm2: first set survivors (decisions in mm5) */ \
-			__asm por mm7, mm0 /* mm7: second set survivors (decisions in mm4) */ \
-			\
-			/* live registers 2 4 5 7 */ \
-			/* interleave & store decisions in mm4, mm5 */ \
-			/* interleave & store new branch metrics in mm2, mm7 */ \
-			__asm movq mm3, mm5 \
-			__asm movq mm0, mm2 \
-			__asm punpcklbw mm3, mm4 /* interleave first 8 decisions */ \
-			__asm punpckhbw mm5, mm4 /* interleave second 8 decisions */ \
-			__asm punpcklbw mm0, mm7 /* interleave first 8 new metrics */ \
-			__asm punpckhbw mm2, mm7 /* interleave second 8 new metrics */ \
-			__asm mov edx, pCurDec \
-			__asm movq [edx + (16 * GROUP)], mm3 \
-			__asm movq [edx + (16 * GROUP + 8)], mm5 \
-			__asm mov edx, pCurTrelMetric \
-			__asm movq [edx + (16 * GROUP)], mm0 /* new metrics */ \
-			__asm movq [edx + (16 * GROUP + 8)], mm2 \
-		}
+        -> mask results with AND and ANDN. then OR */ \
+        __asm movq mm3, mm5 \
+        __asm movq mm0, mm4 \
+        __asm pand mm2, mm5 \
+        __asm pand mm7, mm4 \
+        __asm pandn mm3, mm1 \
+        __asm pandn mm0, mm6 \
+        __asm por mm2, mm3 /* mm2: first set survivors (decisions in mm5) */ \
+        __asm por mm7, mm0 /* mm7: second set survivors (decisions in mm4) */ \
+        \
+        /* live registers 2 4 5 7 */ \
+        /* interleave & store decisions in mm4, mm5 */ \
+        /* interleave & store new branch metrics in mm2, mm7 */ \
+        __asm movq mm3, mm5 \
+        __asm movq mm0, mm2 \
+        __asm punpcklbw mm3, mm4 /* interleave first 8 decisions */ \
+        __asm punpckhbw mm5, mm4 /* interleave second 8 decisions */ \
+        __asm punpcklbw mm0, mm7 /* interleave first 8 new metrics */ \
+        __asm punpckhbw mm2, mm7 /* interleave second 8 new metrics */ \
+        __asm mov edx, pCurDec \
+        __asm movq [edx + (16 * GROUP)], mm3 \
+        __asm movq [edx + (16 * GROUP + 8)], mm5 \
+        __asm mov edx, pCurTrelMetric \
+        __asm movq [edx + (16 * GROUP)], mm0 /* new metrics */ \
+        __asm movq [edx + (16 * GROUP + 8)], mm2 \
+    }
 
-		/* Invoke macro 4 times for a total of 32 butterflies */
-		BFLY(0)
-		BFLY(1)
-		BFLY(2)
-		BFLY(3)
+    /* Invoke macro 4 times for a total of 32 butterflies */
+    BFLY(0)
+    BFLY(1)
+    BFLY(2)
+    BFLY(3)
 
 
-		/* -----------------------------------------------------------------
-		   Normalize by finding smallest metric and subtracting it
-		   from all metrics */
+    /* -----------------------------------------------------------------
+       Normalize by finding smallest metric and subtracting it
+       from all metrics */
 
 #if 1 // if 0, always normalize
-		/* See if we have to normalize */
-		mov eax, [edx] /* Extract first output metric */
-		and eax, 255
-		cmp eax, 150 /* Is it greater than 150? */
-		mov eax, 0
-		jle done /* No, no need to normalize */
+    /* See if we have to normalize */
+    mov eax, [edx] /* Extract first output metric */
+    and eax, 255
+    cmp eax, 150 /* Is it greater than 150? */
+    mov eax, 0
+    jle done /* No, no need to normalize */
 #endif
 
-		/* Search for the minimum metric. Result ist stored in mm0 */
+    /* Search for the minimum metric. Result ist stored in mm0 */
 #		define PMINUB_MM0_MM1 \
 		{ \
 			__asm movq mm2, mm0 \
@@ -152,43 +152,43 @@ void CViterbiDecoder::TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
 			__asm por mm0, mm2 \
 		}
 
-		/* Search for minimum, byte-wise for whole register */
-		movq mm0, [edx]
-		movq mm1, [edx + 8]
-		PMINUB_MM0_MM1
-		movq mm1, [edx + 16]
-		PMINUB_MM0_MM1
-		movq mm1, [edx + 24]
-		PMINUB_MM0_MM1
-		movq mm1, [edx + 32]
-		PMINUB_MM0_MM1
-		movq mm1, [edx + 40]
-		PMINUB_MM0_MM1
-		movq mm1, [edx + 48]
-		PMINUB_MM0_MM1
-		movq mm1, [edx + 56]
-		PMINUB_MM0_MM1
+    /* Search for minimum, byte-wise for whole register */
+    movq mm0, [edx]
+    movq mm1, [edx + 8]
+    PMINUB_MM0_MM1
+    movq mm1, [edx + 16]
+    PMINUB_MM0_MM1
+    movq mm1, [edx + 24]
+    PMINUB_MM0_MM1
+    movq mm1, [edx + 32]
+    PMINUB_MM0_MM1
+    movq mm1, [edx + 40]
+    PMINUB_MM0_MM1
+    movq mm1, [edx + 48]
+    PMINUB_MM0_MM1
+    movq mm1, [edx + 56]
+    PMINUB_MM0_MM1
 
-		/* mm0 contains 8 smallest metrics
-		   crunch down to single lowest metric */
-		movq mm1, mm0
-		psrlq mm0, 32 /* Compare lowest 4 bytes with highest 4 bytes */
-		PMINUB_MM0_MM1 /* -> results are in lowest 4 bytes */
-		movq mm1, mm0
-		psrlq mm0, 16 /* Compare lowest 2 bytes with mext 2 bytes */
-		PMINUB_MM0_MM1 /* -> results are in lowest 2 bytes */
-		movq mm1, mm0
-		psrlq mm0, 8 /* Compare lowest byte with second lowest byte */
-		PMINUB_MM0_MM1 /* -> resulting minium metric is in lowest byte */
+    /* mm0 contains 8 smallest metrics
+       crunch down to single lowest metric */
+    movq mm1, mm0
+    psrlq mm0, 32 /* Compare lowest 4 bytes with highest 4 bytes */
+    PMINUB_MM0_MM1 /* -> results are in lowest 4 bytes */
+    movq mm1, mm0
+    psrlq mm0, 16 /* Compare lowest 2 bytes with mext 2 bytes */
+    PMINUB_MM0_MM1 /* -> results are in lowest 2 bytes */
+    movq mm1, mm0
+    psrlq mm0, 8 /* Compare lowest byte with second lowest byte */
+    PMINUB_MM0_MM1 /* -> resulting minium metric is in lowest byte */
 
-		/* Expand value in lowest byte to all 8 bytes */
-		punpcklbw mm0,mm0 /* First 2 bytes have same value */
-		punpcklbw mm0,mm0 /* First 4 bytes have same value */
-		punpcklbw mm0,mm0 /* All bytes are the same */
+    /* Expand value in lowest byte to all 8 bytes */
+    punpcklbw mm0,mm0 /* First 2 bytes have same value */
+    punpcklbw mm0,mm0 /* First 4 bytes have same value */
+    punpcklbw mm0,mm0 /* All bytes are the same */
 
 
-		/* mm0 now contains lowest metric in all 8 bytes
-		   subtract it from every output metric. Trashes mm7 */
+    /* mm0 now contains lowest metric in all 8 bytes
+       subtract it from every output metric. Trashes mm7 */
 #		define PSUBUSBM(MEM, REG) \
 		{ \
 			__asm movq mm7, MEM \
@@ -196,30 +196,30 @@ void CViterbiDecoder::TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
 			__asm movq MEM, mm7 \
 		}
 
-		PSUBUSBM([edx], mm0)
-		PSUBUSBM([edx + 8], mm0)
-		PSUBUSBM([edx + 16], mm0)
-		PSUBUSBM([edx + 24], mm0)
-		PSUBUSBM([edx + 32], mm0)
-		PSUBUSBM([edx + 40], mm0)
-		PSUBUSBM([edx + 48], mm0)
-		PSUBUSBM([edx + 56], mm0)
+    PSUBUSBM([edx], mm0)
+    PSUBUSBM([edx + 8], mm0)
+    PSUBUSBM([edx + 16], mm0)
+    PSUBUSBM([edx + 24], mm0)
+    PSUBUSBM([edx + 32], mm0)
+    PSUBUSBM([edx + 40], mm0)
+    PSUBUSBM([edx + 48], mm0)
+    PSUBUSBM([edx + 56], mm0)
 
 
-	done:
-		/* Needed, when we have used mmx registers and want to use floating
-		   point operations afterwards */
-		emms
+done:
+    /* Needed, when we have used mmx registers and want to use floating
+       point operations afterwards */
+    emms
 
 #undef BFLY
 #undef MINIMUM
 #undef PSUBUSBM
-	}
+}
 #else
-	/**************************************************************************\
-	* Linux                                                                    *
-	\**************************************************************************/
-	/* Each invocation of BFLY() will do 8 butterflies in parallel */
+    /**************************************************************************\
+    * Linux                                                                    *
+    \**************************************************************************/
+    /* Each invocation of BFLY() will do 8 butterflies in parallel */
 #	define BFLY(GROUP) \
 		/* Compute branch metrics */ \
 		"mov %1,%%edx; " /* Incoming path metric (input) */ \
@@ -274,33 +274,33 @@ void CViterbiDecoder::TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
 		"mov %0,%%edx; " \
 		"movq %%mm0,(16 * "GROUP")(%%edx); " /* new metrics */ \
 		"movq %%mm2,((16 * "GROUP") + 8)(%%edx); " \
+ 
+
+    asm
+    (
+        /* Invoke macro 4 times for a total of 32 butterflies */
+        BFLY("0")
+        BFLY("1")
+        BFLY("2")
+        BFLY("3")
 
 
-	asm
-	(
-		/* Invoke macro 4 times for a total of 32 butterflies */
-		BFLY("0")
-		BFLY("1")
-		BFLY("2")
-		BFLY("3")
-
-
-		/* -----------------------------------------------------------------
-		   Normalize by finding smallest metric and subtracting it
-		   from all metrics */
+        /* -----------------------------------------------------------------
+           Normalize by finding smallest metric and subtracting it
+           from all metrics */
 
 #if 1 // if 0, always normalize
-		/* See if we have to normalize */
-		
-		"mov (%%edx),%%eax; " /* Extract first output metric */
-		"and $255,%%eax; "
-		"cmp $150,%%eax; " /* Is it greater than 150? */
-		"mov $0,%%eax ;"
-		"jle done; " /* No, no need to normalize.  */
+        /* See if we have to normalize */
+
+        "mov (%%edx),%%eax; " /* Extract first output metric */
+        "and $255,%%eax; "
+        "cmp $150,%%eax; " /* Is it greater than 150? */
+        "mov $0,%%eax ;"
+        "jle done; " /* No, no need to normalize.  */
 
 #endif
 
-		/* Search for the minimum metric. Result ist stored in mm0 */
+        /* Search for the minimum metric. Result ist stored in mm0 */
 #		define PMINUBMM0MM1 \
 			"movq %%mm0,%%mm2; " \
 			"psubusb %%mm1,%%mm2; " /* mm2 = mm0 - mm1 */ \
@@ -311,66 +311,66 @@ void CViterbiDecoder::TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
 			"por %%mm2,%%mm0; "
 
 
-		/* Search for minimum, byte-wise for whole register */
-		"movq (%%edx),%%mm0; "
-		"movq 8(%%edx),%%mm1; "
-		PMINUBMM0MM1
-		"movq 16(%%edx),%%mm1; "
-		PMINUBMM0MM1
-		"movq 24(%%edx),%%mm1;"
-		PMINUBMM0MM1
-		"movq 32(%%edx),%%mm1; "
-		PMINUBMM0MM1
-		"movq 40(%%edx),%%mm1; "
-		PMINUBMM0MM1
-		"movq 48(%%edx),%%mm1; "
-		PMINUBMM0MM1
-		"movq 56(%%edx),%%mm1; "
-		PMINUBMM0MM1
+        /* Search for minimum, byte-wise for whole register */
+        "movq (%%edx),%%mm0; "
+        "movq 8(%%edx),%%mm1; "
+        PMINUBMM0MM1
+        "movq 16(%%edx),%%mm1; "
+        PMINUBMM0MM1
+        "movq 24(%%edx),%%mm1;"
+        PMINUBMM0MM1
+        "movq 32(%%edx),%%mm1; "
+        PMINUBMM0MM1
+        "movq 40(%%edx),%%mm1; "
+        PMINUBMM0MM1
+        "movq 48(%%edx),%%mm1; "
+        PMINUBMM0MM1
+        "movq 56(%%edx),%%mm1; "
+        PMINUBMM0MM1
 
-		/* mm0 contains 8 smallest metrics
-		   crunch down to single lowest metric */
+        /* mm0 contains 8 smallest metrics
+           crunch down to single lowest metric */
 
-		"movq %%mm0,%%mm1; "
-		"psrlq $32,%%mm0; " /* Compare lowest 4 bytes with highest 4 bytes */
-		PMINUBMM0MM1 /* -> results are in lowest 4 bytes */
-		"movq %%mm0,%%mm1; "
-		"psrlq $16,%%mm0; " /* Compare lowest 2 bytes with mext 2 bytes */
-		PMINUBMM0MM1 /* -> results are in lowest 2 bytes */
-		"movq %%mm0,%%mm1; "
-		"psrlq $8,%%mm0; " /* Compare lowest byte with second lowest byte */
-		PMINUBMM0MM1 /* -> resulting minium metric is in lowest byte */
+        "movq %%mm0,%%mm1; "
+        "psrlq $32,%%mm0; " /* Compare lowest 4 bytes with highest 4 bytes */
+        PMINUBMM0MM1 /* -> results are in lowest 4 bytes */
+        "movq %%mm0,%%mm1; "
+        "psrlq $16,%%mm0; " /* Compare lowest 2 bytes with mext 2 bytes */
+        PMINUBMM0MM1 /* -> results are in lowest 2 bytes */
+        "movq %%mm0,%%mm1; "
+        "psrlq $8,%%mm0; " /* Compare lowest byte with second lowest byte */
+        PMINUBMM0MM1 /* -> resulting minium metric is in lowest byte */
 
-		/* Expand value in lowest byte to all 8 bytes */
-		"punpcklbw %%mm0,%%mm0; " /* First 2 bytes have same value */
-		"punpcklbw %%mm0,%%mm0; " /* First 4 bytes have same value */
-		"punpcklbw %%mm0,%%mm0; " /* All bytes are the same */
+        /* Expand value in lowest byte to all 8 bytes */
+        "punpcklbw %%mm0,%%mm0; " /* First 2 bytes have same value */
+        "punpcklbw %%mm0,%%mm0; " /* First 4 bytes have same value */
+        "punpcklbw %%mm0,%%mm0; " /* All bytes are the same */
 
 
-		/* mm0 now contains lowest metric in all 8 bytes
-		   subtract it from every output metric. Trashes mm7 */
+        /* mm0 now contains lowest metric in all 8 bytes
+           subtract it from every output metric. Trashes mm7 */
 #		define PSUBUSBM(REG, MEM) \
 			"movq "MEM",%%mm7; " \
 			"psubusb "REG",%%mm7; " \
 			"movq %%mm7,"MEM"; " \
+ 
+
+        PSUBUSBM("%%mm0","(%%edx)")
+        PSUBUSBM("%%mm0","8(%%edx)")
+        PSUBUSBM("%%mm0","16(%%edx)")
+        PSUBUSBM("%%mm0","24(%%edx)")
+        PSUBUSBM("%%mm0","32(%%edx)")
+        PSUBUSBM("%%mm0","40(%%edx)")
+        PSUBUSBM("%%mm0","48(%%edx)")
+        PSUBUSBM("%%mm0","56(%%edx)")
 
 
-		PSUBUSBM("%%mm0","(%%edx)")
-		PSUBUSBM("%%mm0","8(%%edx)")
-		PSUBUSBM("%%mm0","16(%%edx)")
-		PSUBUSBM("%%mm0","24(%%edx)")
-		PSUBUSBM("%%mm0","32(%%edx)")
-		PSUBUSBM("%%mm0","40(%%edx)")
-		PSUBUSBM("%%mm0","48(%%edx)")
-		PSUBUSBM("%%mm0","56(%%edx)")
-
-
-		"done: emms; "	/* Needed, when we have used mmx registers and want to use floating
+        "done: emms; "	/* Needed, when we have used mmx registers and want to use floating
 			 point operations afterwards */
 
-		:
-		:"m"(pCurTrelMetric),"m"(pOldTrelMetric),"m"(pchMet1),"m"(pchMet2),"m"(pCurDec)
-	);
+                :
+                :"m"(pCurTrelMetric),"m"(pOldTrelMetric),"m"(pchMet1),"m"(pchMet2),"m"(pCurDec)
+            );
 
 #undef BFLY
 #undef MINIMUM

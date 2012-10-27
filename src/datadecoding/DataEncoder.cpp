@@ -27,23 +27,14 @@
 \******************************************************************************/
 
 #include "DataEncoder.h"
-#include "MOTSlideShow.h"
-#include <iostream>
 
-CDataEncoder::CDataEncoder():MOTSlideShowEncoder(new CMOTSlideShowEncoder())
-{
-}
-
-CDataEncoder::~CDataEncoder()
-{
-    delete MOTSlideShowEncoder;
-}
+/* Implementation *************************************************************/
 
 void
 CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 {
 	int i;
-	bool bLastFlag;
+	_BOOLEAN bLastFlag;
 
 	/* Init size for whole packet, not only body */
 	vecbiPacket.Init(iTotalPacketSize);
@@ -63,12 +54,12 @@ CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 	if (iRemainSize > iPacketLen)
 	{
 		vecbiPacket.Enqueue((uint32_t) 0, 1);
-		bLastFlag = false;
+		bLastFlag = FALSE;
 	}
 	else
 	{
 		vecbiPacket.Enqueue((uint32_t) 1, 1);
-		bLastFlag = true;
+		bLastFlag = TRUE;
 	}
 
 	/* Packet Id */
@@ -111,8 +102,8 @@ CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 		/* Padded packet. If the PPI is 1 then the first byte shall indicate
 		   the number of useful bytes that follow, and the data field is
 		   completed with padding bytes of value 0x00 */
-		vecbiPacket.Enqueue((uint32_t) (iRemainSize / BITS_BINARY),
-							BITS_BINARY);
+		vecbiPacket.Enqueue((uint32_t) (iRemainSize / SIZEOF__BYTE),
+							SIZEOF__BYTE);
 
 		/* Data */
 		for (i = 0; i < iRemainSize; i++)
@@ -124,10 +115,10 @@ CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 	}
 
 	/* If this was the last packet, get data for next data unit */
-	if (bLastFlag == true)
+	if (bLastFlag == TRUE)
 	{
 		/* Generate new data unit */
-		MOTSlideShowEncoder->GetDataUnit(vecbiCurDataUnit);
+		MOTSlideShowEncoder.GetDataUnit(vecbiCurDataUnit);
 		vecbiCurDataUnit.ResetBitAccess();
 
 		/* Reset data pointer and continuity index */
@@ -144,8 +135,8 @@ CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 	CRCObject.Reset(16);
 
 	/* "byLengthBody" was defined in the header */
-	for (i = 0; i < (iTotalPacketSize / BITS_BINARY - 2); i++)
-		CRCObject.AddByte(_BYTE(vecbiPacket.Separate(BITS_BINARY)));
+	for (i = 0; i < (iTotalPacketSize / SIZEOF__BYTE - 2); i++)
+		CRCObject.AddByte(_BYTE(vecbiPacket.Separate(SIZEOF__BYTE)));
 
 	/* Now, pointer in "enqueue"-function is back at the same place, add CRC */
 	vecbiPacket.Enqueue(CRCObject.GetCRC(), 16);
@@ -157,24 +148,24 @@ CDataEncoder::Init(CParameter & Param)
 	/* Init packet length and total packet size (the total packet length is
 	   three bytes longer as it includes the header and CRC fields) */
 
+// TODO we only use always the first service right now
+	const int iCurSelDataServ = 0;
+
 	Param.Lock();
 
-	const int iCurSelDataServ = Param.GetCurSelDataService();
-
-	iPacketLen = Param.MSCParameters.Stream[
-        Param.Service[iCurSelDataServ].iDataStream
-        ].iPacketLen * BITS_BINARY;
+	iPacketLen =
+		Param.Service[iCurSelDataServ].DataParam.iPacketLen * SIZEOF__BYTE;
 	iTotalPacketSize = iPacketLen + 24 /* CRC + header = 24 bits */ ;
 
-	iPacketID = Param.Service[iCurSelDataServ].iPacketID;
+	iPacketID = Param.Service[iCurSelDataServ].DataParam.iPacketID;
 
 	Param.Unlock();
 
 	/* Init DAB MOT encoder object */
-	MOTSlideShowEncoder->Init();
+	MOTSlideShowEncoder.Init();
 
 	/* Generate first data unit */
-	MOTSlideShowEncoder->GetDataUnit(vecbiCurDataUnit);
+	MOTSlideShowEncoder.GetDataUnit(vecbiCurDataUnit);
 	vecbiCurDataUnit.ResetBitAccess();
 
 	/* Reset pointer to current position in data unit and continuity index */
@@ -183,19 +174,4 @@ CDataEncoder::Init(CParameter & Param)
 
 	/* Return total packet size */
 	return iTotalPacketSize;
-}
-
-void CDataEncoder::AddPic(const string& strFileName, const string& strFormat)
-{
-	MOTSlideShowEncoder->AddFileName(strFileName, strFormat);
-}
-
-void CDataEncoder::ClearPics()
-{
-	MOTSlideShowEncoder->ClearAllFileNames();
-}
-
-bool CDataEncoder::GetTransStat(string& strCPi, _REAL& rCPe) const
-{
-	return MOTSlideShowEncoder->GetTransStat(strCPi, rCPe);
 }

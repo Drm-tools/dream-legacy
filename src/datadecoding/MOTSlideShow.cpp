@@ -39,12 +39,12 @@ CMOTSlideShowEncoder::GetDataUnit (CVector < _BINARY > &vecbiNewData)
     /* Get new data group from MOT encoder. If the last MOT object was
        completely transmitted, this functions returns true. In this case, put
        a new picture to the MOT encoder object */
-    if (MOTDAB.GetDataGroup (vecbiNewData) == true)
-		AddNextPicture ();
+    if (MOTDAB.GetDataGroup (vecbiNewData) == TRUE)
+	AddNextPicture ();
 }
 
-bool
-CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc)
+_BOOLEAN
+CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc) const
 {
 /*
 	Name and current percentage of transmitted data of current picture.
@@ -52,10 +52,10 @@ CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc)
     strCurPict = strCurObjName;
     rCurPerc = MOTDAB.GetProgPerc ();
 
-    if (vecPicFileNames.size () != 0)
-		return true;
+    if (vecPicFileNames.Size () != 0)
+	return TRUE;
     else
-		return false;
+	return FALSE;
 }
 
 void
@@ -66,16 +66,16 @@ CMOTSlideShowEncoder::Init ()
     iPictureCnt = 0;
     strCurObjName = "";
 
-    MOTDAB.Reset();
+    MOTDAB.Reset ();
 
-    AddNextPicture();
+    AddNextPicture ();
 }
 
 void
 CMOTSlideShowEncoder::AddNextPicture ()
 {
     /* Make sure at least one picture is in container */
-    if (vecPicFileNames.size() > 0)
+    if (vecPicFileNames.Size () > 0)
       {
 	  /* Get current file name */
 	  strCurObjName = vecPicFileNames[iPictureCnt].strName;
@@ -98,10 +98,10 @@ CMOTSlideShowEncoder::AddNextPicture ()
 		while (fread ((void *) &byIn, size_t (1), size_t (1), pFiBody)
 		       != size_t (0))
 		  {
-		      /* Add one byte = BITS_BINARY bits */
-		      MOTPicture.vecbRawData.Enlarge (BITS_BINARY);
+		      /* Add one byte = SIZEOF__BYTE bits */
+		      MOTPicture.vecbRawData.Enlarge (SIZEOF__BYTE);
 		      MOTPicture.vecbRawData.Enqueue ((uint32_t) byIn,
-						      BITS_BINARY);
+						      SIZEOF__BYTE);
 		  }
 
 		/* Close the file afterwards */
@@ -112,7 +112,7 @@ CMOTSlideShowEncoder::AddNextPicture ()
 
 	  /* Set file counter to next picture, test for wrap around */
 	  iPictureCnt++;
-	  if (iPictureCnt == vecPicFileNames.size())
+	  if (iPictureCnt == vecPicFileNames.Size ())
 	      iPictureCnt = 0;
       }
 }
@@ -124,8 +124,8 @@ CMOTSlideShowEncoder::AddFileName (const string & strFileName,
     /* Only ContentSubType "JFIF" (JPEG) and ContentSubType "PNG" are allowed
        for SlideShow application (not tested here!) */
     /* Add file name to the list */
-    SPicDescr d;
-    d.strName = strFileName;
-    d.strFormat = strFormat;
-    vecPicFileNames.push_back(d);
+    const int iOldNumObj = vecPicFileNames.Size ();
+    vecPicFileNames.Enlarge (1);
+    vecPicFileNames[iOldNumObj].strName = strFileName;
+    vecPicFileNames[iOldNumObj].strFormat = strFormat;
 }

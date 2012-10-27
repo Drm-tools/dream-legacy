@@ -29,9 +29,11 @@
 #if !defined(_AMSSDEMODULATION_H_)
 #define _AMSSDEMODULATION_H_
 
-#include "util/ReceiverModul.h"
+#include "Parameter.h"
+#include "util/Modul.h"
+#include "util/Vector.h"
 #include "matlib/Matlib.h"
-#include "AMDemodulation.h"
+#include "resample/Resample.h"
 
 #define AMSS_PLL_LOOP_GAIN						((CReal) 0.00015)
 #define AMSS_PLL_LOOP_FILTER_LAMBDA				((CReal) 0.99)
@@ -55,53 +57,60 @@
 class CAMSSPLL
 {
 public:
-	CAMSSPLL() : rCurPhase((CReal) 0.0) {}
-	void Init(const int iNewBlockSize);
-	void Process(CComplexVector& veccIn, CRealVector& vecrOut);
+    CAMSSPLL() : rCurPhase((CReal) 0.0) {}
+    void Init(const int iNewBlockSize);
+    void Process(CComplexVector& veccIn, CRealVector& vecrOut);
 
-	void SetRefNormFreq(const CReal rNewNormFreq);
-	CReal GetCurPhase() const {return rCurPhase;}
-	CReal GetCurNormFreqOffs() const
-		{return rNormCurFreqOffset + rNormCurFreqOffsetAdd;}
+    void SetRefNormFreq(const CReal rNewNormFreq);
+    CReal GetCurPhase() const {
+        return rCurPhase;
+    }
+    CReal GetCurNormFreqOffs() const
+    {
+        return rNormCurFreqOffset + rNormCurFreqOffsetAdd;
+    }
 
 protected:
-	CMixer			Mixer;
-	int				iBlockSize;
-	CRealVector		rvecPhaseTmp;
-	CComplexVector	cvecLow;
-	CReal			rNormCurFreqOffset;
-	CReal			rNormCurFreqOffsetAdd;
-	CReal			rCurPhase;
+    CMixer			Mixer;
+    int				iBlockSize;
+    CRealVector		rvecPhaseTmp;
+    CComplexVector	cvecLow;
+    CReal			rNormCurFreqOffset;
+    CReal			rNormCurFreqOffsetAdd;
+    CReal			rCurPhase;
 
-	CRealVector		rvecZPhase;
-	CRealVector		rvecA;
-	CRealVector		rvecB;
+    CRealVector		rvecZPhase;
+    CRealVector		rvecA;
+    CRealVector		rvecB;
 
-	CReal rPreviousPhaseSample;
-	CReal rPhaseOffset;
+    CReal rPreviousPhaseSample;
+    CReal rPhaseOffset;
 };
 
 /* Recursive filter  -------------------------------------------------------------------- */
 class CRecursiveFilter
 {
 public:
-	CRecursiveFilter() { iPeakPos = 0; iCurPos = 0; }
-	~CRecursiveFilter() {}
-	void Init(const int iNewBlockSize);
-	void Process(CRealVector& vecrIn /* in/out */);
+    CRecursiveFilter() {
+        iPeakPos = 0;
+        iCurPos = 0;
+    }
+    ~CRecursiveFilter() {}
+    void Init(const int iNewBlockSize);
+    void Process(CRealVector& vecrIn /* in/out */);
 
-	int GetPeakPos();
-	_REAL GetPeakVal();
+    int GetPeakPos();
+    _REAL GetPeakVal();
 
 
 protected:
-	int				iBlockSize;
-	CRealVector		vecrStore;
+    int				iBlockSize;
+    CRealVector		vecrStore;
 
-	CReal			rOut;
-	CReal			rPeakVal;
-	int				iPeakPos;
-	int				iCurPos;
+    CReal			rOut;
+    CReal			rPeakVal;
+    int				iPeakPos;
+    int				iCurPos;
 
 };
 
@@ -110,50 +119,53 @@ protected:
 class CAMSSPhaseDemod : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	CAMSSPhaseDemod() : rBPNormBW((CReal) AMSS_IF_FILTER_BW / SOUNDCRD_SAMPLE_RATE), rNormCurMixFreqOffs((CReal) 0.0)
-		{ rPreviousPhaseSample = 0.0; rPhaseOffset = 0.0; }
-	virtual ~CAMSSPhaseDemod() { }
+    CAMSSPhaseDemod() : rBPNormBW((CReal) AMSS_IF_FILTER_BW / SOUNDCRD_SAMPLE_RATE), rNormCurMixFreqOffs((CReal) 0.0)
+    {
+        rPreviousPhaseSample = 0.0;
+        rPhaseOffset = 0.0;
+    }
+    virtual ~CAMSSPhaseDemod() { }
 
-	void SetAcqFreq(const CReal rNewNormCenter);
-	bool GetPLLPhase(CReal& rPhaseOut);
+    void SetAcqFreq(const CReal rNewNormCenter);
+    _BOOLEAN GetPLLPhase(CReal& rPhaseOut);
 
 protected:
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 
-	int			iSymbolBlockSize;
+    int			iSymbolBlockSize;
 
-	void SetBPFilter(const CReal rNewBPNormBW, const CReal rNewNormFreqOffset);
-	void SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs);
+    void SetBPFilter(const CReal rNewBPNormBW, const CReal rNewNormFreqOffset);
+    void SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs);
 
-	CComplexVector				cvecBReal;
-	CComplexVector				cvecBImag;
-	CRealVector					rvecZReal;
-	CRealVector					rvecZImag;
+    CComplexVector				cvecBReal;
+    CComplexVector				cvecBImag;
+    CRealVector					rvecZReal;
+    CRealVector					rvecZImag;
 
-	CRealVector					rvecInpTmp;
-	CRealVector					rvecPhase;
-	CComplexVector				cvecHilbert;
-	int							iHilFiltBlLen;
-	CFftPlans					FftPlansHilFilt;
+    CRealVector					rvecInpTmp;
+    CRealVector					rvecPhase;
+    CComplexVector				cvecHilbert;
+    int							iHilFiltBlLen;
+    CFftPlans					FftPlansHilFilt;
 
-	CReal						rBPNormBW;
-	CReal						rNormCurMixFreqOffs;
-	CReal						rBPNormCentOffsTot;
+    CReal						rBPNormBW;
+    CReal						rNormCurMixFreqOffs;
+    CReal						rBPNormCentOffsTot;
 
-	CReal						rPreviousPhaseSample;
-	CReal						rPhaseOffset;
-	CReal						rPhaseDiff;
+    CReal						rPreviousPhaseSample;
+    CReal						rPhaseOffset;
+    CReal						rPhaseDiff;
 
 
-	CRealVector		rvecZPhase;
-	CRealVector		rvecA;
-	CRealVector		rvecB;
+    CRealVector		rvecZPhase;
+    CRealVector		rvecA;
+    CRealVector		rvecB;
 
-	/* Objects */
-	CAMSSPLL					AMSSPLL;
-	CFreqOffsAcq				FreqOffsAcq;
-	//CAGC						AGC;
+    /* Objects */
+    CAMSSPLL					AMSSPLL;
+    CFreqOffsAcq				FreqOffsAcq;
+    //CAGC						AGC;
 };
 
 
@@ -161,27 +173,32 @@ protected:
 class CAMSSExtractBits : public CReceiverModul<_REAL, _BINARY>
 {
 public:
-	CAMSSExtractBits()
-		{ iDiffStorePos = 0; iDiffInSamplePos = 0; iBitSyncSampleCount = 0; iBitSyncSliceOffset = 0;  }
-	virtual ~CAMSSExtractBits() { }
+    CAMSSExtractBits()
+    {
+        iDiffStorePos = 0;
+        iDiffInSamplePos = 0;
+        iBitSyncSampleCount = 0;
+        iBitSyncSliceOffset = 0;
+    }
+    virtual ~CAMSSExtractBits() { }
 protected:
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 
-	int					iSymbolBlockSize;
+    int					iSymbolBlockSize;
 
-	CRealVector			rvecDiffStore;
-	int					iDiffStorePos;
-	int					iDiffInSamplePos;
+    CRealVector			rvecDiffStore;
+    int					iDiffStorePos;
+    int					iDiffInSamplePos;
 
-	CRealVector			rvecInpTmp;
-	CRealVector			rvecInpTmpAbs;
+    CRealVector			rvecInpTmp;
+    CRealVector			rvecInpTmpAbs;
 
-	int					iBitSyncSampleCount;
-	int					iBitSyncSliceOffset;
+    int					iBitSyncSampleCount;
+    int					iBitSyncSliceOffset;
 
-	/* Objects */
-	CRecursiveFilter	RecursiveFilter;
+    /* Objects */
+    CRecursiveFilter	RecursiveFilter;
 };
 
 
@@ -189,77 +206,93 @@ protected:
 class CAMSSDecode : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CAMSSDecode()
-	{
-		cDataEntityGroupStatus = new char[MAX_DATA_ENTITY_GROUP_SEGMENTS+1];
-		cCurrentBlockBits = new char[AMSS_BLOCK_SIZE_BITS+1];
-	}
+    CAMSSDecode()
+    {
+        cDataEntityGroupStatus = new char[MAX_DATA_ENTITY_GROUP_SEGMENTS+1];
+        cCurrentBlockBits = new char[AMSS_BLOCK_SIZE_BITS+1];
+    }
 
-	virtual ~CAMSSDecode()
-	{
-		delete[] cDataEntityGroupStatus;
-		delete[] cCurrentBlockBits;
-	}
+    virtual ~CAMSSDecode()
+    {
+        delete[] cDataEntityGroupStatus;
+        delete[] cCurrentBlockBits;
+    }
 
-	EAMSSBlockLockStat GetLockStatus() const { return eAMSSBlockLockStatus; }
-	int GetPercentageDataEntityGroupComplete() const
-		{ return iPercentageDataEntityGroupComplete; }
-	char* GetDataEntityGroupStatus() const { return cDataEntityGroupStatus; }
-	int GetCurrentBlock() const { return iCurrentBlock; }
-	char* GetCurrentBlockBits() const { return cCurrentBlockBits; }
+    /* AMSS status */
+    enum EAMSSBlockLockStat { NO_SYNC, RE_SYNC, DEF_SYNC, DEF_SYNC_BUT_DATA_CHANGED, POSSIBLE_LOSS_OF_SYNC };
 
-	bool GetBlock1Status() const { return blBlock1DataValid; }
+
+    EAMSSBlockLockStat GetLockStatus() const {
+        return eAMSSBlockLockStatus;
+    }
+    int GetPercentageDataEntityGroupComplete() const
+    {
+        return iPercentageDataEntityGroupComplete;
+    }
+    char* GetDataEntityGroupStatus() const {
+        return cDataEntityGroupStatus;
+    }
+    int GetCurrentBlock() const {
+        return iCurrentBlock;
+    }
+    char* GetCurrentBlockBits() const {
+        return cCurrentBlockBits;
+    }
+
+    _BOOLEAN GetBlock1Status() const {
+        return blBlock1DataValid;
+    }
 
 protected:
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 
-	EAMSSBlockLockStat	eAMSSBlockLockStatus;
+    EAMSSBlockLockStat	eAMSSBlockLockStatus;
 
-	int				iPercentageDataEntityGroupComplete;
-	char*			cDataEntityGroupStatus;
-	int				iCurrentBlock;
-	char*			cCurrentBlockBits;
+    int				iPercentageDataEntityGroupComplete;
+    char*			cDataEntityGroupStatus;
+    int				iCurrentBlock;
+    char*			cCurrentBlockBits;
 
-	int				iTotalDataEntityGroupSegments;
-	CVector<int>	blDataEntityGroupSegmentsReceived;
+    int				iTotalDataEntityGroupSegments;
+    CVector<int>	blDataEntityGroupSegmentsReceived;
 
-	int				DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam);
-	void			DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverParam);
-	void			DecodeBlock2(CVector<_BINARY>& bBits);
+    int				DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam);
+    void			DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverParam);
+    void			DecodeBlock2(CVector<_BINARY>& bBits);
 
-	void			ApplyOffsetWord(CVector<_BINARY>& bBlockBits, CVector<_BINARY>& offset);
-	bool		    CheckCRC(CVector<_BINARY>& bBits);
+    void			ApplyOffsetWord(CVector<_BINARY>& bBlockBits, CVector<_BINARY>& offset);
+    _BOOLEAN		CheckCRC(CVector<_BINARY>& bBits);
 
-	void			ResetStatus(CParameter& ReveiverParam);
+    void			ResetStatus(CParameter& ReveiverParam);
 
-	CVector<_BINARY>	bAMSSBits;
-	int					iIntakeBufferPos;
+    CVector<_BINARY>	bAMSSBits;
+    int					iIntakeBufferPos;
 
-	CVector<_BINARY>	bBitsBlock1;
-	CVector<_BINARY>	bBitsBlock2;
+    CVector<_BINARY>	bBitsBlock1;
+    CVector<_BINARY>	bBitsBlock2;
 
-	CVector<_BINARY>	bOffsetBlock1;
-	CVector<_BINARY>	bOffsetBlock2;
+    CVector<_BINARY>	bOffsetBlock1;
+    CVector<_BINARY>	bOffsetBlock2;
 
-	CVector<_BINARY>	bGP;
+    CVector<_BINARY>	bGP;
 
-	CVector<_BINARY>	bBlock1Store;
-	CVector<_BINARY>	bBlock2Store;
+    CVector<_BINARY>	bBlock1Store;
+    CVector<_BINARY>	bBlock2Store;
 
-	bool			blStoredBlock2Valid;
-	bool			bVersionFlag;
+    _BOOLEAN			blStoredBlock2Valid;
+    _BOOLEAN			bVersionFlag;
 
-	bool			blFirstEverBlock1;
+    _BOOLEAN			blFirstEverBlock1;
 
-	CVector<_BINARY>	bDataEntityGroup;
+    CVector<_BINARY>	bDataEntityGroup;
 
-	int					iBitsSinceLastBlock1Pass;
-	int					iBitsSinceLastBlock2Pass;
-	int					iBlock1FailCount;
-	int					iBlock2FailCount;
+    int					iBitsSinceLastBlock1Pass;
+    int					iBitsSinceLastBlock2Pass;
+    int					iBlock1FailCount;
+    int					iBlock2FailCount;
 
-	bool			blBlock1DataValid;
+    _BOOLEAN			blBlock1DataValid;
 };
 
 

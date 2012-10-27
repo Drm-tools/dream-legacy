@@ -29,7 +29,8 @@
 #if !defined(INPUTRESAMPLE_H__3B0BA660_CA63_4344_BB2B_2OJVBEWJBWV_INCLUDED_)
 #define INPUTRESAMPLE_H__3B0BA660_CA63_4344_BB2B_2OJVBEWJBWV_INCLUDED_
 
-#include "util/ReceiverModul.h"
+#include "Parameter.h"
+#include "util/Modul.h"
 #include "resample/Resample.h"
 
 
@@ -41,18 +42,20 @@
 class CInputResample : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	CInputResample() : bSyncInput(false) {}
-	virtual ~CInputResample() {}
+    CInputResample() : bSyncInput(FALSE) {}
+    virtual ~CInputResample() {}
 
-	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(bool bNewS) {bSyncInput = bNewS;}
+    /* To set the module up for synchronized DRM input data stream */
+    void SetSyncInput(_BOOLEAN bNewS) {
+        bSyncInput = bNewS;
+    }
 
 protected:
-	CResample	ResampleObj;
-	bool	bSyncInput;
+    CResample	ResampleObj;
+    _BOOLEAN	bSyncInput;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 

@@ -30,16 +30,15 @@
 #define _SLIDESHOWVIEWER_H
 
 #include "ui_SlideShowViewer.h"
-#include "../ReceiverInterface.h"
+#include "../DrmReceiver.h"
 class CSettings;
 
-class SlideShowViewer : public QMainWindow, Ui_SlideShowViewer
+class SlideShowViewer : public QMainWindow
 {
 	Q_OBJECT
 
 public:
-	SlideShowViewer(ReceiverInterface&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, Qt::WFlags f = 0);
+	SlideShowViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0);
 	virtual ~SlideShowViewer();
 
 protected:
@@ -48,11 +47,12 @@ protected:
     void                    UpdateButtons();
     QTimer Timer;
 	std::string             strCurrentSavePath;
-	ReceiverInterface&  receiver;
+	CDRMReceiver&			receiver;
 	CSettings&              settings;
 	std::vector<QPixmap>    vecImages;
 	std::vector<QString>    vecImageNames;
 	int						iCurImagePos;
+	Ui_SlideShowViewer*		ui;
 
 public slots:
 	void OnTimer();
@@ -68,4 +68,3 @@ public slots:
 };
 
 #endif
-

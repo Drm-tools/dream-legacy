@@ -35,34 +35,35 @@
 #include "../Parameter.h"
 #include "ChannelCode.h"
 
+
 /* Classes ********************************************************************/
 class CConvEncoder : public CChannelCode
 {
 public:
-	CConvEncoder() {}
-	virtual ~CConvEncoder() {}
+    CConvEncoder() {}
+    virtual ~CConvEncoder() {}
 
-	int		Encode(CVector<_DECISION>& vecInputData,
-				   CVector<_DECISION>& vecOutputData);
+    int		Encode(CVector<_DECISION>& vecInputData,
+                CVector<_DECISION>& vecOutputData);
 
-	void	Init(ECodScheme eNewCodingScheme, EChanType eNewChannelType,
-				 int iN1, int iN2, int iNewNumInBitsPartA,
-				 int iNewNumInBitsPartB, int iPunctPatPartA, int iPunctPatPartB,
-				 int iLevel);
+    void	Init(ECodScheme eNewCodingScheme, EChanType eNewChannelType,
+              int iN1, int iN2, int iNewNumInBitsPartA,
+              int iNewNumInBitsPartB, int iPunctPatPartA, int iPunctPatPartB,
+              int iLevel);
 
 protected:
-	int						iNumInBits;
-	int						iNumInBitsWithMemory;
+    int						iNumInBits;
+    int						iNumInBitsWithMemory;
 
-	CVector<int>			veciTablePuncPat;
+    CVector<int>			veciTablePuncPat;
 
-	EChanType	eChannelType;
+    EChanType	eChannelType;
 
 #ifdef USE_MAX_LOG_MAP
-	CShiftRegister<_DECISION>	vecStateMem;
-	_DECISION SoftConvolution(const _BYTE byNewStateShiftReg,
-							  CShiftRegister<_DECISION>& vecStateMem,
-							  const int iGenPolyn);
+    CShiftRegister<_DECISION>	vecStateMem;
+    _DECISION SoftConvolution(const _BYTE byNewStateShiftReg,
+                              CShiftRegister<_DECISION>& vecStateMem,
+                              const int iGenPolyn);
 #endif
 };
 

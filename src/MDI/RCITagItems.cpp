@@ -51,31 +51,36 @@ void CTagItemGeneratorCfre::GenTag(int iNewFreqkHz)
 
 string CTagItemGeneratorCfre::GetTagName(void) {return "cfre";}
 
-void CTagItemGeneratorCdmo::GenTag(const EModulationType eMode) // cdmo
+void CTagItemGeneratorCdmo::GenTag(const ERecMode eMode) // cdmo
 {
-	PrepareTag(4 * BITS_BINARY);
-	string s;
+	PrepareTag(4*SIZEOF__BYTE);
 	switch (eMode)
 	{
-	case DRM: s="drm_"; break;
-	case AM: s="am__"; break;
-	case USB: s="usb_"; break;
-	case LSB: s="lsb_"; break;
-	case NBFM: s="nbfm"; break;
-	case WBFM: s="wbfm"; break;
-	default: s="    "; break;
+	case RM_DRM:
+		Enqueue((uint32_t) 'd', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'r', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	case RM_FM:
+		Enqueue((uint32_t) 'f', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	case RM_AM:
+		Enqueue((uint32_t) 'a', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	default:
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		break;
 	}
-
-	for (int i=0; i<4; i++)
-		Enqueue((uint32_t) s[i], BITS_BINARY);
 }
 
 string CTagItemGeneratorCdmo::GetTagName(void) {return "cdmo";}
-
-void CTagItemGeneratorCser::GenTag(const int iServiceID) // cser
-{
-	PrepareTag(1*BITS_BINARY);
-	Enqueue((uint8_t) iServiceID, BITS_BINARY);
-}
-
-string CTagItemGeneratorCser::GetTagName(void) {return "cser";}

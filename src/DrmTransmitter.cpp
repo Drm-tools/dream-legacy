@@ -26,495 +26,233 @@
  *
 \******************************************************************************/
 
-#include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
-#include "MDI/MDIDecode.h"
 #include "DrmTransmitter.h"
-#include "mlc/MLC.h"
-#include <sstream>
-#include <ctime>
-
+#include "sound.h"
 
 /* Implementation *************************************************************/
-CDRMTransmitter::CDRMTransmitter():
-    CDRMTransmitterInterface(),
-	Parameters(), eOpMode(T_TX), bRunning(false),
-	strMDIinAddr(), MDIoutAddr(),
-	pEncoder(NULL), pModulator(NULL),
-	pMDIIn(NULL), pDecodeMDI(NULL), pMDIOut(NULL)
-{
-	/* Init streams */
-	Parameters.ResetServicesStreams();
-
-	/* Init frame ID counter (index) */
-	Parameters.FACParameters.iFrameId = 0;
-
-	time_t t;
-	time(&t);
-    tm gmt = *gmtime(&t);
-
-	/* Date, time. */
-	Parameters.iDay = gmt.tm_mday;
-	Parameters.iMonth = gmt.tm_mon+1;
-	Parameters.iYear = 1900+gmt.tm_year;
-	Parameters.iUTCHour = gmt.tm_hour;
-	Parameters.iUTCMin = gmt.tm_min;
-}
-
-void
-CDRMTransmitter::CalculateChannelCapacities()
-{
-    CMLC mlc(CT_MSC);
-    mlc.CalculateParam(Parameters, CT_FAC);
-    mlc.CalculateParam(Parameters, CT_SDC);
-    mlc.CalculateParam(Parameters, CT_MSC);
-}
-
-void
-CDRMTransmitter::SetOperatingMode(const ETxOpMode eNewOpMode)
-{
-	eOpMode = eNewOpMode;
-    switch(eOpMode)
-    {
-    case T_TX:
-		if(pMDIIn)
-		{
-			delete pMDIIn;
-			pMDIIn = NULL;
-		}
-		if(pDecodeMDI)
-		{
-			delete pDecodeMDI;
-			pDecodeMDI = NULL;
-		}
-		if(pMDIOut)
-		{
-			delete pMDIOut;
-			pMDIIn = NULL;
-		}
-		if(pEncoder == NULL)
-			pEncoder = new CDRMEncoder();
-		if(pModulator == NULL)
-			pModulator = new CDRMModulator();
-	break;
-    case T_ENC:
-		if(pMDIIn)
-		{
-			delete pMDIIn;
-			pMDIIn = NULL;
-		}
-		if(pDecodeMDI)
-		{
-			delete pDecodeMDI;
-			pDecodeMDI = NULL;
-		}
-		if(pModulator)
-		{
-			delete pModulator;
-			pModulator = NULL;
-		}
-		if(pEncoder == NULL)
-			pEncoder = new CDRMEncoder();
-		if(pMDIOut == NULL)
-			pMDIOut = new CMDIOut();
-	break;
-    case T_MOD:
-		if(pEncoder)
-		{
-			delete pEncoder;
-			pEncoder = NULL;
-		}
-		if(pMDIOut)
-		{
-			delete pMDIOut;
-			pMDIOut = NULL;
-		}
-		if(pMDIIn == NULL)
-			pMDIIn = new CMDIIn();
-		if(pDecodeMDI == NULL)
-			pDecodeMDI = new CDecodeMDI();
-		if(pModulator == NULL)
-			pModulator = new CDRMModulator();
-    }
-}
-
-CDRMTransmitter::ETxOpMode
-CDRMTransmitter::GetOperatingMode() const
-{
-	return eOpMode;
-}
-
-void
-CDRMTransmitter::
-GetSoundInChoices(vector<string>& v) const
-{
-    if(pEncoder)
-	pEncoder->GetSoundInChoices(v);
-    else
-	v.clear();
-}
-
-void
-CDRMTransmitter::
-GetSoundOutChoices(vector<string>& v) const
-{
-    if(pModulator)
-	pModulator->GetSoundOutChoices(v);
-    else
-	v.clear();
-}
-
-int
-CDRMTransmitter::
-GetSoundInInterface() const
-{
-    if(pEncoder)
-	return pEncoder->GetSoundInInterface();
-    else
-	return -1;
-}
-
-void
-CDRMTransmitter::
-SetSoundInInterface(int i)
-{
-    if(pEncoder)
-	pEncoder->SetSoundInInterface(i);
-}
-
-
-_REAL CDRMTransmitter::GetLevelMeter() const
-{
-    if(pEncoder)
-	return pEncoder->GetLevelMeter();
-    else
-	return 0.0;
-}
-
-void
-CDRMTransmitter::AddTextMessage(const string& strText)
-{
-    if(pEncoder)
-	pEncoder->AddTextMessage(strText);
-}
-
-void
-CDRMTransmitter::ClearTextMessages()
-{
-    if(pEncoder)
-	pEncoder->ClearTextMessages();
-}
-
-void
-CDRMTransmitter::GetTextMessages(vector<string>& v) const
-{
-    if(pEncoder)
-	pEncoder->GetTextMessages(v);
-    else
-	v.clear();
-}
-
-
-void
-CDRMTransmitter::AddPic(const string& strFileName, const string& strFormat)
-{
-    if(pEncoder)
-	pEncoder->AddPic(strFileName, strFormat);
-}
-
-void
-CDRMTransmitter::ClearPics()
-{
-    if(pEncoder)
-	pEncoder->ClearPics();
-}
-
-void
-CDRMTransmitter::GetPics(map<string,string>& m) const
-{
-    if(pEncoder)
-	pEncoder->GetPics(m);
-}
-
-bool
-CDRMTransmitter::GetTransStat(string& strCPi, _REAL& rCPe) const
-{
-    if(pEncoder)
-	return pEncoder->GetTransStat(strCPi, rCPe);
-    else
-	return false;
-}
-
-void
-CDRMTransmitter::GetData(map<int, map<int,CDataParam> >& d) const
-{
-	d = Parameters.DataParam;
-}
-
-void
-CDRMTransmitter::PutData(const map<int, map<int,CDataParam> >& d)
-{
-	Parameters.DataParam = d;
-}
-
-void
-CDRMTransmitter::SetReadFromFile(const string & strNFN)
-{
-    if(pEncoder)
-	pEncoder->SetReadFromFile(strNFN);
-}
-
-string
-CDRMTransmitter::GetReadFromFile() const
-{
-    if(pEncoder)
-	return pEncoder->GetReadFromFile();
-    else
-	return "";
-}
-
-void
-CDRMTransmitter::GetAudio(map<int,CAudioParam>& a) const
-{
-	a = Parameters.AudioParam;
-}
-
-void
-CDRMTransmitter::PutAudio(const map<int,CAudioParam>& a)
-{
-	Parameters.AudioParam = a;
-}
-
-void
-CDRMTransmitter::SetCOFDMOutputs(const vector<string>& o)
-{
-    if(pModulator)
-	pModulator->SetOutputs(o);
-}
-
-void
-CDRMTransmitter::GetCOFDMOutputs(vector<string>& o) const
-{
-    if(pModulator)
-	pModulator->GetOutputs(o);
-    else
-	o.clear();
-}
-
-void
-CDRMTransmitter::PutChannel(const CChannel& c)
-{
-	Parameters.Channel=c;
-    Parameters.CellMappingTable.MakeTable(c.eRobustness, c.eSpectrumOccupancy);
-}
-
-void
-CDRMTransmitter::GetServices(vector<CService>& s, int& naudio, int& ndata) const
-{
-	s= Parameters.Service;
-	naudio = Parameters.FACParameters.iNumAudioServices;
-	ndata = Parameters.FACParameters.iNumDataServices;
-}
-
-void
-CDRMTransmitter::PutServices(const vector<CService>& s, int naudio, int ndata)
-{
-	Parameters.Service = s;
-	Parameters.FACParameters.iNumAudioServices = naudio;
-	Parameters.FACParameters.iNumDataServices = ndata;
-}
-
-void
-CDRMTransmitter::Stop()
-{
-	bRunning = false;
-}
-
 void CDRMTransmitter::Start()
 {
+    /* Set run flag */
+    TransmParam.eRunState = CParameter::RUNNING;
 
-	bool bInSync = true;
-	CSingleBuffer<_BINARY> MDIPacketBuf;
-	CSingleBuffer<_BINARY> FACBuf, SDCBuf;
-	vector<CSingleBuffer<_BINARY> > MSCBuf(MAX_NUM_STREAMS);
+    /* Initialization of the modules */
+    Init();
 
-	try
-	{
-	switch(eOpMode)
-	{
-	case T_TX:
-	    Parameters.ReceiveStatus.FAC.SetStatus(RX_OK);
-	    Parameters.ReceiveStatus.SDC.SetStatus(RX_OK);
-	    pEncoder->Init(Parameters, FACBuf, SDCBuf, MSCBuf);
-	    pModulator->Init(Parameters);
-	    break;
-	case T_ENC:
-	    if(MDIoutAddr.size()==0)
-		throw CGenErr("Encoder with no outputs");
-	    Parameters.ReceiveStatus.FAC.SetStatus(RX_OK);
-	    Parameters.ReceiveStatus.SDC.SetStatus(RX_OK);
-	    pEncoder->Init(Parameters, FACBuf, SDCBuf, MSCBuf);
-	    /* set the output address */
-	    for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
-	    {
-		pMDIOut->AddSubscriber(*s, 'M');
-	    }
-	    pMDIOut->Init(Parameters);
-	    break;
-	case T_MOD:
-	    if(strMDIinAddr == "")
-	    {
-		throw CGenErr("Modulator with no input");
-	    }
-	    pMDIIn->SetOrigin(strMDIinAddr);
-	    bInSync = false;
-	    pMDIIn->Init(Parameters, MDIPacketBuf);
-	    pDecodeMDI->Init(Parameters, FACBuf, SDCBuf, MSCBuf);
-	}
-
-	/* Set run flag */
-	bRunning = true;
-	switch(eOpMode)
-	{
-	case T_TX:
-	    cout << "Tx: starting, in: Encoder, out: COFDM" << endl;
-	    break;
-	case T_ENC:
-	    cout << "Tx: starting, in: Encoder, out: MDI" << endl;
-	    break;
-	case T_MOD:
-	    cout << "Tx: starting, in: MDI, out: COFDM" << endl;
-	}
-
-		while (bRunning)
-		{
-			if(eOpMode == T_MOD)
-			{
-				if(bInSync==false)
-				{
-					FACBuf.SetRequestFlag(true);
-					SDCBuf.SetRequestFlag(true);
-					for(size_t i=0; i<MAX_NUM_STREAMS; i++)
-						MSCBuf[i].SetRequestFlag(true);
-					MDIPacketBuf.SetRequestFlag(true);
-				}
-				MDIPacketBuf.Clear();
-				pMDIIn->ReadData(Parameters, MDIPacketBuf);
-				if(MDIPacketBuf.GetFillLevel()>0)
-				{
-					//DecodeMDI.Expect(MDIPacketBuf.GetFillLevel());
-					pDecodeMDI->ProcessData(Parameters, MDIPacketBuf, FACBuf, SDCBuf, MSCBuf);
-				}
-				if(bInSync==false && FACBuf.GetFillLevel()>0)
-				{
-					CFACReceive FACReceive;
-					bool bCRCOk = FACReceive.FACParam(FACBuf.QueryWriteBuffer(), Parameters);
-					if(bCRCOk)
-					{
-						Parameters.Lock();
-						Parameters.Channel = Parameters.NextConfig.Channel;
-						Parameters.Unlock();
-						pModulator->Init(Parameters);
-						if(SDCBuf.GetFillLevel()>0)
-						{
-							bInSync = true;
-						}
-						else
-						{
-							/* consume the FAC & MSC and wait for an SDC frame */
-							(void)FACBuf.Get(NUM_FAC_BITS_PER_BLOCK);
-							for(size_t i=0; i<MAX_NUM_STREAMS; i++)
-							{
-								(void)MSCBuf[i].Get(MSCBuf[i].GetFillLevel());
-			    }
-						}
-					}
-					else
-						cerr << "bad FAC CRC" << endl;
-				}
-			}
-			else
-			{
-				pEncoder->ReadData(Parameters, FACBuf, SDCBuf, MSCBuf);
-			}
-
-			if(eOpMode == T_ENC)
-			{
-				pMDIOut->WriteData(Parameters, FACBuf, SDCBuf, MSCBuf);
-			}
-			else
-			{
-				if(bInSync)
-					pModulator->WriteData(Parameters, FACBuf, SDCBuf, MSCBuf);
-				/* TODO - set bInSync false on error */
-			}
-		}
-	}
-	catch(CGenErr GenErr)
-	{
-		ErrorMessage(GenErr.strError);
-	}
-	if(eOpMode != T_ENC)
-		pModulator->Cleanup(Parameters);
-	if(eOpMode != T_MOD)
-		pEncoder->Cleanup(Parameters);
+    /* Start the transmitter run routine */
+    Run();
 }
 
-void
-CDRMTransmitter::LoadSettings(CSettings& s)
+void CDRMTransmitter::Stop()
 {
-	string mode = s.Get("0", "mode", string("TX"));
-	if(mode == "TX")
-	{
-	SetOperatingMode(T_TX);
-	pEncoder->LoadSettings(s, Parameters);
-	pModulator->LoadSettings(s, Parameters);
-	}
-	if(mode == "ENC")
-	{
-	SetOperatingMode(T_ENC);
-	pEncoder->LoadSettings(s, Parameters);
-	for(size_t i=0; i<100; i++)
-	{
-	    stringstream ss;
-	    ss << "MDIout" << i;
-	    string addr = s.Get("Transmitter", ss.str(), string("[none]"));
-	    if(addr == "[none]")
-		break;
-	    MDIoutAddr.push_back(addr);
-	}
-	}
-	if(mode == "MOD")
-	{
-	SetOperatingMode(T_MOD);
-	pModulator->LoadSettings(s, Parameters);
-	strMDIinAddr = s.Get("Transmitter", "MDIin", string(""));
-	}
+    TransmParam.eRunState = CParameter::STOP_REQUESTED;
+
+    if (pSoundInInterface) pSoundInInterface->Close();
+    if (pSoundOutInterface) pSoundOutInterface->Close();
 }
 
-void
-CDRMTransmitter::SaveSettings(CSettings& s) const
+void CDRMTransmitter::Run()
 {
-	switch(eOpMode)
-	{
-	case T_TX:
-		s.Put("0", "mode", string("TX"));
-	pEncoder->SaveSettings(s, Parameters);
-	pModulator->SaveSettings(s, Parameters);
-		break;
-	case T_ENC:
-		s.Put("0", "mode", string("ENC"));
-	pEncoder->SaveSettings(s, Parameters);
-	for(size_t i=0; i<MDIoutAddr.size(); i++)
-	{
-	    stringstream ss;
-	    ss << "MDIout" << i;
-	    s.Put("Transmitter", ss.str(), MDIoutAddr[i]);
-	}
-		break;
-	case T_MOD:
-		s.Put("0", "mode", string("MOD"));
-	pModulator->SaveSettings(s, Parameters);
-	s.Put("Transmitter", "MDIin", strMDIinAddr);
-		break;
-	}
+    /*
+    	The hand over of data is done via an intermediate-buffer. The calling
+    	convention is always "input-buffer, output-buffer". Additional, the
+    	DRM-parameters are fed to the function
+    */
+    while (TransmParam.eRunState == CParameter::RUNNING)
+    {
+        /* MSC ****************************************************************/
+        /* Read the source signal */
+        ReadData.ReadData(TransmParam, DataBuf);
+
+        /* Audio source encoder */
+        AudioSourceEncoder.ProcessData(TransmParam, DataBuf, AudSrcBuf);
+
+        /* MLC-encoder */
+        MSCMLCEncoder.ProcessData(TransmParam, AudSrcBuf, MLCEncBuf);
+
+        /* Convolutional interleaver */
+        SymbInterleaver.ProcessData(TransmParam, MLCEncBuf, IntlBuf);
+
+
+        /* FAC ****************************************************************/
+        GenerateFACData.ReadData(TransmParam, GenFACDataBuf);
+        FACMLCEncoder.ProcessData(TransmParam, GenFACDataBuf, FACMapBuf);
+
+
+        /* SDC ****************************************************************/
+        GenerateSDCData.ReadData(TransmParam, GenSDCDataBuf);
+        SDCMLCEncoder.ProcessData(TransmParam, GenSDCDataBuf, SDCMapBuf);
+
+
+        /* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
+        OFDMCellMapping.ProcessData(TransmParam, IntlBuf, FACMapBuf, SDCMapBuf,
+                                    CarMapBuf);
+
+
+        /* OFDM-modulation ****************************************************/
+        OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);
+
+
+        /* Transmit the signal ************************************************/
+        TransmitData.WriteData(TransmParam, OFDMModBuf);
+    }
+    TransmParam.eRunState = CParameter::STOPPED;
+}
+
+void CDRMTransmitter::Init()
+{
+    /* Defines number of cells, important! */
+    OFDMCellMapping.Init(TransmParam, CarMapBuf);
+
+    /* Defines number of SDC bits per super-frame */
+    SDCMLCEncoder.Init(TransmParam, SDCMapBuf);
+
+    MSCMLCEncoder.Init(TransmParam, MLCEncBuf);
+    SymbInterleaver.Init(TransmParam, IntlBuf);
+    GenerateFACData.Init(TransmParam, GenFACDataBuf);
+    FACMLCEncoder.Init(TransmParam, FACMapBuf);
+    GenerateSDCData.Init(TransmParam, GenSDCDataBuf);
+    OFDMModulation.Init(TransmParam, OFDMModBuf);
+    AudioSourceEncoder.Init(TransmParam, AudSrcBuf);
+    ReadData.Init(TransmParam, DataBuf);
+    TransmitData.Init(TransmParam);
+}
+
+CDRMTransmitter::CDRMTransmitter() :
+        TransmParam(NULL),
+        pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
+        ReadData(pSoundInInterface), TransmitData(pSoundOutInterface),
+        rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
+        // UEP only works with Dream receiver, FIXME! -> disabled for now
+        bUseUEP(FALSE)
+{
+    /* Init streams */
+    TransmParam.ResetServicesStreams();
+
+    /* Init frame ID counter (index) */
+    TransmParam.iFrameIDTransm = 0;
+
+    /* Date, time. TODO: use computer system time... */
+    TransmParam.iDay = 0;
+    TransmParam.iMonth = 0;
+    TransmParam.iYear = 0;
+    TransmParam.iUTCHour = 0;
+    TransmParam.iUTCMin = 0;
+
+
+    /**************************************************************************/
+    /* Robustness mode and spectrum occupancy. Available transmission modes:
+       RM_ROBUSTNESS_MODE_A: Gaussian channels, with minor fading,
+       RM_ROBUSTNESS_MODE_B: Time and frequency selective channels, with longer
+       delay spread,
+       RM_ROBUSTNESS_MODE_C: As robustness mode B, but with higher Doppler
+       spread,
+       RM_ROBUSTNESS_MODE_D: As robustness mode B, but with severe delay and
+       Doppler spread.
+       Available bandwidths:
+       SO_0: 4.5 kHz, SO_1: 5 kHz, SO_2: 9 kHz, SO_3: 10 kHz, SO_4: 18 kHz,
+       SO_5: 20 kHz */
+    TransmParam.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+
+    /* Protection levels for MSC. Depend on the modulation scheme. Look at
+       TableMLC.h, iCodRateCombMSC16SM, iCodRateCombMSC64SM,
+       iCodRateCombMSC64HMsym, iCodRateCombMSC64HMmix for available numbers */
+    TransmParam.MSCPrLe.iPartA = 0;
+    TransmParam.MSCPrLe.iPartB = 1;
+    TransmParam.MSCPrLe.iHierarch = 0;
+
+    /* Either one audio or one data service can be chosen */
+    _BOOLEAN bIsAudio = TRUE;
+
+    CService Service;
+
+    /* In the current version only one service and one stream is supported. The
+       stream IDs must be 0 in both cases */
+    if (bIsAudio == TRUE)
+    {
+        /* Audio */
+        TransmParam.SetNumOfServices(1,0);
+        TransmParam.SetCurSelAudioService(0);
+
+        CAudioParam AudioParam;
+
+        AudioParam.iStreamID = 0;
+
+        /* Text message */
+        AudioParam.bTextflag = TRUE;
+
+        TransmParam.SetAudioParam(0, AudioParam);
+
+        TransmParam.SetAudDataFlag(0,  CService::SF_AUDIO);
+
+        /* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
+        Service.iServiceDescr = 15; /* 15 -> other music */
+
+        TransmParam.SetCurSelAudioService(0);
+    }
+    else
+    {
+        /* Data */
+        TransmParam.SetNumOfServices(0,1);
+        TransmParam.SetCurSelDataService(0);
+
+        TransmParam.SetAudDataFlag(0,  CService::SF_DATA);
+
+        CDataParam DataParam;
+
+        DataParam.iStreamID = 0;
+
+        /* Init SlideShow application */
+        DataParam.iPacketLen = 45; /* TEST */
+        DataParam.eDataUnitInd = CDataParam::DU_DATA_UNITS;
+        DataParam.eAppDomain = CDataParam::AD_DAB_SPEC_APP;
+        TransmParam.SetDataParam(0, DataParam);
+
+        /* The value 0 indicates that the application details are provided
+           solely by SDC data entity type 5 */
+        Service.iServiceDescr = 0;
+    }
+
+    /* Init service parameters, 24 bit unsigned integer number */
+    Service.iServiceID = 0;
+
+    /* Service label data. Up to 16 bytes defining the label using UTF-8
+       coding */
+    Service.strLabel = "Dream Test";
+
+    /* Language (see TableFAC.h, "strTableLanguageCode[]") */
+    Service.iLanguage = 5; /* 5 -> english */
+
+    TransmParam.SetServiceParameters(0, Service);
+
+    /* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
+       short interleaving (400 ms): SI_SHORT */
+    TransmParam.eSymbolInterlMode = CParameter::SI_LONG;
+
+    /* MSC modulation scheme. Available modes:
+       16-QAM standard mapping (SM): CS_2_SM,
+       64-QAM standard mapping (SM): CS_3_SM,
+       64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
+       64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
+    TransmParam.eMSCCodingScheme = CS_3_SM;
+
+    /* SDC modulation scheme. Available modes:
+       4-QAM standard mapping (SM): CS_1_SM,
+       16-QAM standard mapping (SM): CS_2_SM */
+    TransmParam.eSDCCodingScheme = CS_2_SM;
+
+    /* Set desired intermedia frequency (IF) in Hertz */
+    SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
+
+    if (bUseUEP == TRUE)
+    {
+        // TEST
+        TransmParam.SetStreamLen(0, 80, 0);
+    }
+    else
+    {
+        /* Length of part B is set automatically (equal error protection (EEP),
+           if "= 0"). Sets the number of bytes, should not exceed total number
+           of bytes available in MSC block */
+        TransmParam.SetStreamLen(0, 0, 0);
+    }
 }

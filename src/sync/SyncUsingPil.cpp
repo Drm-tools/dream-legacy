@@ -34,14 +34,14 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
 
-	ReceiverParam.Lock();
+	ReceiverParam.Lock(); 
 
 	/**************************************************************************\
 	* Frame synchronization detection										   *
 	\**************************************************************************/
-	bool bSymbolIDHasChanged = false;
+	_BOOLEAN bSymbolIDHasChanged = FALSE;
 
-	if ((bSyncInput == false) && (bAquisition == true))
+	if ((bSyncInput == FALSE) && (bAquisition == TRUE))
 	{
 		/* DRM frame synchronization based on time pilots ------------------- */
 		/* Calculate correlation of received cells with pilot pairs */
@@ -69,7 +69,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			/* Search for maximum */
 			int iMaxIndex = 0;
-			CReal rMaxValue = - numeric_limits<_REAL>::max();
+			CReal rMaxValue = -_MAXREAL;
 			for (i = 0; i < iNumSymPerFrame; i++)
 			{
 				if (vecrCorrHistory[i] > rMaxValue)
@@ -80,10 +80,10 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 
 			/* For initial frame synchronization, use maximum directly */
-			if (bInitFrameSync == true)
+			if (bInitFrameSync == TRUE)
 			{
 				/* Reset init flag */
-				bInitFrameSync = false;
+				bInitFrameSync = FALSE;
 
 				/* Set symbol ID index according to received data */
 				iSymbCntFraSy = iNumSymPerFrame - iMaxIndex - 1;
@@ -97,15 +97,15 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 					if (iSymbCntFraSy == iNumSymPerFrame - iMiddleOfInterval - 1)
 					{
 						/* Reset flags */
-						bBadFrameSync = false;
-						bFrameSyncWasOK = true;
+						bBadFrameSync = FALSE;
+						bFrameSyncWasOK = TRUE;
 
 						/* Post Message for GUI (Good frame sync) */
 						ReceiverParam.ReceiveStatus.FSync.SetStatus(RX_OK);
 					}
 					else
 					{
-						if (bBadFrameSync == true)
+						if (bBadFrameSync == TRUE)
 						{
 							/* Reset symbol ID index according to received
 							   data */
@@ -113,10 +113,10 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 								iNumSymPerFrame - iMiddleOfInterval - 1;
 
 							/* Inform that symbol ID has changed */
-							bSymbolIDHasChanged = true;
+							bSymbolIDHasChanged = TRUE;
 
 							/* Reset flag */
-							bBadFrameSync = false;
+							bBadFrameSync = FALSE;
 
 							ReceiverParam.ReceiveStatus.FSync.SetStatus(CRC_ERROR);
 						}
@@ -128,9 +128,9 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 							   detection gets false results. If the next time
 							   the frame sync is still unequal to the
 							   measurement, then correct it */
-							bBadFrameSync = true;
+							bBadFrameSync = TRUE;
 
-							if (bFrameSyncWasOK == true)
+							if (bFrameSyncWasOK == TRUE)
 							{
 								/* Post Message that frame sync was wrong but
 								   was not yet corrected (yellow light) */
@@ -141,7 +141,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 						}
 
 						/* Set flag for bad sync */
-						bFrameSyncWasOK = false;
+						bFrameSyncWasOK = FALSE;
 					}
 				}
 			}
@@ -167,7 +167,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	/**************************************************************************\
 	* Using Frequency pilot information										   *
 	\**************************************************************************/
-	if ((bSyncInput == false) && (bTrackPil == true))
+	if ((bSyncInput == FALSE) && (bTrackPil == TRUE))
 	{
 		CComplex cFreqOffEstVecSym = CComplex((CReal) 0.0, (CReal) 0.0);
 
@@ -183,14 +183,14 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 				(*pvecInputData)[iPosFreqPil[i]] * Conj(cOldFreqPilCorr);
 
 			/* Save "old" frequency pilots for next symbol. Special treatment
-			   for robustness mode D (carriers 7 and 21) necessary
+			   for robustness mode D (carriers 7 and 21) necessary 
 			   (See 8.4.2.2) */
 
 // TODO: take care of initialization phase: do not start using estimates until
 // the first "old pilots" were stored. Also, an "initial frequecy offset
 // estimate" should be made and rFreqOffsetTrack should be set to this value!
 
-			if ((ReceiverParam.Channel.eRobustness == RM_ROBUSTNESS_MODE_D) &&
+			if ((ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D) &&
 				(i < 2))
 			{
 				cOldFreqPil[i] = -(*pvecInputData)[iPosFreqPil[i]];
@@ -280,16 +280,14 @@ fflush(pFile);
 
 	/* If synchronized DRM input stream is used, overwrite the detected
 	   frequency offest estimate by "0", because we know this value */
-	if (bSyncInput == true)
-	{
+	if (bSyncInput == TRUE)
 		ReceiverParam.rFreqOffsetTrack = (CReal) 0.0;
-	}
 
 	/* Do not ship data before first frame synchronization was done. The flag
-	   "bAquisition" must not be set to false since in that case we would run
+	   "bAquisition" must not be set to FALSE since in that case we would run
 	   into an infinite loop since we would not ever ship any data. But since
 	   the flag is set after this module, we should be fine with that. */
-	if ((bInitFrameSync == true) && (bSyncInput == false))
+	if ((bInitFrameSync == TRUE) && (bSyncInput == FALSE))
 		iOutputBlockSize = 0;
 	else
 	{
@@ -301,7 +299,7 @@ fflush(pFile);
 			(*pvecOutputData)[i] = (*pvecInputData)[i];
 	}
 
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 }
 
 void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
@@ -309,14 +307,14 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	int			i;
 	_COMPLEX	cPhaseCorTermDivi;
 
-	ReceiverParam.Lock();
+	ReceiverParam.Lock(); 
 
 	/* Init base class for modifying the pilots (rotation) */
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Init internal parameters from global struct */
 	iNumCarrier = ReceiverParam.CellMappingTable.iNumCarrier;
-	eCurRobMode = ReceiverParam.Channel.eRobustness;
+	eCurRobMode = ReceiverParam.GetWaveMode();
 
 	/* Check if symbol number per frame has changed. If yes, reset the
 	   symbol counter */
@@ -331,7 +329,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* Allocate memory for histories. Init history with small values, because
 	   we search for maximum! */
-	vecrCorrHistory.Init(iNumSymPerFrame, -numeric_limits<_REAL>::max());
+	vecrCorrHistory.Init(iNumSymPerFrame, -_MAXREAL);
 
 	/* Set middle of observation interval */
 	iMiddleOfInterval = iNumSymPerFrame / 2;
@@ -383,7 +381,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 		{
 			/* For average frequency pilot position to DC carrier */
 			iAvPilPos += i + ReceiverParam.CellMappingTable.iCarrierKmin;
-
+			
 			iPosFreqPil[iFreqPilCount] = i;
 			iFreqPilCount++;
 		}
@@ -397,7 +395,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Init memory for "old" frequency pilots */
 	for (i = 0; i < NUM_FREQ_PILOTS; i++)
 		cOldFreqPil[i] = CComplex((CReal) 0.0, (CReal) 0.0);
-
+	
 	/* Nomalization constant for frequency offset estimation */
 	rNormConstFOE =
 		(CReal) 1.0 / ((CReal) 2.0 * crPi * ReceiverParam.CellMappingTable.iSymbolBlockSize);
@@ -431,7 +429,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = iNumCarrier;
 	iMaxOutputBlockSize = iNumCarrier;
 
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 }
 
 void CSyncUsingPil::StartAcquisition()
@@ -440,14 +438,14 @@ void CSyncUsingPil::StartAcquisition()
 	iSymbCntFraSy = 0;
 
 	/* Reset correlation history */
-	vecrCorrHistory.Reset(-numeric_limits<_REAL>::max());
+	vecrCorrHistory.Reset(-_MAXREAL);
 
-	bAquisition = true;
+	bAquisition = TRUE;
 
 	/* After an initialization the frame sync must be adjusted */
-	bBadFrameSync = true;
-	bInitFrameSync = true; /* Set flag to show that (re)-init was done */
-	bFrameSyncWasOK = false;
+	bBadFrameSync = TRUE;
+	bInitFrameSync = TRUE; /* Set flag to show that (re)-init was done */
+	bFrameSyncWasOK = FALSE;
 
 	/* Initialize count for filling the history buffer */
 	iInitCntFraSy = iNumSymPerFrame;

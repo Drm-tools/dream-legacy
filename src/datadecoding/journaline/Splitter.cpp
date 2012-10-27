@@ -53,7 +53,7 @@
 /// @file       Splitter.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: Splitter.cpp,v 1.1.2.3 2008/12/26 20:31:17 jcable Exp $
+/// $Id: Splitter.cpp,v 1.2 2008/12/26 17:18:08 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///

@@ -15,29 +15,22 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation; either version 2 of the License, or (at your option) any later 
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
 
 #include "FreqSyncAcq.h"
-    /* TODO - reconcile this with Ollies RSCI Doppler code in ChannelEstimation */
 
-
-
-	/* Reset parameters used for averaging */
-	//iSymbolCount = 0;
-	//rSumDopplerHist = (_REAL) 0.0;
-	//rSumSNRHist = (_REAL) 0.0;
 /* Implementation *************************************************************/
 void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 {
@@ -47,24 +40,19 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	int			iNumDetPeaks;
 	//int			iDiffTemp;
 	//CReal		rLevDiff;
-	bool	bNoPeaksLeft;
+	_BOOLEAN	bNoPeaksLeft;
 	CRealVector	vecrPSDPilPoin(3);
 
-	ReceiverParam.Lock();
-
-    int iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
+	ReceiverParam.Lock(); 
 
 	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
-	if (iFreeSymbolCounter >= iNumSymPerFrame)
+	if (iFreeSymbolCounter >= ReceiverParam.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
 	}
-    ReceiverParam.Measurements.FrequencySyncValue.set(
-	ReceiverParam.rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE
-    );
 
-	if (bAquisition == true)
+	if (bAquisition == TRUE)
 	{
 
 		/* Do not transfer any data to the next block if no frequency
@@ -92,9 +80,9 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				vecrFFTInput[i] = vecrFFTHistory[i + iStartIdx];
 
 			static CMatlibVector<CReal> vecRet;
-			vecRet.Init(vecrFFTInput.Size());
+			vecRet.Init(vecrFFTInput.GetSize(), VTY_TEMP);
 
-			for (int k = 0; k < vecrFFTInput.Size(); k++)
+			for (int k = 0; k < vecrFFTInput.GetSize(); k++)
 				vecRet[k] = vecrFFTInput[k] * vecrHammingWin[k];
 
 			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) */
@@ -113,7 +101,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 			else
 			{
 				/* Get PSD estimate */
-				CRealVector vecrPSD(vvrPSDMovAv.GetAverage());
+				const CRealVector vecrPSD(vvrPSDMovAv.GetAverage());
 
 
 				/* -------------------------------------------------------------
@@ -148,7 +136,7 @@ const int iStartFilt = 0; // <- no offset right now
 				}
 
 				/* Average RL and LR filter outputs */
-				vecrFiltRes = (vecrFiltResLR + vecrFiltResRL) / 2.0;
+				vecrFiltRes = (vecrFiltResLR + vecrFiltResRL) / 2;
 
 #ifdef _DEBUG_
 #if 0
@@ -239,13 +227,13 @@ fclose(pFile2);
 					/* First, get the first valid peak entry and init the
 					   maximum with this value. We also detect, if a peak is
 					   left */
-					bNoPeaksLeft = true;
+					bNoPeaksLeft = TRUE;
 					for (i = 0; i < iNumDetPeaks; i++)
 					{
 						if (vecbFlagVec[i] == 1)
 						{
 							/* At least one peak is left */
-							bNoPeaksLeft = false;
+							bNoPeaksLeft = FALSE;
 
 							/* Init max value */
 							iMaxIndex = veciPeakIndex[i];
@@ -253,7 +241,7 @@ fclose(pFile2);
 						}
 					}
 
-					if (bNoPeaksLeft == false)
+					if (bNoPeaksLeft == FALSE)
 					{
 						/* Actual maximum detection, take the remaining peak
 						   which has the highest value */
@@ -298,13 +286,13 @@ fclose(pFile1);
 							(_REAL) iMaxIndex / iFrAcFFTSize;
 
 						/* Reset acquisition flag */
-						bAquisition = false;
+						bAquisition = FALSE;
 
 
 						/* Send out the data stored for FFT calculation ----- */
 						/* This does not work for bandpass filter. TODO: make
 						   this possible for bandpass filter, too */
-						if (bUseRecFilter == false)
+						if (bUseRecFilter == FALSE)
 						{
 							iOutputBlockSize = iHistBufSize;
 
@@ -337,7 +325,7 @@ fclose(pFile1);
 		/* If synchronized DRM input stream is used, overwrite the detected
 		   frequency offest estimate by the desired frequency, because we know
 		   this value */
-		if (bSyncInput == true)
+		if (bSyncInput == TRUE)
 		{
 			ReceiverParam.rFreqOffsetAcqui =
 				(_REAL) ReceiverParam.CellMappingTable.iIndexDCFreq / ReceiverParam.CellMappingTable.iFFTSizeN;
@@ -373,16 +361,16 @@ fclose(pFile1);
 
 
 		/* Bandpass filter -------------------------------------------------- */
-		if (bUseRecFilter == true)
+		if (bUseRecFilter == TRUE)
 			BPFilter.Process(*pvecOutputData);
 
 	}
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 }
 
 void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.Lock();
+	ReceiverParam.Lock(); 
 	/* Needed for calculating offset in Hertz in case of synchronized input
 	   (for simulation) */
 	iFFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
@@ -464,13 +452,17 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	/* Init moving average class for SqMag FFT results */
 	vvrPSDMovAv.InitVec(NUM_FFT_RES_AV_BLOCKS, iHalfBuffer);
 
+
 	/* Frequency correction */
 	/* Start with phase null (arbitrary) */
 	cCurExp = (_REAL) 1.0;
 	rInternIFNorm = (_REAL) ReceiverParam.CellMappingTable.iIndexDCFreq / iFFTSize;
 
+
+	/* Init bandpass filter object */
 	BPFilter.Init(ReceiverParam.CellMappingTable.iSymbolBlockSize, VIRTUAL_INTERMED_FREQ,
-		ReceiverParam.Channel.eSpectrumOccupancy, CDRMBandpassFilt::FT_RECEIVER);
+		ReceiverParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_RECEIVER);
+
 
 	/* Define block-sizes for input (The output block size is set inside
 	   the processing routine, therefore only a maximum block size is set
@@ -486,11 +478,7 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;
 
-	/* Init bandpass filter object */
-	/* Negative margin for receiver filter for better interferer rejection */
-	CReal rMargin = -200.0 /* Hz */;
-
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 }
 
 void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)
@@ -506,7 +494,7 @@ void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)
 void CFreqSyncAcq::StartAcquisition()
 {
 	/* Set flag so that the actual acquisition routine is entered */
-	bAquisition = true;
+	bAquisition = TRUE;
 
 	/* Reset (or init) counters */
 	iAquisitionCounter = NUM_BLOCKS_4_FREQ_ACQU;

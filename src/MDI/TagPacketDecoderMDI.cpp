@@ -116,7 +116,6 @@ void CTagPacketDecoderMDI::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPa
 	TagItemDecoderAMAudio.vecbidata.Init(0);
 	TagItemDecoderFAC.vecbidata.Init(0);
 	TagItemDecoderSDC.vecbidata.Init(0);
-	TagItemDecoderSDCChanInf.vecbidata.Init(0);
 
 	TagItemDecoderRobMod.Init();
 	// Call base class function to do the actual decoding

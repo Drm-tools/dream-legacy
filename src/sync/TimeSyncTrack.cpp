@@ -31,6 +31,7 @@
 
 #include "TimeSyncTrack.h"
 
+
 /* Implementation *************************************************************/
 void CTimeSyncTrack::Process(CParameter& Parameter,
 							 CComplexVector& veccChanEst, int iNewTiCorr,
@@ -43,8 +44,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	CReal		rCurEnergy;
 	CReal		rWinEnergy;
 	CReal		rMaxWinEnergy;
-	bool	    bDelayFound = false;
-	bool	    bPDSResultFound;
+	_BOOLEAN	bDelayFound = FALSE;
+	_BOOLEAN	bPDSResultFound;
 
 	/* Rotate the averaged PDP to follow the time shifts -------------------- */
 	/* Update timing correction history (shift register) */
@@ -124,7 +125,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		for (i = 0; i < iNumIntpFreqPil - 1; i++)
 		{
 			/* We are only interested in the first peak */
-			if (bDelayFound == false)
+			if (bDelayFound == FALSE)
 			{
 				if ((vecrAvPoDeSpRot[i] > vecrAvPoDeSpRot[i + 1]) &&
 					(vecrAvPoDeSpRot[i] > rPeakBound))
@@ -133,7 +134,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 					iFirstPathDelay = i;
 
 					/* Set the flag */
-					bDelayFound = true;
+					bDelayFound = TRUE;
 				}
 			}
 		}
@@ -163,14 +164,14 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		}
 
 		/* We always have a valid measurement, set flag */
-		bDelayFound = true;
+		bDelayFound = TRUE;
 		break;
 	}
 
 
 	/* Only apply timing correction if search was successful and tracking is
 	   activated */
-	if ((bDelayFound == true) && (bTiSyncTracking == true))
+	if ((bDelayFound == TRUE) && (bTiSyncTracking == TRUE))
 	{
 		CReal rPropGain = 0.0; /* quiet compiler */
 		/* Consider the rotation introduced for earlier peaks in path delay.
@@ -217,7 +218,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 		/* In case of sample rate offset acquisition phase, use faster timing
 		   corrections */
-		if (bSamRaOffsAcqu == true)
+		if (bSamRaOffsAcqu == TRUE)
 			rPropGain *= 2;
 
 		/* Apply proportional control and fix result to sample grid */
@@ -298,10 +299,10 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	else
 	{
 		/* Apply the result from acquisition only once */
-		if (bSamRaOffsAcqu == true)
+		if (bSamRaOffsAcqu == TRUE)
 		{
 			/* End of acquisition phase */
-			bSamRaOffsAcqu = false;
+			bSamRaOffsAcqu = FALSE;
 
 			/* Set sample rate offset to initial estimate. We consider the
 			   initialization phase of channel estimation by "iSymDelay" */
@@ -358,17 +359,17 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	/* From left to the right -> search for end of PDS */
 	rEstPDSEnd = (CReal) (iNumIntpFreqPil - 1);
 	rCurEnergy = (CReal) 0.0;
-	bPDSResultFound = false;
+	bPDSResultFound = FALSE;
 	for (i = 0; i < iNumIntpFreqPil; i++)
 	{
-		if (bPDSResultFound == false)
+		if (bPDSResultFound == FALSE)
 		{
 			if (rCurEnergy > rSigEnergyBound)
 			{
 				/* Delay index */
 				rEstPDSEnd = (CReal) i;
 
-				bPDSResultFound = true;
+				bPDSResultFound = TRUE;
 			}
 
 			/* Accumulate signal energy, subtract noise on each sample */
@@ -379,17 +380,17 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	/* From right to the left -> search for beginning of PDS */
 	rEstPDSBegin = (CReal) 0.0;
 	rCurEnergy = (CReal) 0.0;
-	bPDSResultFound = false;
+	bPDSResultFound = FALSE;
 	for (i = iNumIntpFreqPil - 1; i >= 0; i--)
 	{
-		if (bPDSResultFound == false)
+		if (bPDSResultFound == FALSE)
 		{
 			if (rCurEnergy > rSigEnergyBound)
 			{
 				/* Delay index */
 				rEstPDSBegin = (CReal) i;
 
-				bPDSResultFound = true;
+				bPDSResultFound = TRUE;
 			}
 
 			/* Accumulate signal energy, subtract noise on each sample */
@@ -410,6 +411,18 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	const CReal rPDSLenCorrection = iNumIntpFreqPil - iStPoRot + 1;
 	rEstPDSBegin -= rPDSLenCorrection;
 	rEstPDSEnd -= rPDSLenCorrection;
+
+
+	/* write PIR estimate into parameter struct for RSI output - use the function provided for plotting */
+	CVector<_REAL> vecrScale;
+	_REAL rLowerBound=0, rHigherBound=0, rStartGuard=0, rEndGuard=0, rPDSBegin=0, rPDSEnd=0;
+
+	//Parameter.Lock();
+	GetAvPoDeSp(Parameter.vecrPIR, vecrScale, rLowerBound, rHigherBound, rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
+	Parameter.rPIRStart = vecrScale[0];
+	Parameter.rPIREnd = vecrScale[vecrScale.Size()-1];
+	//Parameter.Unlock();
+
 
 	/* Set return parameters */
 	rLenPDS = rEstPDSEnd - rEstPDSBegin;
@@ -454,7 +467,7 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Weights for peak bound calculation, in Eq. (19), special values for
 	   robustness mode D! */
-	if (Parameter.Channel.eRobustness == RM_ROBUSTNESS_MODE_D)
+	if (Parameter.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
 	{
 		rConst1 = pow((_REAL) 10.0, (_REAL) -TETA1_DIST_FROM_MAX_DB_RMD / 10);
 		rConst2 = pow((_REAL) 10.0, (_REAL) TETA2_DIST_FROM_MIN_DB_RMD / 10);
@@ -559,22 +572,129 @@ void CTimeSyncTrack::SetTiSyncTracType(ETypeTiSyncTrac eNewTy)
 	}
 }
 
+void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
+								 CVector<_REAL>& vecrScale,
+								_REAL& rLowerBound, _REAL& rHigherBound,
+								_REAL& rStartGuard, _REAL& rEndGuard,
+								_REAL& rPDSBegin, _REAL& rPDSEnd)
+{
+	int		i;
+	int		iHalfSpec;
+	_REAL	rScaleIncr;
+	_REAL	rScaleAbs;
+
+	/* Init output vectors */
+	vecrData.Init(iNumIntpFreqPil, (_REAL) 0.0);
+	vecrScale.Init(iNumIntpFreqPil, (_REAL) 0.0);
+	rHigherBound = (_REAL) 0.0;
+	rLowerBound = (_REAL) 0.0;
+	rStartGuard = (_REAL) 0.0;
+	rEndGuard = (_REAL) 0.0;
+	rPDSBegin = (_REAL) 0.0;
+	rPDSEnd = (_REAL) 0.0;
+
+	/* Do copying of data only if vector is of non-zero length which means that
+	   the module was already initialized */
+	if (iNumIntpFreqPil != 0)
+	{
+		/* With this setting we only define the position of the guard-interval
+		   in the plot. With this setting we position it centered */
+		iHalfSpec = (int) ((iNumIntpFreqPil - rGuardSizeFFT) / 2);
+
+		/* Init scale (in "ms") */
+		rScaleIncr = (_REAL) iDFTSize /
+			(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil) * 1000 / iScatPilFreqInt;
+
+		/* Let the target timing position be the "0" time */
+		rScaleAbs = -(iHalfSpec + iTargetTimingPos) * rScaleIncr;
+
+		/* Copy first part of data in output vector */
+		for (i = 0; i < iHalfSpec; i++)
+		{
+			const _REAL rCurPDSVal =
+				vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i];
+
+			if (rCurPDSVal > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(rCurPDSVal);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
+
+			/* Scale */
+			vecrScale[i] = rScaleAbs;
+			rScaleAbs += rScaleIncr;
+		}
+
+		/* Save scale point because this is the start point of guard-interval */
+		rStartGuard = rScaleAbs;
+
+		/* Copy second part of data in output vector */
+		for (i = iHalfSpec; i < iNumIntpFreqPil; i++)
+		{
+			const _REAL rCurPDSVal = vecrAvPoDeSp[i - iHalfSpec];
+
+			if (rCurPDSVal > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(rCurPDSVal);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
+
+			/* Scale */
+			vecrScale[i] = rScaleAbs;
+			rScaleAbs += rScaleIncr;
+		}
+
+		/* Return bounds */
+		switch (TypeTiSyncTrac)
+		{
+		case TSFIRSTPEAK:
+			if (rBoundHigher > 0)
+				rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
+			else
+				rHigherBound = RET_VAL_LOG_0;
+
+			if (rBoundLower > 0)
+				rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
+			else
+				rLowerBound = RET_VAL_LOG_0;
+			break;
+
+		case TSENERGY:
+			/* No bounds needed for energy type, set both values to "defined
+			   infinity value", so it does not show up in the plot */
+			rHigherBound = RET_VAL_LOG_0;
+			rLowerBound = RET_VAL_LOG_0;
+			break;
+		}
+
+		/* End point of guard interval */
+		rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);
+
+		/* Estmiated begin and end of estimated PDS */
+		rPDSBegin = rScaleIncr * (rEstPDSBegin - iTargetTimingPos);
+		rPDSEnd = rScaleIncr * (rEstPDSEnd - iTargetTimingPos);
+	}
+}
+
 /* OPH: Calculate the delay according to the rdel tag of RSCI */
 void CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
 {
 	/* Define the intervals in ascending order of threshold percentage */
-	_REAL rTotEgy = Sum(vecrAvPoDeSpRot);
+	CReal rTotEgy = Sum(vecrAvPoDeSpRot);
 
-	_REAL rIntervalAccum = 0.0;
-	const int iNumDelayIntervals = vecrRdelThresholds.Size();
-	vector<_REAL> vecrIntervalStart, vecrIntervalEnd;
-	vecrRdelIntervals.Init(iNumDelayIntervals);
-	vecrIntervalStart.resize(iNumDelayIntervals);
-	vecrIntervalEnd.resize(iNumDelayIntervals);
+	CReal rIntervalAccum= (CReal) 0.0; 
+	const int ciNumDelayIntervals = vecrRdelThresholds.GetSize();
+	CRealVector vecrIntervalStart, vecrIntervalEnd;
+	vecrRdelIntervals.Init(ciNumDelayIntervals);
+	vecrIntervalStart.Init(ciNumDelayIntervals);
+	vecrIntervalEnd.Init(ciNumDelayIntervals);
 
-	for(int i=0, j = iNumDelayIntervals - 1; j >= 0; j--)
+	int i = 0;
+	int j;
+
+	for (j = ciNumDelayIntervals - 1; j >= 0; j--)
 	{
-		_REAL rIntervalThresh = rTotEgy * ( 1.0 - (vecrRdelThresholds[j] / 100.0)) * 0.5;
+		CReal rIntervalThresh = rTotEgy *
+			((CReal) 1.0 - (vecrRdelThresholds[j] / (CReal) 100.0)) *
+			(CReal) 0.5;
 
 		for (; rIntervalAccum < rIntervalThresh && i < iNumIntpFreqPil; i++)
 		{
@@ -583,10 +703,14 @@ void CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
 		vecrIntervalStart[j] = i;
 	}
 
-	rIntervalAccum = 0.0;
-	for (int i=iNumIntpFreqPil - 1, j = iNumDelayIntervals - 1; j >= 0; j--)
+	i = iNumIntpFreqPil - 1;
+	rIntervalAccum = (CReal) 0.0;
+
+	for (j = ciNumDelayIntervals - 1; j >= 0; j--)
 	{
-		_REAL rIntervalThresh = rTotEgy * (1.0 - (vecrRdelThresholds[j] / 100.0)) * 0.5;
+		_REAL rIntervalThresh = rTotEgy *
+			((CReal) 1.0 - (vecrRdelThresholds[j] / (CReal) 100.0)) *
+			(CReal) 0.5;
 
 		for (; rIntervalAccum < rIntervalThresh && i >= 0; i--)
 		{
@@ -595,24 +719,25 @@ void CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
 		vecrIntervalEnd[j] = i;
 	}
 
-    vector<CMeasurements::CRdel> rdel(iNumDelayIntervals);
-	for (int j = 0; j < iNumDelayIntervals; j++)
+	for (j = 0; j < ciNumDelayIntervals; j++)
 	{
-		_REAL rInterval =
-			((vecrIntervalEnd[j] - vecrIntervalStart[j])) *
-			Parameter.CellMappingTable.iFFTSizeN / (_REAL(SOUNDCRD_SAMPLE_RATE) *
+		CReal rInterval =
+			((_REAL) (vecrIntervalEnd[j] - vecrIntervalStart[j])) *
+			Parameter.CellMappingTable.iFFTSizeN / (SOUNDCRD_SAMPLE_RATE *
 			Parameter.CellMappingTable.iNumIntpFreqPil * Parameter.CellMappingTable.iScatPilFreqInt) * 1000;
 
 		/* Clip the delay interval values for display purposes */
-		if (rInterval <  -9.9)
-			rInterval =  -9.9;
+		if (rInterval < (CReal) -9.9)
+			rInterval = (CReal) -9.9;
 
-		if (rInterval >  9.9)
-			rInterval =  9.9;
+		if (rInterval > (CReal) 9.9)
+			rInterval = (CReal) 9.9;
 
-		rdel[j].interval = rInterval;
+		vecrRdelIntervals[j] = rInterval;
 	}
-    Parameter.Measurements.Rdel.set(rdel);
+
+	Parameter.vecrRdelThresholds = vecrRdelThresholds;
+	Parameter.vecrRdelIntervals = vecrRdelIntervals;
 }
 
 void CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
@@ -623,7 +748,7 @@ void CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
 	CReal rSumSqChan = (CReal) 0.0;
 
 	/* Now do the calculation */
-	for (int i = 0; i < veccPilots.Size(); i++)
+	for (int i = 0; i < veccPilots.GetSize(); i++)
 	{
 		rSumSqDiff += SqMag(veccPilots[i] - veccOldImpulseResponse[i]);
 		rSumSqChan += SqMag(veccPilots[i]);
@@ -631,105 +756,5 @@ void CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
 
 	CReal rTs = (_REAL) Parameter.CellMappingTable.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
 
-	Parameter.Measurements.Rdop.set(Sqrt(rSumSqDiff / rSumSqChan) / (crPi * rTs));
-}
-
-void CTimeSyncTrack::CalculateAvPoDeSp(CParameter& Parameter)
-{
-
-	/* Do copying of data only if vector is of non-zero length which means that
-	   the module was already initialized */
-	if (iNumIntpFreqPil == 0)
-	{
-	    return;
-	}
-
-    CMeasurements::CPIR pir;
-
-	int		i;
-	int		iHalfSpec;
-	_REAL	rScaleIncr;
-	_REAL	rScaleAbs;
-
-	/* Init output vectors */
-	pir.data.resize(iNumIntpFreqPil,  0.0);
-	pir.rHigherBound = (_REAL) 0.0;
-	pir.rLowerBound = (_REAL) 0.0;
-	pir.rStartGuard = (_REAL) 0.0;
-	pir.rEndGuard = (_REAL) 0.0;
-	pir.rPDSBegin = (_REAL) 0.0;
-	pir.rPDSEnd = (_REAL) 0.0;
-
-    /* With this setting we only define the position of the guard-interval
-       in the plot. With this setting we position it centered */
-    iHalfSpec = (int) ((iNumIntpFreqPil - rGuardSizeFFT) / 2);
-
-    /* Init scale (in "ms") */
-    rScaleIncr = (_REAL) iDFTSize /
-        (SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil) * 1000 / iScatPilFreqInt;
-
-    /* Let the target timing position be the "0" time */
-    rScaleAbs = -(iHalfSpec + iTargetTimingPos) * rScaleIncr;
-
-    pir.rStart = rScaleAbs; // 0th element of scale;
-    pir.rStep = rScaleIncr; // step for scale
-
-    /* Copy first part of data in output vector */
-    for (i = 0; i < iHalfSpec; i++)
-    {
-        const _REAL rCurPDSVal =
-            vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i];
-
-        if (rCurPDSVal > 0)
-            pir.data[i] = (_REAL) 10.0 * log10(rCurPDSVal);
-        else
-            pir.data[i] = RET_VAL_LOG_0;
-
-    }
-
-    /* Save scale point because this is the start point of guard-interval */
-    pir.rStartGuard = rScaleAbs;
-
-    /* Copy second part of data in output vector */
-    for (i = iHalfSpec; i < iNumIntpFreqPil; i++)
-    {
-        const _REAL rCurPDSVal = vecrAvPoDeSp[i - iHalfSpec];
-
-        if (rCurPDSVal > 0)
-            pir.data[i] = (_REAL) 10.0 * log10(rCurPDSVal);
-        else
-            pir.data[i] = RET_VAL_LOG_0;
-    }
-
-    /* Return bounds */
-    switch (TypeTiSyncTrac)
-    {
-    case TSFIRSTPEAK:
-        if (rBoundHigher > 0)
-            pir.rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
-        else
-            pir.rHigherBound = RET_VAL_LOG_0;
-
-        if (rBoundLower > 0)
-            pir.rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
-        else
-            pir.rLowerBound = RET_VAL_LOG_0;
-        break;
-
-    case TSENERGY:
-        /* No bounds needed for energy type, set both values to "defined
-           infinity value", so it does not show up in the plot */
-        pir.rHigherBound = RET_VAL_LOG_0;
-        pir.rLowerBound = RET_VAL_LOG_0;
-        break;
-    }
-
-    /* End point of guard interval */
-    pir.rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);
-
-    /* begin and end of estimated PDS */
-    pir.rPDSBegin = rScaleIncr * (rEstPDSBegin - iTargetTimingPos);
-    pir.rPDSEnd = rScaleIncr * (rEstPDSEnd - iTargetTimingPos);
-
-    Parameter.Measurements.PIR.set(pir);
+	Parameter.rRdop = Sqrt(rSumSqDiff / rSumSqChan) / (crPi * rTs);
 }

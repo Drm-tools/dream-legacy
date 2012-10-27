@@ -29,93 +29,101 @@
 #if !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
+#include <iostream>
+#include "util/Buffer.h"
 #include "Parameter.h"
-#include "DrmEncoder.h"
-#include "DrmModulator.h"
-#include "DrmTransmitterInterface.h"
-#include "MDI/MDIRSCI.h"
-#include "MDI/MDIDecode.h"
+#include "DataIO.h"
+#include "mlc/MLC.h"
+#include "interleaver/SymbolInterleaver.h"
+#include "ofdmcellmapping/OFDMCellMapping.h"
+#include "OFDM.h"
+#include "DRMSignalIO.h"
+#include "sourcedecoders/AudioSourceEncoder.h"
+#include "soundinterface.h"
 
 /* Classes ********************************************************************/
-class CSettings;
-
-class CDRMTransmitter: public CDRMTransmitterInterface
+class CDRMTransmitter
 {
 public:
-							CDRMTransmitter();
-	virtual 				~CDRMTransmitter() {}
-	void					LoadSettings(CSettings&); // can write to settings to set defaults
-	void					SaveSettings(CSettings&) const;
+    CDRMTransmitter();
+    virtual ~CDRMTransmitter() {}
 
-	void					Start();
-	void					Stop();
+    void Init();
+    void Start();
+    void Stop();
 
-	void					SetOperatingMode(const ETxOpMode);
-	ETxOpMode				GetOperatingMode() const;
+    /* Get pointer to internal modules */
+    CSoundInInterface*		GetSoundInInterface() {
+        return pSoundInInterface;
+    }
+    CSoundOutInterface*		GetSoundOutInterface() {
+        return pSoundOutInterface;
+    }
+    CAudioSourceEncoder*	GetAudSrcEnc() {
+        return &AudioSourceEncoder;
+    }
+    CTransmitData*			GetTransData() {
+        return &TransmitData;
+    }
+    CReadData*				GetReadData() {
+        return &ReadData;
+    }
 
-	void					CalculateChannelCapacities();
+    CParameter*				GetParameters() {
+        return &TransmParam;
+    }
 
-	_REAL 					GetLevelMeter() const;
-
-	/* Source Encoder Interface */
-	void					AddTextMessage(const string& strText);
-	void					ClearTextMessages();
-	void					GetTextMessages(vector<string>&) const;
-
-	void					AddPic(const string& strFileName, const string& strFormat);
-	void					ClearPics();
-	void					GetPics(map<string,string>&) const;
-	bool				    GetTransStat(string& strCPi, _REAL& rCPe) const;
-	void					GetData(map<int, map<int,CDataParam> >&) const;
-	void					PutData(const map<int, map<int,CDataParam> >&);
-
-	void					GetSoundInChoices(vector<string>&) const;
-	void					SetSoundInInterface(int);
-	int						GetSoundInInterface() const;
-	void 					SetReadFromFile(const string& strNFN);
-	string					GetReadFromFile() const;
-	void					GetAudio(map<int,CAudioParam>&) const;
-	void					PutAudio(const map<int,CAudioParam>&);
-
-	void					GetSoundOutChoices(vector<string>&) const;
-	void					SetCOFDMOutputs(const vector<string>& o);
-	void					GetCOFDMOutputs(vector<string>& o) const;
-	double					GetCarrierOffset() const { return Parameters.rCarOffset;}
-	void					SetCarrierOffset(double r) {Parameters.rCarOffset=r;}
-	EOutFormat				GetOutputFormat() const {return Parameters.eOutputFormat;}
-	void					SetOutputFormat(EOutFormat e) {Parameters.eOutputFormat=e;}
-
-	void					SetMDIIn(const string& s) { strMDIinAddr = s; }
-	string					GetMDIIn() const { return strMDIinAddr; }
-
-	void					SetMDIOut(const vector<string>& v) { MDIoutAddr = v; }
-	void					GetMDIOut(vector<string>& v) const { v = MDIoutAddr; }
-
-	void					GetChannel(CChannel& c) const { c = Parameters.Channel;}
-	void					PutChannel(const CChannel& c);
-
-	void					GetMSC(CMSCParameters& msc) const {msc=Parameters.MSCParameters;}
-	void					PutMSC(const CMSCParameters& msc) {Parameters.MSCParameters=msc;}
-
-	void					GetServices(vector<CService>&, int&, int&) const;
-	void					PutServices(const vector<CService>&, int, int);
-	int						NumBitsMSC() const { return Parameters.iNumDecodedBitsMSC; }
-	int						NumBitsSDCsuperFrame() const { return Parameters.iNumSDCBitsPerSuperFrame; }
+    void SetCarOffset(const _REAL rNewCarOffset)
+    {
+        /* Has to be set in OFDM modulation and transmitter filter module */
+        OFDMModulation.SetCarOffset(rNewCarOffset);
+        TransmitData.SetCarOffset(rNewCarOffset);
+        rDefCarOffset = rNewCarOffset;
+    }
+    _REAL GetCarOffset() {
+        return rDefCarOffset;
+    }
 
 protected:
+    void Run();
 
-	CParameter				Parameters;
-	ETxOpMode				eOpMode;
-	bool                    bRunning;
+    /* Parameters */
+    CParameter				TransmParam;
 
-	string					strMDIinAddr;
-	vector<string>			MDIoutAddr;
+    /* Buffers */
+    CSingleBuffer<_SAMPLE>	DataBuf;
+    CSingleBuffer<_BINARY>	AudSrcBuf;
 
-	CDRMEncoder*			pEncoder;
-	CDRMModulator*			pModulator;
-	CMDIIn*					pMDIIn;
-	CDecodeMDI*				pDecodeMDI;
-	CMDIOut*				pMDIOut;
+    CSingleBuffer<_COMPLEX>	MLCEncBuf;
+    CCyclicBuffer<_COMPLEX>	IntlBuf;
+
+    CSingleBuffer<_BINARY>	GenFACDataBuf;
+    CCyclicBuffer<_COMPLEX>	FACMapBuf;
+
+    CSingleBuffer<_BINARY>	GenSDCDataBuf;
+    CCyclicBuffer<_COMPLEX>	SDCMapBuf;
+
+    CSingleBuffer<_COMPLEX>	CarMapBuf;
+    CSingleBuffer<_COMPLEX>	OFDMModBuf;
+
+    CSoundInInterface*		pSoundInInterface;
+    CSoundOutInterface*		pSoundOutInterface;
+
+    /* Modules */
+    CReadData				ReadData;
+    CAudioSourceEncoder		AudioSourceEncoder;
+    CMSCMLCEncoder			MSCMLCEncoder;
+    CSymbInterleaver		SymbInterleaver;
+    CGenerateFACData		GenerateFACData;
+    CFACMLCEncoder			FACMLCEncoder;
+    CGenerateSDCData		GenerateSDCData;
+    CSDCMLCEncoder			SDCMLCEncoder;
+    COFDMCellMapping		OFDMCellMapping;
+    COFDMModulation			OFDMModulation;
+    CTransmitData			TransmitData;
+
+    _REAL					rDefCarOffset;
+    _BOOLEAN				bUseUEP;
 };
 
 

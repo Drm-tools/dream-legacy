@@ -5,7 +5,7 @@
  *	Volker Fischer
  *
  * Description:
- *	c++ Mathematic Library (Matlib)
+ *	C++ Mathematic Library (Matlib)
  *
  ******************************************************************************
  *
@@ -28,6 +28,7 @@
 #ifndef _MATLIB_H_
 #define _MATLIB_H_
 
+#include <cstdlib>
 #include <math.h>
 #include <complex>
 using namespace std;
@@ -63,25 +64,46 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 
 
 /* In debug mode, test input parameters */
-
 #ifdef _DEBUG_
-template<typename T>
-inline void _TESTRNG(T POS, T limit)
-{
-    if ((POS >= limit) || (POS < 0))
-        DebugError(__FUNCTION__, "POS", POS, "Len", limit);
-}
-
-template<typename T>
-inline void _TESTSIZE(T INP, T limit)
-{
-    if (INP != limit)
-        DebugError("SizeCheck", "INP", INP, "Len", limit);
-}
+#define _TESTRNGR(POS)		if ((POS >= iVectorLength) || (POS < 0)) \
+								DebugError("MatLibrRead", "POS", POS, \
+								"iVectorLength", iVectorLength)
+#define _TESTRNGW(POS)		if ((POS >= iVectorLength) || (POS < 0)) \
+								DebugError("MatLibrWrite", "POS", POS, \
+								"iVectorLength", iVectorLength)
+#define _TESTSIZE(INP)		if (INP != iVectorLength) \
+								DebugError("SizeCheck", "INP", INP, \
+								"iVectorLength", iVectorLength)
+#define _TESTRNGRM(POS)		if ((POS >= iRowSize) || (POS < 0)) \
+								DebugError("MatLibrReadMatrix", "POS", POS, \
+								"iRowSize", iRowSize)
+#define _TESTRNGWM(POS)		if ((POS >= iRowSize) || (POS < 0)) \
+								DebugError("MatLibrWriteMatrix", "POS", POS, \
+								"iRowSize", iRowSize)
+#define _TESTSIZEM(INP)		if (INP != iRowSize) \
+								DebugError("MatLibOperatorMatrix=()", "INP", INP, \
+								"iRowSize", iRowSize)
 #else
-template<typename T> inline void _TESTRNG(T, T) { }
-template<typename T> inline void _TESTSIZE(T, T) { }
+
+// On Visual c++ 2005 Express Edition there is a segmentation fault if these macros are empty
+// TODO: FIX this with a better solution
+#if _MSC_VER && (_MSC_VER == 1400)
+#define _TESTRNGR(POS) if (POS != POS) int idummy=0
+#define _TESTRNGW(POS) if (POS != POS) int idummy=0
+#define _TESTSIZE(INP) if (INP != INP) int idummy=0
+#define _TESTRNGRM(POS) if (POS != POS) int idummy=0
+#define _TESTRNGWM(POS) if (POS != POS) int idummy=0
+#define _TESTSIZEM(INP) if (INP != INP) int idummy=0
+#else
+#define _TESTRNGR(POS)
+#define _TESTRNGW(POS)
+#define _TESTSIZE(INP)
+#define _TESTRNGRM(POS)
+#define _TESTRNGWM(POS)
+#define _TESTSIZEM(INP)
 #endif
+#endif
+
 
 /* Classes ********************************************************************/
 /* Prototypes */
@@ -110,12 +132,14 @@ public:
 		eVType(eNTy), iVectorLength(0), pData(NULL) {Init(iNLen);}
 	CMatlibVector(const int iNLen, const T tIniVal) :
 		eVType(VTY_CONST), iVectorLength(0), pData(NULL) {Init(iNLen, tIniVal);}
+#ifndef _MSC_VER
 	CMatlibVector(CMatlibVector<T>& vecI);
+#endif
 	CMatlibVector(const CMatlibVector<T>& vecI);
 	virtual ~CMatlibVector() {if (pData != NULL) delete[] pData;}
 
 	CMatlibVector(const CMatlibVector<CReal>& fvReal, const CMatlibVector<CReal>& fvImag) :
-		eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(fvReal.Size()), pData(NULL)
+		eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(fvReal.GetSize()), pData(NULL)
 	{
 		/* Allocate data block for vector */
 		pData = new CComplex[iVectorLength];
@@ -127,20 +151,20 @@ public:
 
 	/* Operator[] (Regular indices!!!) */
 	inline T& operator[](int const iPos) const
-		{_TESTRNG(iPos, iVectorLength); return pData[iPos];}
+		{_TESTRNGR(iPos); return pData[iPos];}
 	inline T& operator[](int const iPos)
-		{_TESTRNG(iPos, iVectorLength); return pData[iPos];} // For use as l value
+		{_TESTRNGW(iPos); return pData[iPos];} // For use as l value
 
 	/* Operator() */
 	inline T& operator()(int const iPos) const
-		{_TESTRNG(iPos - 1, iVectorLength); return pData[iPos - 1];}
+		{_TESTRNGR(iPos - 1); return pData[iPos - 1];}
 	inline T& operator()(int const iPos)
-		{_TESTRNG(iPos - 1, iVectorLength); return pData[iPos - 1];} // For use as l value
+		{_TESTRNGW(iPos - 1); return pData[iPos - 1];} // For use as l value
 
 	CMatlibVector<T> operator()(const int iFrom, const int iTo) const;
 	CMatlibVector<T> operator()(const int iFrom, const int iStep, const int iTo) const;
 
-	inline int Size() const {return iVectorLength;}
+	inline int GetSize() const {return iVectorLength;}
 	void Init(const int iIniLen, const T tIniVal = 0);
 	inline CMatlibVector<T>& Reset(const T tResVal = 0) {_VECOPCL(= tResVal);}
 	CMatlibVector<T>& PutIn(const int iFrom, const int iTo, CMatlibVector<T>& fvA);
@@ -153,19 +177,19 @@ public:
 	/* operator= */
 	inline CMatlibVector<T>&		operator=(const CMatlibVector<CReal>& vecI)
 	{
-		Init(vecI.Size());
-		for (int i = 0; i < iVectorLength; i++)
-			operator[](i) = vecI[i];
-
+		Init(vecI.GetSize());
+		for (int i = 0; i < iVectorLength; i++) 
+			operator[](i) = vecI[i]; 
+		
 		return *this;
 	}
 
 	inline CMatlibVector<CComplex>&	operator=(const CMatlibVector<CComplex>& vecI)
 	{
-		Init(vecI.Size());
-		for (int i = 0; i < iVectorLength; i++)
-			operator[](i) = vecI[i];
-
+		Init(vecI.GetSize());
+		for (int i = 0; i < iVectorLength; i++) 
+			operator[](i) = vecI[i]; 
+		
 		return *this;
 	}
 
@@ -218,144 +242,146 @@ protected:
 /* operator* ---------------------------------------------------------------- */
 inline CMatlibVector<CComplex> // cv, cv
 	operator*(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CComplex>& cvB)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] * cvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] * cvB[i]);}
 inline CMatlibVector<CReal> // rv, rv
 	operator*(const CMatlibVector<CReal>& rvA, const CMatlibVector<CReal>& rvB)
-	{_VECOP(CReal, rvA.Size(), rvA[i] * rvB[i]);}
+	{_VECOP(CReal, rvA.GetSize(), rvA[i] * rvB[i]);}
 
 inline CMatlibVector<CComplex> // cv, rv
 	operator*(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CReal>& rvB)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] * rvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] * rvB[i]);}
 inline CMatlibVector<CComplex> // rv, cv
 	operator*(const CMatlibVector<CReal>& rvB, const CMatlibVector<CComplex>& cvA)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] * rvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] * rvB[i]);}
 
 template<class T> inline
 CMatlibVector<T> // Tv, r
 	operator*(const CMatlibVector<T>& vecA, const CReal& rB)
-	{_VECOP(T, vecA.Size(), vecA[i] * rB);}
+	{_VECOP(T, vecA.GetSize(), vecA[i] * rB);}
 template<class T> inline
 CMatlibVector<T> // r, Tv
 	operator*(const CReal& rA, const CMatlibVector<T>& vecB)
-	{_VECOP(T, vecB.Size(), rA * vecB[i]);}
+	{_VECOP(T, vecB.GetSize(), rA * vecB[i]);}
 
 template<class T> inline
 CMatlibVector<CComplex> // Tv, c
 	operator*(const CMatlibVector<T>& vecA, const CComplex& cB)
-	{_VECOP(CComplex, vecA.Size(), vecA[i] * cB);}
+	{_VECOP(CComplex, vecA.GetSize(), vecA[i] * cB);}
 template<class T> inline
 CMatlibVector<CComplex> // c, Tv
 	operator*(const CComplex& cA, const CMatlibVector<T>& vecB)
-	{_VECOP(CComplex, vecB.Size(), cA * vecB[i]);}
+	{_VECOP(CComplex, vecB.GetSize(), cA * vecB[i]);}
 
 
 /* operator/ ---------------------------------------------------------------- */
 inline CMatlibVector<CComplex> // cv, cv
 	operator/(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CComplex>& cvB)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] / cvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] / cvB[i]);}
 inline CMatlibVector<CReal> // rv, rv
 	operator/(const CMatlibVector<CReal>& rvA, const CMatlibVector<CReal>& rvB)
-	{_VECOP(CReal, rvA.Size(), rvA[i] / rvB[i]);}
+	{_VECOP(CReal, rvA.GetSize(), rvA[i] / rvB[i]);}
 
 inline CMatlibVector<CComplex> // cv, rv
 	operator/(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CReal>& rvB)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] / rvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] / rvB[i]);}
 inline CMatlibVector<CComplex> // rv, cv
 	operator/(const CMatlibVector<CReal>& rvA, const CMatlibVector<CComplex>& cvB)
-	{_VECOP(CComplex, rvA.Size(), rvA[i] / cvB[i]);}
+	{_VECOP(CComplex, rvA.GetSize(), rvA[i] / cvB[i]);}
 
 template<class T> inline
 CMatlibVector<T> // Tv, r
 	operator/(const CMatlibVector<T>& vecA, const CReal& rB)
-	{_VECOP(T, vecA.Size(), vecA[i] / rB);}
+	{_VECOP(T, vecA.GetSize(), vecA[i] / rB);}
 template<class T> inline
 CMatlibVector<T> // r, Tv
 	operator/(const CReal& rA, const CMatlibVector<T>& vecB)
-	{_VECOP(T, vecB.Size(), rA / vecB[i]);}
+	{_VECOP(T, vecB.GetSize(), rA / vecB[i]);}
 
 template<class T> inline
 CMatlibVector<CComplex> // Tv, c
 	operator/(const CMatlibVector<T>& vecA, const CComplex& cB)
-	{_VECOP(CComplex, vecA.Size(), vecA[i] / cB);}
+	{_VECOP(CComplex, vecA.GetSize(), vecA[i] / cB);}
 template<class T> inline
 CMatlibVector<CComplex> // c, Tv
 	operator/(const CComplex& cA, const CMatlibVector<T>& vecB)
-	{_VECOP(CComplex, vecB.Size(), cA / vecB[i]);}
+	{_VECOP(CComplex, vecB.GetSize(), cA / vecB[i]);}
 
 
 /* operator+ ---------------------------------------------------------------- */
 inline CMatlibVector<CComplex> // cv, cv
 	operator+(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CComplex>& cvB)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] + cvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] + cvB[i]);}
 inline CMatlibVector<CReal> // rv, rv
 	operator+(const CMatlibVector<CReal>& rvA, const CMatlibVector<CReal>& rvB)
-	{_VECOP(CReal, rvA.Size(), rvA[i] + rvB[i]);}
+	{_VECOP(CReal, rvA.GetSize(), rvA[i] + rvB[i]);}
 
 inline CMatlibVector<CComplex> // cv, rv
 	operator+(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CReal>& rvB)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] + rvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] + rvB[i]);}
 inline CMatlibVector<CComplex> // rv, cv
 	operator+(const CMatlibVector<CReal>& rvA, const CMatlibVector<CComplex>& cvB)
-	{_VECOP(CComplex, rvA.Size(), rvA[i] + cvB[i]);}
+	{_VECOP(CComplex, rvA.GetSize(), rvA[i] + cvB[i]);}
 
 template<class T> inline
 CMatlibVector<T> // Tv, r
 	operator+(const CMatlibVector<T>& vecA, const CReal& rB)
-	{_VECOP(T, vecA.Size(), vecA[i] + rB);}
+	{_VECOP(T, vecA.GetSize(), vecA[i] + rB);}
 template<class T> inline
 CMatlibVector<T> // r, Tv
 	operator+(const CReal& rA, const CMatlibVector<T>& vecB)
-	{_VECOP(T, vecB.Size(), rA + vecB[i]);}
+	{_VECOP(T, vecB.GetSize(), rA + vecB[i]);}
 
 template<class T> inline
 CMatlibVector<CComplex> // Tv, c
 	operator+(const CMatlibVector<T>& vecA, const CComplex& cB)
-	{_VECOP(CComplex, vecA.Size(), vecA[i] + cB);}
+	{_VECOP(CComplex, vecA.GetSize(), vecA[i] + cB);}
 template<class T> inline
 CMatlibVector<CComplex> // c, Tv
 	operator+(const CComplex& cA, const CMatlibVector<T>& vecB)
-	{_VECOP(CComplex, vecB.Size(), cA + vecB[i]);}
+	{_VECOP(CComplex, vecB.GetSize(), cA + vecB[i]);}
 
 
 /* operator- ---------------------------------------------------------------- */
 inline CMatlibVector<CComplex> // cv, cv
 	operator-(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CComplex>& cvB)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] - cvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] - cvB[i]);}
 inline CMatlibVector<CReal> // rv, rv
 	operator-(const CMatlibVector<CReal>& rvA, const CMatlibVector<CReal>& rvB)
-	{_VECOP(CReal, rvA.Size(), rvA[i] - rvB[i]);}
+	{_VECOP(CReal, rvA.GetSize(), rvA[i] - rvB[i]);}
 
 inline CMatlibVector<CComplex> // cv, rv
 	operator-(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CReal>& rvB)
-	{_VECOP(CComplex, cvA.Size(), cvA[i] - rvB[i]);}
+	{_VECOP(CComplex, cvA.GetSize(), cvA[i] - rvB[i]);}
 inline CMatlibVector<CComplex> // rv, cv
 	operator-(const CMatlibVector<CReal>& rvA, const CMatlibVector<CComplex>& cvB)
-	{_VECOP(CComplex, rvA.Size(), rvA[i] - cvB[i]);}
+	{_VECOP(CComplex, rvA.GetSize(), rvA[i] - cvB[i]);}
 
 template<class T> inline
 CMatlibVector<T> // Tv, r
 	operator-(const CMatlibVector<T>& vecA, const CReal& rB)
-	{_VECOP(T, vecA.Size(), vecA[i] - rB);}
+	{_VECOP(T, vecA.GetSize(), vecA[i] - rB);}
 template<class T> inline
 CMatlibVector<T> // r, Tv
 	operator-(const CReal& rA, const CMatlibVector<T>& vecB)
-	{_VECOP(T, vecB.Size(), rA - vecB[i]);}
+	{_VECOP(T, vecB.GetSize(), rA - vecB[i]);}
 
 template<class T> inline
 CMatlibVector<CComplex> // Tv, c
 	operator-(const CMatlibVector<T>& vecA, const CComplex& cB)
-	{_VECOP(CComplex, vecA.Size(), vecA[i] - cB);}
+	{_VECOP(CComplex, vecA.GetSize(), vecA[i] - cB);}
 template<class T> inline
 CMatlibVector<CComplex> // c, Tv
 	operator-(const CComplex& cA, const CMatlibVector<T>& vecB)
-	{_VECOP(CComplex, vecB.Size(), cA - vecB[i]);}
+	{_VECOP(CComplex, vecB.GetSize(), cA - vecB[i]);}
 
 
 /* Implementation **************************************************************
    (the implementation of template classes must be in the header file!) */
+
+#ifndef _MSC_VER
 template<class T>
 CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) :
-	 eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(vecI.Size()), pData(NULL)
+	 eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(vecI.GetSize()), pData(NULL)
 {
 	/* The copy constructor for the constant vector is a real copying
 	   task. But in the case of a temporary buffer only the pointer
@@ -388,11 +414,12 @@ CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) :
 		}
 	}
 }
+#endif
 
 /* Copy constructor for constant Matlib vectors */
 template<class T>
 CMatlibVector<T>::CMatlibVector(const CMatlibVector<T>& vecI) :
-	eVType(VTY_CONST), iVectorLength(vecI.Size()), pData(NULL)
+	eVType(VTY_CONST), iVectorLength(vecI.GetSize()), pData(NULL)
 {
 	if (iVectorLength > 0)
 	{
@@ -464,7 +491,7 @@ CMatlibVector<T> CMatlibVector<T>::operator()(const int iFrom,
 											  const int iStep,
 											  const int iTo) const
 {
-    CMatlibVector<T> vecRet(size_t(abs(float(iTo - iFrom)) / abs(float(iStep))) + 1, VTY_TEMP);
+	CMatlibVector<T> vecRet(size_t(abs(float(iTo - iFrom)) / abs(float(iStep))) + 1, VTY_TEMP);
 	int iOutPos = 0;
 	int i;
 
@@ -506,11 +533,11 @@ CMatlibVector<T>& CMatlibVector<T>::PutIn(const int iFrom,
 template<class T> inline
 CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA, T& tB)
 {
-	const int iSizeA = vecA.Size();
+	const int iSizeA = vecA.GetSize();
 
 	for (int i = 0; i < iSizeA; i++)
 		operator[](i) = vecA[i];
-
+	
 	operator[](iSizeA) = tB;
 
 	return *this;
@@ -521,13 +548,13 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 										  const CMatlibVector<T>& vecB)
 {
 	int i;
-	const int iSizeA = vecA.Size();
-	const int iSizeB = vecB.Size();
+	const int iSizeA = vecA.GetSize();
+	const int iSizeB = vecB.GetSize();
 
 	/* Put first vector */
 	for (i = 0; i < iSizeA; i++)
 		operator[](i) = vecA[i];
-
+	
 	/* Put second vector behind the first one, both
 	   together must have length of *this */
 	for (i = 0; i < iSizeB; i++)
@@ -542,15 +569,15 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 										  const CMatlibVector<T>& vecC)
 {
 	int i;
-	const int iSizeA = vecA.Size();
-	const int iSizeB = vecB.Size();
-	const int iSizeC = vecC.Size();
+	const int iSizeA = vecA.GetSize();
+	const int iSizeB = vecB.GetSize();
+	const int iSizeC = vecC.GetSize();
 	const int iSizeAB = iSizeA + iSizeB;
 
 	/* Put first vector */
 	for (i = 0; i < iSizeA; i++)
 		operator[](i) = vecA[i];
-
+	
 	/* Put second vector behind the first one */
 	for (i = 0; i < iSizeB; i++)
 		operator[](i + iSizeA) = vecB[i];
@@ -588,28 +615,28 @@ public:
 	void Init(const int iNRowLen, const int iNColLen, const T tIniVal = 0);
 	inline int GetRowSize() const {return iRowSize;}
 	inline int GetColSize() const
-		{if (iRowSize > 0) return ppData[0].Size(); else return 0;}
+		{if (iRowSize > 0) return ppData[0].GetSize(); else return 0;}
 
 	/* Operator[] (Regular indices!!!) */
 	inline CMatlibVector<T>& operator[](int const iPos) const
-		{_TESTRNG(iPos, iRowSize); return ppData[iPos];}
+		{_TESTRNGRM(iPos); return ppData[iPos];}
 	inline CMatlibVector<T>& operator[](int const iPos)
-		{_TESTRNG(iPos, iRowSize); return ppData[iPos];} // For use as l value
+		{_TESTRNGWM(iPos); return ppData[iPos];} // For use as l value
 
 	/* Operator() */
-	inline CMatlibVector<T>& operator()(int const iPos) const
-		{_TESTRNG(iPos - 1, iRowSize); return ppData[iPos - 1];}
-	inline CMatlibVector<T>& operator()(int const iPos)
-		{_TESTRNG(iPos - 1, iRowSize); return ppData[iPos - 1];} // For use as l value
+	inline CMatlibVector<T>& operator()(int const iPos) const 
+		{_TESTRNGRM(iPos - 1); return ppData[iPos - 1];}
+	inline CMatlibVector<T>& operator()(int const iPos) 
+		{_TESTRNGWM(iPos - 1); return ppData[iPos - 1];} // For use as l value
 
 	CMatlibMatrix<T> operator()(const int iRowFrom, const int iRowTo,
 		const int iColFrom, const int iColTo) const;
 
 	/* operator= */
 	inline CMatlibMatrix<T>& operator=(const CMatlibMatrix<CReal>& matI)
-		{_TESTSIZE(matI.GetRowSize(), iRowSize); _MATOPCL(= matI[i]);}
+		{_TESTSIZEM(matI.GetRowSize()); _MATOPCL(= matI[i]);}
 	inline CMatlibMatrix<CComplex>& operator=(const CMatlibMatrix<CComplex>& matI)
-		{_TESTSIZE(matI.GetRowSize(), iRowSize); _MATOPCL(= matI[i]);}
+		{_TESTSIZEM(matI.GetRowSize()); _MATOPCL(= matI[i]);}
 
 	/* operator+= */
 	inline CMatlibMatrix<T>& operator+=(const CMatlibMatrix<CReal>& matI)
@@ -682,7 +709,7 @@ inline CMatlibVector<CComplex> // cm, cv
 operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibVector<CComplex>& cvB)
 {
 	const int iRowSizeA = cmA.GetRowSize();
-	const int iSizeB = cvB.Size();
+	const int iSizeB = cvB.GetSize();
 	CMatlibVector<CComplex> vecRet(iSizeB, VTY_TEMP);
 
 	for (int j = 0; j < iRowSizeA; j++)
@@ -701,7 +728,7 @@ inline CMatlibVector<CReal> // rm, rv
 operator*(const CMatlibMatrix<CReal>& rmA, const CMatlibVector<CReal>& rvB)
 {
 	const int iRowSizeA = rmA.GetRowSize();
-	const int iSizeB = rvB.Size();
+	const int iSizeB = rvB.GetSize();
 	CMatlibVector<CReal> vecRet(iSizeB, VTY_TEMP);
 
 	for (int j = 0; j < iRowSizeA; j++)

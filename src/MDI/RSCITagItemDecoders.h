@@ -30,8 +30,9 @@
 #define RSCI_TAG_ITEM_DECODERS_H_INCLUDED
 
 #include "TagItemDecoder.h"
-#include "../ReceiverInterface.h"
+#include "../Parameter.h"
 
+class CDRMReceiver;
 class CRSISubscriber;
 
 // RSCI Status
@@ -118,24 +119,17 @@ public:
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 
-/*
-class CTagItemDecoderPilots : public CTagItemDecoderRSI
-{
-public:
-	CTagItemDecoderPilots(CParameter* pP) : CTagItemDecoderRSI(pP, "rpil") {}
-	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-};*/
-
 // RSCI control
+
 class CTagItemDecoderRCI : public CTagItemDecoder
 {
 public:
-    CTagItemDecoderRCI(const string& s):pRSISubscriber(NULL),tag(s) {}
-    virtual string GetTagName() { return tag; }
-    void SetSubscriber(CRSISubscriber *pSubscriber) {pRSISubscriber = pSubscriber;}
+	CTagItemDecoderRCI(const string& s) : pDRMReceiver(NULL),tag(s) {}
+	void SetReceiver(CDRMReceiver *pReceiver) {pDRMReceiver = pReceiver;}
+	virtual string GetTagName() { return tag; }
 protected:
-    CRSISubscriber* pRSISubscriber;
-    string tag;
+	CDRMReceiver *pDRMReceiver;
+	string tag;
 };
 
 class CTagItemDecoderCact : public CTagItemDecoderRCI
@@ -166,18 +160,14 @@ public:
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 
-class CTagItemDecoderCser : public CTagItemDecoderRCI
-{
-public:
-	CTagItemDecoderCser() : CTagItemDecoderRCI("cser") {}
-	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-};
-
 class CTagItemDecoderCpro : public CTagItemDecoderRCI
 {
 public:
-	CTagItemDecoderCpro() : CTagItemDecoderRCI("cpro") {}
+	CTagItemDecoderCpro() : CTagItemDecoderRCI("crec"), pRSISubscriber(NULL) {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+	void SetSubscriber(CRSISubscriber *pSubscriber) {pRSISubscriber = pSubscriber;}
+private:
+	CRSISubscriber* pRSISubscriber;
 };
 
 #endif

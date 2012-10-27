@@ -26,10 +26,15 @@
 \******************************************************************************/
 
 #include "Journaline.h"
+#ifdef WIN32
+# include <winsock2.h>
+#else
+# include <netinet/in.h>
+#endif
 
-/* Implementation *************************************************************/
+#include "journaline/newssvcdec_impl.h" // for log variables
 
-CJournaline::CJournaline(CParameter& p) : DataApplication(p), dgdec(NULL), newsdec(NULL)
+CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
 {
 	/* This will be the first call to the Journaline decoder open function, the
 	   pointer to the decoders must have a defined value (NULL) to avoid
@@ -58,8 +63,6 @@ void CJournaline::ResetOpenJournalineDecoder()
 	/* No extended header will be used */
 	unsigned long extended_header_len = 0;
 
-	Lock();
-
 	/* If decoder was initialized before, delete old instance */
 	if (newsdec != NULL)
 		NEWS_SVC_DEC_deleteDec(newsdec);
@@ -72,17 +75,48 @@ void CJournaline::ResetOpenJournalineDecoder()
 	dgdec = DAB_DATAGROUP_DECODER_createDec(dg_cb, this);
 	newsdec = NEWS_SVC_DEC_createDec(obj_avail_cb, max_memory, &max_objects,
 		extended_header_len, this);
-
-   Unlock();
 }
 
-void CJournaline::AddDataUnit(vector<uint8_t>& data)
+void CJournaline::AddFile(const string filename)
 {
-	const int iSizeBytes = data.size();
-	CVector<_BINARY> vecbiNewData;
-	vecbiNewData.Init(data.size()*BITS_BINARY);
-	for(size_t i=0; i<data.size(); i++)
-		vecbiNewData.Enqueue(data[i], BITS_BINARY);
+	FILE *f = fopen(filename.c_str(), "rb");
+	bool err=false;
+	showDdNewsSvcDecInfo=1;
+	showDdNewsSvcDecErr=1;
+	while(!feof(f))
+	{
+		unsigned char buf[8192];
+		uint16_t s;
+		size_t n = fread(&s, 2, 1, f);
+		if(n!=1)
+		{
+			err=true;
+			break;
+		}
+		unsigned long size = ntohs(s);
+		if(size>8192)
+			break;
+		n = fread(buf, 1, size, f);
+		if(n==size)
+		{
+			if(NEWS_SVC_DEC_putData(newsdec, size, buf)!=1)
+				fprintf(stderr, "error decoding jml");
+		}
+		else
+		{
+			err=true;
+			break;
+		}
+	}
+	if(!err)
+		fclose(f);
+	showDdNewsSvcDecInfo=0;
+	showDdNewsSvcDecErr=0;
+}
+
+void CJournaline::AddDataUnit(CVector<_BINARY>& vecbiNewData)
+{
+	const int iSizeBytes = vecbiNewData.Size() / SIZEOF__BYTE;
 
 	if (iSizeBytes > 0)
 	{
@@ -91,12 +125,10 @@ void CJournaline::AddDataUnit(vector<uint8_t>& data)
 		vecbiNewData.ResetBitAccess();
 
 		for (int i = 0; i < iSizeBytes; i++)
-			vecbyData[i] = (_BYTE) vecbiNewData.Separate(BITS_BINARY);
+			vecbyData[i] = (_BYTE) vecbiNewData.Separate(SIZEOF__BYTE);
 
 		/* Add new data unit to Journaline decoder library */
-		Lock();
 		DAB_DATAGROUP_DECODER_putData(dgdec, iSizeBytes, &vecbyData[0]);
-		Unlock();
 	}
 }
 
@@ -109,8 +141,7 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 	NML::RawNewsObject_t rno;
 	unsigned long elen = 0;
 	unsigned long len = 0;
-	Lock();
-	if (NEWS_SVC_DEC_get_news_object(newsdec, iObjID, &elen, &len, rno.nml))
+	if(newsdec && NEWS_SVC_DEC_get_news_object(newsdec, iObjID, &elen, &len, rno.nml))
 	{
 		rno.nml_len = static_cast<unsigned short>(len);
 		rno.extended_header_len = static_cast<unsigned short>(elen);
@@ -166,5 +197,4 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 
 		delete nml;
 	}
-	Unlock();
 }

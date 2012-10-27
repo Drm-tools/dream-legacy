@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation; either version 2 of the License, or (at your option) any later 
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -29,7 +29,9 @@
 #if !defined(SYNCUSINGPIL_H__3B0BA660_CA63_434OBUVEE7A0D31912__INCLUDED_)
 #define SYNCUSINGPIL_H__3B0BA660_CA63_434OBUVEE7A0D31912__INCLUDED_
 
-#include "../util/ReceiverModul.h"
+#include "../Parameter.h"
+#include "../util/Modul.h"
+#include "../util/Vector.h"
 #include "../chanest/ChanEstTime.h"
 
 
@@ -45,7 +47,7 @@
 
 
 /* Classes ********************************************************************/
-class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>,
+class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>, 
 					  public CPilotModiClass
 {
 public:
@@ -54,8 +56,8 @@ public:
 		cOldFreqPil(NUM_FREQ_PILOTS),
 		iSymbCntFraSy(0),
 		iNumSymPerFrame(0),
-		bSyncInput(false), bAquisition(false),
-		bTrackPil(false)
+		bSyncInput(FALSE), bAquisition(FALSE),
+		bTrackPil(FALSE)
 #ifdef USE_SAMOFFS_TRACK_FRE_PIL
 		, cFreqPilotPhDiff(NUM_FREQ_PILOTS)
 #endif
@@ -63,13 +65,13 @@ public:
 	virtual ~CSyncUsingPil() {}
 
 	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(bool bNewS) {bSyncInput = bNewS;}
+	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
 
 	void StartAcquisition();
-	void StopAcquisition() {bAquisition = false;}
+	void StopAcquisition() {bAquisition = FALSE;}
 
-	void StartTrackPil() {bTrackPil = true;}
-	void StopTrackPil() {bTrackPil = false;}
+	void StartTrackPil() {bTrackPil = TRUE;}
+	void StopTrackPil() {bTrackPil = FALSE;}
 
 protected:
 	class CPilotCorr
@@ -92,14 +94,14 @@ protected:
 	int						iNumSymPerFrame;
 	int						iNumCarrier;
 
-	bool				bBadFrameSync;
-	bool				bInitFrameSync;
-	bool				bFrameSyncWasOK;
+	_BOOLEAN				bBadFrameSync;
+	_BOOLEAN				bInitFrameSync;
+	_BOOLEAN				bFrameSyncWasOK;
 
-	bool				bSyncInput;
+	_BOOLEAN				bSyncInput;
 
-	bool				bAquisition;
-	bool				bTrackPil;
+	_BOOLEAN				bAquisition;
+	_BOOLEAN				bTrackPil;
 
 	int						iMiddleOfInterval;
 

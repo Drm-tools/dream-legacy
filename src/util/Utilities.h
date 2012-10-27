@@ -11,6 +11,7 @@
  *	- Bandpass filter
  *	- Modified Julian Date
  *	- Reverberation effect
+ *	- Hamlib interface
  *
  ******************************************************************************
  *
@@ -33,20 +34,22 @@
 #if !defined(UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_)
 #define UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_
 
-#include "../Parameter.h"
+#include "../GlobalDefinitions.h"
 #include "Settings.h"
 #include "Vector.h"
 #include "../matlib/Matlib.h"
 #include <map>
 #include <iostream>
 
+#ifdef HAVE_LIBHAMLIB
+# include <hamlib/rig.h>
+#endif
+
+
 /* Definitions ****************************************************************/
 #define	METER_FLY_BACK					15
 
 /* Classes ********************************************************************/
-
-struct CIpIf	{string name; uint32_t addr;};
-
 /* Signal level meter ------------------------------------------------------- */
 class CSignalLevelMeter
 {
@@ -56,12 +59,11 @@ public:
 
 	void Init(_REAL rStartVal) {rCurLevel = Abs(rStartVal);}
 	void Update(const _REAL rVal);
-	void Update(const vector<_SAMPLE> vecrVal);
 	void Update(const CVector<_REAL> vecrVal);
-	_REAL Level() const;
+	void Update(const CVector<_SAMPLE> vecsVal);
+	_REAL Level();
 
 protected:
-	void doUpdate(const _REAL rVal);
 	_REAL rCurLevel;
 };
 
@@ -119,13 +121,125 @@ public:
 
 protected:
 	void setT60(const CReal rT60);
-	bool isPrime(const int number);
+	_BOOLEAN isPrime(const int number);
 
 	CFIFO<int>	allpassDelays_[3];
 	CFIFO<int>	combDelays_[4];
 	CReal		allpassCoefficient_;
 	CReal		combCoefficient_[4];
 };
+
+
+#ifdef HAVE_LIBHAMLIB
+/* Hamlib interface --------------------------------------------------------- */
+class CHamlib
+{
+public:
+	enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
+
+	CHamlib();
+	virtual ~CHamlib();
+
+	struct SDrRigCaps
+	{
+		SDrRigCaps() : strManufacturer(""), strModelName(""),
+			eRigStatus(RIG_STATUS_ALPHA),bIsSpecRig(FALSE) {}
+		SDrRigCaps(const string& strNMan, const string& strNModN, rig_status_e eNSt, _BOOLEAN bNsp) :
+			strManufacturer(strNMan), strModelName(strNModN), eRigStatus(eNSt),
+			bIsSpecRig(bNsp)
+			{}
+		SDrRigCaps(const SDrRigCaps& nSDRC) :
+			strManufacturer(nSDRC.strManufacturer),
+			strModelName(nSDRC.strModelName),
+			eRigStatus(nSDRC.eRigStatus), bIsSpecRig(nSDRC.bIsSpecRig) {}
+
+		inline SDrRigCaps& operator=(const SDrRigCaps& cNew)
+		{
+			strManufacturer = cNew.strManufacturer;
+			strModelName = cNew.strModelName;
+			eRigStatus = cNew.eRigStatus;
+			bIsSpecRig = cNew.bIsSpecRig;
+			return *this;
+		}
+
+		string			strManufacturer;
+		string			strModelName;
+		rig_status_e	eRigStatus;
+		_BOOLEAN		bIsSpecRig;
+	};
+
+	_BOOLEAN		SetFrequency(const int iFreqkHz);
+	ESMeterState	GetSMeter(_REAL& rCurSigStr);
+
+	/* backend selection */
+	void			GetRigList(map<rig_model_t,SDrRigCaps>&);
+	void			SetHamlibModelID(const rig_model_t model);
+	rig_model_t		GetHamlibModelID() const {return iHamlibModelID;}
+
+	/* com port selection */
+	void			GetPortList(map<string,string>&);
+	void			SetComPort(const string&);
+	string			GetComPort() const;
+
+	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
+	_BOOLEAN		GetEnableModRigSettings() const {return bModRigSettings;}
+	string			GetInfo() const;
+
+	void			RigSpecialParameters(rig_model_t id, const string& sSet, int iFrOff, const string& sModSet);
+	void			ConfigureRig(const string & strSet);
+	void			LoadSettings(CSettings& s);
+	void			SaveSettings(CSettings& s);
+
+protected:
+	class CSpecDRMRig
+	{
+	public:
+		CSpecDRMRig() : strDRMSetMod(""), strDRMSetNoMod(""), iFreqOffs(0) {}
+		CSpecDRMRig(const CSpecDRMRig& nSpec) :
+			strDRMSetMod(nSpec.strDRMSetMod),
+			strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
+		CSpecDRMRig(string sSet, int iNFrOff, string sModSet) :
+			strDRMSetMod(sModSet), strDRMSetNoMod(sSet), iFreqOffs(iNFrOff) {}
+
+		string		strDRMSetMod; /* Special DRM settings (modified) */
+		string		strDRMSetNoMod; /* Special DRM settings (not mod.) */
+		int			iFreqOffs; /* Frequency offset */
+	};
+
+	map<rig_model_t,CSpecDRMRig>	SpecDRMRigs;
+	map<rig_model_t,SDrRigCaps>		CapsHamlibModels;
+
+	void EnableSMeter(const _BOOLEAN bStatus);
+
+	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
+	void				SetRigModes();
+	void				SetRigLevels();
+	void				SetRigFuncs();
+	void				SetRigParams();
+	void				SetRigConfig();
+
+	RIG*				pRig;
+	_BOOLEAN			bSMeterIsSupported;
+	_BOOLEAN			bModRigSettings;
+	rig_model_t			iHamlibModelID;
+	string				strHamlibConf;
+	string				strSettings;
+	int					iFreqOffset;
+	map<string,string> modes;
+	map<string,string> levels;
+	map<string,string> functions;
+	map<string,string> parameters;
+	map<string,string> config;
+
+};
+#else
+class CHamlib
+{
+public:
+	enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
+	void SetFrequency(int) {}
+};
+#endif
 
 inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)
 {
@@ -157,9 +271,5 @@ inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)
 
 	return iVal;
 }
-
-void GetNetworkInterfaces(vector<CIpIf>& vecIpIf);
-
-void GetComPortList(map<string,string>&);
 
 #endif // !defined(UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_)

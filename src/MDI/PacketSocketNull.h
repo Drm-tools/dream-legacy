@@ -44,10 +44,9 @@ public:
 	// Send packet to the socket
 	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	bool SetDestination(const string& str);
-	bool SetOrigin(const string& str);
-	bool GetDestination(string& str);
-        bool Poll() {return false;} // not used
+	_BOOLEAN SetDestination(const string&);
+	_BOOLEAN SetOrigin(const string&);
+	_BOOLEAN GetDestination(string&);
 };
 
 #endif

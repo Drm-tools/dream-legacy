@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation; either version 2 of the License, or (at your option) any later 
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -30,9 +30,9 @@
 
 
 /* Implementation *************************************************************/
-_REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
-						    CComplexVector& veccOutputData,
-						    CVector<int>& veciMapTab,
+_REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+						    CComplexVector& veccOutputData, 
+						    CVector<int>& veciMapTab, 
 						    CVector<_COMPLEX>& veccPilotCells, _REAL rSNR)
 {
 	int			i, j;
@@ -44,7 +44,7 @@ _REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	_COMPLEX	cGrad;
 
 	/* Channel estimation buffer -------------------------------------------- */
-	/* Move data in channel estimation-buffer
+	/* Move data in channel estimation-buffer 
 	   (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
 	{
@@ -54,7 +54,7 @@ _REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 	/* Clear current symbol for new channel estimates */
 	for (i = 0; i < iNumIntpFreqPil; i++)
-		matcChanEstHist[iLenHistBuff - 1][i] =
+		matcChanEstHist[iLenHistBuff - 1][i] = 
 			_COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 
 
@@ -76,12 +76,12 @@ _REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			/* Pilots are only every "iScatPilFreqInt"'th carrier */
 			iPiHiIndex = i / iScatPilFreqInt;
 
-			/* h = r / s, h: transfer function of channel, r: received signal,
+			/* h = r / s, h: transfer function of channel, r: received signal, 
 			   s: transmitted signal */
-			matcChanEstHist[iLenHistBuff - 1][iPiHiIndex] =
+			matcChanEstHist[iLenHistBuff - 1][iPiHiIndex] = 
 				(*pvecInputData)[i] / veccPilotCells[i];
 
-			/* Linear interpolate in time direction from this current pilot to
+			/* Linear interpolate in time direction from this current pilot to 
 			   the corresponding pilot in the last symbol of the history */
 			for (j = 1; j < iLenHistBuff - 1; j++)
 			{
@@ -89,7 +89,7 @@ _REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 				/* Calculate timing difference to old and new pilot */
 				iTimeDiffOld = vecTiCorrHist[0]	- vecTiCorrHist[j];
 				iTimeDiffNew = 0				- vecTiCorrHist[j];
-
+				
 				/* Correct pilot information for phase rotation */
 				cOldPilot = Rotate(
 					matcChanEstHist[0][iPiHiIndex], i, iTimeDiffOld);
@@ -128,7 +128,7 @@ int CTimeLinear::Init(CParameter& Parameter)
 
 	/* Set length of history-buffer according to time-int-index */
 	iLenHistBuff = Parameter.CellMappingTable.iScatPilTimeInt + 1;
-
+	
 	/* Init timing correction history with zeros */
 	iLenTiCorrHist = iLenHistBuff - 1;
 	vecTiCorrHist.Init(iLenTiCorrHist, 0);

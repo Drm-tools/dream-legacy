@@ -59,8 +59,7 @@ public:
 		if (pFile != NULL)
 		{
 			iBytesWritten = sizeof(CWaveHdr);
-			fwrite((const void*) &WaveHeader, size_t(sizeof(CWaveHdr)),
-				size_t(1), pFile);
+			(void)fwrite((const void*) &WaveHeader, size_t(sizeof(CWaveHdr)), size_t(1), pFile);
 		}
 	}
 
@@ -69,8 +68,8 @@ public:
 		if (pFile != NULL)
 		{
 			iBytesWritten += 2 * sizeof(_SAMPLE);
-			fwrite((const void*) &sLeft, size_t(2), size_t(1), pFile);
-			fwrite((const void*) &sRight, size_t(2), size_t(1), pFile);
+			(void)fwrite((const void*) &sLeft, size_t(2), size_t(1), pFile);
+			(void)fwrite((const void*) &sRight, size_t(2), size_t(1), pFile);
 		}
 	}
 
@@ -80,11 +79,11 @@ public:
 		{
 			const uint32_t iFileLength = iBytesWritten - 8;
 			fseek(pFile, 4 /* offset */, SEEK_SET /* origin */);
-			fwrite((const void*) &iFileLength, size_t(4), size_t(1), pFile);
+			(void)fwrite((const void*) &iFileLength, size_t(4), size_t(1), pFile);
 
 			const uint32_t iDataLength = iBytesWritten - sizeof(CWaveHdr);
 			fseek(pFile, 40 /* offset */, SEEK_SET /* origin */);
-			fwrite((const void*) &iDataLength, size_t(4), size_t(1), pFile);
+			(void)fwrite((const void*) &iDataLength, size_t(4), size_t(1), pFile);
 
 			fclose(pFile);
 			pFile = NULL;

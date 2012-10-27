@@ -34,13 +34,12 @@
 
 # include "soundinterface.h"
 #include "Parameter.h"
-#include "util/ReceiverModul.h"
-#include "util/TransmitterModul.h"
-#include "util/SimulationModul.h"
+#include "util/Modul.h"
 #include "FAC/FAC.h"
-#include "SDC/SDCReceive.h"
-#include "SDC/SDCTransmit.h"
+#include "SDC/SDC.h"
 #include "TextMessage.h"
+#include "util/AudioFile.h"
+#include "util/Utilities.h"
 #include "AMDemodulation.h" // For CMixer
 
 /* Definitions ****************************************************************/
@@ -64,107 +63,124 @@
    power -> compromise */
 #define MIX_OUT_CHAN_NORM_CONST		((_REAL) 1.0 / sqrt((_REAL) 2.0))
 
+
 /* Classes ********************************************************************/
 /* MSC ---------------------------------------------------------------------- */
 class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CReadData(CSoundInInterface* pNS) : pSound(pNS),
-	vecsSoundBuffer()
-	{}
-	virtual ~CReadData() {}
+    CReadData(CSoundInInterface* pNS) : pSound(pNS) {}
+    virtual ~CReadData() {}
 
-	void Stop();
+    _REAL GetLevelMeter() {
+        return SignalLevelMeter.Level();
+    }
 
 protected:
-	CSoundInInterface*	pSound;
-	vector<_SAMPLE>		vecsSoundBuffer;
+    CSoundInInterface*	pSound;
+    CVector<_SAMPLE>	vecsSoundBuffer;
+    CSignalLevelMeter	SignalLevelMeter;
 
-	virtual void InitInternal(CParameter& TransmParam);
-	virtual void ProcessDataInternal(CParameter& TransmParam);
+    virtual void InitInternal(CParameter& TransmParam);
+    virtual void ProcessDataInternal(CParameter& TransmParam);
 };
 
 class CWriteData : public CReceiverModul<_SAMPLE, _SAMPLE>
 {
 public:
-	enum EOutChanSel {CS_BOTH_BOTH, CS_LEFT_LEFT, CS_RIGHT_RIGHT,
-		CS_LEFT_MIX, CS_RIGHT_MIX};
+    enum EOutChanSel {CS_BOTH_BOTH, CS_LEFT_LEFT, CS_RIGHT_RIGHT,
+                      CS_LEFT_MIX, CS_RIGHT_MIX
+                     };
 
-	CWriteData(CSoundOutInterface* pNS);
-	virtual ~CWriteData() {}
+    CWriteData(CSoundOutInterface* pNS);
+    virtual ~CWriteData() {}
 
-	void StartWriteWaveFile(const string strFileName);
-	bool GetIsWriteWaveFile() {return bDoWriteWaveFile;}
-	void StopWriteWaveFile();
+    void StartWriteWaveFile(const string& strFileName);
+    _BOOLEAN GetIsWriteWaveFile() {
+        return bDoWriteWaveFile;
+    }
+    void StopWriteWaveFile();
 
-	void MuteAudio(bool bNewMA) {bMuteAudio = bNewMA;}
-	bool GetMuteAudio() {return bMuteAudio;}
+    void MuteAudio(_BOOLEAN bNewMA) {
+        bMuteAudio = bNewMA;
+    }
+    _BOOLEAN GetMuteAudio() {
+        return bMuteAudio;
+    }
 
-	void SetSoundBlocking(const bool bNewBl)
-		{bNewSoundBlocking = bNewBl; SetInitFlag();}
+    void SetSoundBlocking(const _BOOLEAN bNewBl)
+    {
+        bNewSoundBlocking = bNewBl;
+        SetInitFlag();
+    }
 
-	void SetOutChanSel(const EOutChanSel eNS) {eOutChanSel = eNS;}
-	EOutChanSel GetOutChanSel() {return eOutChanSel;}
+    void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+
+    void SetOutChanSel(const EOutChanSel eNS) {
+        eOutChanSel = eNS;
+    }
+    EOutChanSel GetOutChanSel() {
+        return eOutChanSel;
+    }
 
 protected:
-	CSoundOutInterface*		pSound;
-	CSoundOutInterface*		pSoundFile;
-	bool				    bMuteAudio;
-	bool				    bDoWriteWaveFile;
-	bool				    bSoundBlocking;
-	bool				    bNewSoundBlocking;
-	vector<_SAMPLE>			vecsTmpAudData;
-	EOutChanSel				eOutChanSel;
-	_REAL					rMixNormConst;
+    CSoundOutInterface*		pSound;
+    _BOOLEAN				bMuteAudio;
+    CWaveFile				WaveFileAudio;
+    _BOOLEAN				bDoWriteWaveFile;
+    _BOOLEAN				bSoundBlocking;
+    _BOOLEAN				bNewSoundBlocking;
+    CVector<_SAMPLE>		vecsTmpAudData;
+    EOutChanSel				eOutChanSel;
+    _REAL					rMixNormConst;
 
-	CShiftRegister<_SAMPLE>	vecsOutputData;
-	CFftPlans				FftPlan;
-	CComplexVector			veccFFTInput;
-	CComplexVector			veccFFTOutput;
-	CRealVector				vecrHammingWindow;
+    CShiftRegister<_SAMPLE>	vecsOutputData;
+    CFftPlans				FftPlan;
+    CComplexVector			veccFFTInput;
+    CComplexVector			veccFFTOutput;
+    CRealVector				vecrHammingWindow;
 
-	virtual void InitInternal(CParameter&);
-	virtual void ProcessDataInternal(CParameter&);
-	void putAudioSpec(CParameter&);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 class CGenSimData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
-	CGenSimData() : eCntType(CT_TIME), iNumSimBlocks(DEFAULT_NUM_SIM_BLOCKS),
-		iNumErrors(0), iCounter(0), strFileName("SimTime.dat"), tiStartTime(0) {}
-	virtual ~CGenSimData() {}
+    CGenSimData() : eCntType(CT_TIME), iNumSimBlocks(DEFAULT_NUM_SIM_BLOCKS),
+            iNumErrors(0), iCounter(0), strFileName("SimTime.dat"), tiStartTime(0) {}
+    virtual ~CGenSimData() {}
 
-	void SetSimTime(int iNewTi, string strNewFileName);
-	void SetNumErrors(int iNewNE, string strNewFileName);
+    void SetSimTime(int iNewTi, string strNewFileName);
+    void SetNumErrors(int iNewNE, string strNewFileName);
 
 protected:
-	enum ECntType {CT_TIME, CT_ERRORS};
-	ECntType	eCntType;
-	int			iNumSimBlocks;
-	int			iNumErrors;
-	int			iCounter;
-	int			iMinNumBlocks;
-	string		strFileName;
-	time_t		tiStartTime;
+    enum ECntType {CT_TIME, CT_ERRORS};
+    ECntType	eCntType;
+    int			iNumSimBlocks;
+    int			iNumErrors;
+    int			iCounter;
+    int			iMinNumBlocks;
+    string		strFileName;
+    time_t		tiStartTime;
 
-	virtual void InitInternal(CParameter& TransmParam);
-	virtual void ProcessDataInternal(CParameter& TransmParam);
+    virtual void InitInternal(CParameter& TransmParam);
+    virtual void ProcessDataInternal(CParameter& TransmParam);
 };
 
 class CEvaSimData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CEvaSimData() {}
-	virtual ~CEvaSimData() {}
+    CEvaSimData() {}
+    virtual ~CEvaSimData() {}
 
 protected:
-	int		iIniCnt;
-	int		iNumAccBitErrRate;
-	_REAL	rAccBitErrRate;
+    int		iIniCnt;
+    int		iNumAccBitErrRate;
+    _REAL	rAccBitErrRate;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 
@@ -172,35 +188,39 @@ protected:
 class CGenerateFACData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
-	CGenerateFACData() {}
-	virtual ~CGenerateFACData() {}
+    CGenerateFACData() {}
+    virtual ~CGenerateFACData() {}
 
 protected:
-	CFACTransmit FACTransmit;
+    CFACTransmit FACTransmit;
 
-	virtual void InitInternal(CParameter& TransmParam);
-	virtual void ProcessDataInternal(CParameter& TransmParam);
+    virtual void InitInternal(CParameter& TransmParam);
+    virtual void ProcessDataInternal(CParameter& TransmParam);
 };
 
 class CUtilizeFACData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CUtilizeFACData() :
-		bSyncInput(false), bCRCOk(false) {}
-	virtual ~CUtilizeFACData() {}
+    CUtilizeFACData() :
+            bSyncInput(FALSE), bCRCOk(FALSE) {}
+    virtual ~CUtilizeFACData() {}
 
-	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(bool bNewS) {bSyncInput = bNewS;}
+    /* To set the module up for synchronized DRM input data stream */
+    void SetSyncInput(_BOOLEAN bNewS) {
+        bSyncInput = bNewS;
+    }
 
-	bool GetCRCOk() const {return bCRCOk;}
+    _BOOLEAN GetCRCOk() const {
+        return bCRCOk;
+    }
 
 protected:
-	CFACReceive FACReceive;
-	bool	bSyncInput;
-	bool	bCRCOk;
+    CFACReceive FACReceive;
+    _BOOLEAN	bSyncInput;
+    _BOOLEAN	bCRCOk;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 
@@ -208,108 +228,110 @@ protected:
 class CGenerateSDCData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
-	CGenerateSDCData() {}
-	virtual ~CGenerateSDCData() {}
+    CGenerateSDCData() {}
+    virtual ~CGenerateSDCData() {}
 
 protected:
-	CSDCTransmit SDCTransmit;
+    CSDCTransmit SDCTransmit;
 
-	virtual void InitInternal(CParameter& TransmParam);
-	virtual void ProcessDataInternal(CParameter& TransmParam);
+    virtual void InitInternal(CParameter& TransmParam);
+    virtual void ProcessDataInternal(CParameter& TransmParam);
 };
 
 class CUtilizeSDCData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CUtilizeSDCData() {}
-	virtual ~CUtilizeSDCData() {}
+    CUtilizeSDCData() {}
+    virtual ~CUtilizeSDCData() {}
 
-    void SetSDCType(ESDCType e) { SDCReceive.SetSDCType(e); }
+    CSDCReceive* GetSDCReceive() {
+        return &SDCReceive;
+    }
 
 protected:
-	CSDCReceive SDCReceive;
-	bool	bFirstBlock;
+    CSDCReceive SDCReceive;
+    _BOOLEAN	bFirstBlock;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 
 /******************************************************************************\
 * Data type conversion classes needed for simulation and AMSS decoding         *
 \******************************************************************************/
-
 /* Conversion from channel output to resample module input */
-class CDataConvChanResam : public CReceiverModul<CChanSimData<_REAL>, _REAL>
+class CDataConvChanResam : public CReceiverModul<CChanSimDataMod, _REAL>
 {
 protected:
-	virtual void InitInternal(CParameter& ReceiverParam)
-	{
-		iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-		iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-	}
-	virtual void ProcessDataInternal(CParameter&)
-	{
-		for (int i = 0; i < iOutputBlockSize; i++)
-			(*pvecOutputData)[i] = (*pvecInputData)[i].tOut;
-	}
+    virtual void InitInternal(CParameter& ReceiverParam)
+    {
+        iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+        iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+    }
+    virtual void ProcessDataInternal(CParameter&)
+    {
+        for (int i = 0; i < iOutputBlockSize; i++)
+            (*pvecOutputData)[i] = (*pvecInputData)[i].tOut;
+    }
 };
 
 /* Takes an input buffer and splits it 2 ways */
 class CSplit: public CReceiverModul<_REAL, _REAL>
 {
 protected:
-	virtual void InitInternal(CParameter& ReceiverParam)
-	{
-		iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-		iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-		iOutputBlockSize2 = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-	}
-	virtual void ProcessDataInternal(CParameter&)
-	{
-		for (int i = 0; i < iInputBlockSize; i++)
-		{
-			(*pvecOutputData)[i] = (*pvecInputData)[i];
-			(*pvecOutputData2)[i] = (*pvecInputData)[i];
-		}
-	}
+    virtual void InitInternal(CParameter& ReceiverParam)
+    {
+        iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+        iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+        iOutputBlockSize2 = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+    }
+    virtual void ProcessDataInternal(CParameter&)
+    {
+        for (int i = 0; i < iInputBlockSize; i++)
+        {
+            (*pvecOutputData)[i] = (*pvecInputData)[i];
+            (*pvecOutputData2)[i] = (*pvecInputData)[i];
+        }
+    }
 };
 
 
 class CWriteIQFile : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	CWriteIQFile();
-	virtual ~CWriteIQFile();
+    CWriteIQFile();
+    virtual ~CWriteIQFile();
 
-	void StartRecording(CParameter& ReceiverParam);
-	void StopRecording();
+    void StartRecording(CParameter& ReceiverParam);
+    void StopRecording();
 
-	void NewFrequency(CParameter &ReceiverParam);
+    void NewFrequency(CParameter &ReceiverParam);
 
 protected:
-	FILE *					pFile;
+    FILE *					pFile;
+    CVector<_SAMPLE>		vecsTmpAudData;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
-	void		 OpenFile(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    void		 OpenFile(CParameter& ReceiverParam);
 
-	/* For doing the IF to IQ conversion (stolen from AM demod) */
-	CRealVector					rvecInpTmp;
-	CComplexVector				cvecHilbert;
-	int							iHilFiltBlLen;
-	CFftPlans					FftPlansHilFilt;
+    /* For doing the IF to IQ conversion (stolen from AM demod) */
+    CRealVector					rvecInpTmp;
+    CComplexVector				cvecHilbert;
+    int							iHilFiltBlLen;
+    CFftPlans					FftPlansHilFilt;
 
-	CComplexVector				cvecBReal;
-	CComplexVector				cvecBImag;
-	CRealVector					rvecZReal;
-	CRealVector					rvecZImag;
+    CComplexVector				cvecBReal;
+    CComplexVector				cvecBImag;
+    CRealVector					rvecZReal;
+    CRealVector					rvecZImag;
 
-	CMixer						Mixer;
+    CMixer						Mixer;
 
-	int							iFrequency; // For use in generating filename
-	bool					bIsRecording;
-	bool					bChangeReceived;
+    int							iFrequency; // For use in generating filename
+    _BOOLEAN					bIsRecording;
+    _BOOLEAN					bChangeReceived;
 
 };
 

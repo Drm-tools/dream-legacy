@@ -26,64 +26,61 @@
  *
 \******************************************************************************/
 
-#ifndef _GPSRECEIVER_H_
+#if !defined(_GPSRECEIVER_H_)
 #define _GPSRECEIVER_H_
 
 #include "Parameter.h"
 #include "util/Settings.h"
-#ifdef QT_NETWORK_LIB
+#if QT_VERSION < 0x040000
+# include <qsocket.h>
+#else
 # include <QTcpSocket>
-# include <QThread>
-# include <QMutex>
-# include <QTimer>
-#else
-# define slots
 #endif
+#include <qthread.h>
+#if QT_VERSION >= 0x030000
+# include <qmutex.h>
+#endif
+#include <qtimer.h>
 
-class CGPSReceiver
-#ifdef QT_NETWORK_LIB
- : public QObject
+class CGPSReceiver : public QObject
 {
-	Q_OBJECT
-#else
-{
-#endif
+    Q_OBJECT
 public:
-	CGPSReceiver(CParameter&, const string& host, int port);
-	virtual ~CGPSReceiver();
-	/* dummy assignment operator to help MSVC8 */
-	CGPSReceiver& operator=(const CGPSReceiver&)
-	{ throw "should not happen"; return *this;}
+    CGPSReceiver(CParameter&, CSettings&);
+    virtual ~CGPSReceiver();
 
 protected:
 
-	void open();
-	void close();
+    void open();
+    void close();
 
-	void DecodeGPSDReply(string Reply);
-	void DecodeString(char Command, string Value);
-	void DecodeO(string Value);
-	void DecodeY(string Value);
+    void DecodeGPSDReply(string Reply);
+    void DecodeString(char Command, string Value);
+    void DecodeO(string Value);
+    void DecodeY(string Value);
 
-	static const unsigned short c_usReconnectIntervalSeconds;
+    static const unsigned short c_usReconnectIntervalSeconds;
 
-	CParameter&	Parameters;
-#ifdef QT_NETWORK_LIB
-	QTcpSocket*	m_pSocket;
-	QTimer*		m_pTimer;
-	QTimer*		m_pTimerDataTimeout;
+    CParameter&	Parameters;
+    CSettings&	m_Settings;
+#if QT_VERSION < 0x040000
+    QSocket*	m_pSocket;
+#else
+    QTcpSocket*	m_pSocket;
 #endif
-	int		m_iCounter;
-	string		m_sHost;
-	int		m_iPort;
+    QTimer*		m_pTimer;
+    QTimer*		m_pTimerDataTimeout;
+    int			m_iCounter;
+    string		m_sHost;
+    int			m_iPort;
 
 public slots:
 
-	void slotInit();
-	void slotConnected();
-	void slotTimeout();
-	void slotReadyRead();
-	void slotSocketError(int);
+    void slotInit();
+    void slotConnected();
+    void slotTimeout();
+    void slotReadyRead();
+    void slotSocketError(int);
 
 };
 

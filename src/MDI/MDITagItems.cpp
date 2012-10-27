@@ -37,6 +37,7 @@
  *
 \******************************************************************************/
 
+#include <time.h>
 #include "MDITagItems.h"
 #include <iostream>
 #include <fstream>
@@ -48,22 +49,22 @@ CTagItemGeneratorWithProfiles::CTagItemGeneratorWithProfiles()
 {
 }
 
-bool
+_BOOLEAN
 CTagItemGeneratorWithProfiles::IsInProfile(char cProfile)
 {
 	string strProfiles = GetProfiles();
 
 	for (size_t i = 0; i < strProfiles.length(); i++)
 		if (strProfiles[i] == char (toupper(cProfile)))
-			return true;
+			return TRUE;
 
-	return false;
+	return FALSE;
 }
 
-bool
+_BOOLEAN
 CTagItemGenerator::IsInProfile(char)
 {
-	return true;
+	return TRUE;
 }
 
 /* Default implementation: unless otherwise specified, tag will be in all RSCI profiles, but not MDI */
@@ -71,7 +72,7 @@ CTagItemGenerator::IsInProfile(char)
 string
 CTagItemGeneratorWithProfiles::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
@@ -81,10 +82,10 @@ CTagItemGeneratorProTyMDI::GenTag()
 	PrepareTag(64);
 
 	/* Protocol type: DMDI */
-	Enqueue((uint32_t) 'D', BITS_BINARY);
-	Enqueue((uint32_t) 'M', BITS_BINARY);
-	Enqueue((uint32_t) 'D', BITS_BINARY);
-	Enqueue((uint32_t) 'I', BITS_BINARY);
+	Enqueue((uint32_t) 'D', SIZEOF__BYTE);
+	Enqueue((uint32_t) 'M', SIZEOF__BYTE);
+	Enqueue((uint32_t) 'D', SIZEOF__BYTE);
+	Enqueue((uint32_t) 'I', SIZEOF__BYTE);
 
 	/* Major revision */
 	Enqueue((uint32_t) MDI_MAJOR_REVISION, 16);
@@ -112,10 +113,10 @@ CTagItemGeneratorProTyRSCI::GenTag()
 	PrepareTag(64);
 
 	/* Protocol type: DMDI */
-	Enqueue((uint32_t) 'R', BITS_BINARY);
-	Enqueue((uint32_t) 'S', BITS_BINARY);
-	Enqueue((uint32_t) 'C', BITS_BINARY);
-	Enqueue((uint32_t) 'I', BITS_BINARY);
+	Enqueue((uint32_t) 'R', SIZEOF__BYTE);
+	Enqueue((uint32_t) 'S', SIZEOF__BYTE);
+	Enqueue((uint32_t) 'C', SIZEOF__BYTE);
+	Enqueue((uint32_t) 'I', SIZEOF__BYTE);
 
 	/* Major revision */
 	Enqueue((uint32_t) RSCI_MAJOR_REVISION, 16);
@@ -133,7 +134,7 @@ CTagItemGeneratorProTyRSCI::GetTagName()
 string
 CTagItemGeneratorProTyRSCI::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 CTagItemGeneratorLoFrCnt::CTagItemGeneratorLoFrCnt():iLogFraCnt(0)
@@ -164,28 +165,30 @@ CTagItemGeneratorLoFrCnt::GetTagName()
 string
 CTagItemGeneratorLoFrCnt::GetProfiles()
 {
-	return "ABCDGQM";
+	return "ABCDQM";
 }
 
 void
-CTagItemGeneratorFAC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvecbiData)
+CTagItemGeneratorFAC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &FACData)
 {
-	if (Parameter.ReceiveStatus.FAC.GetStatus() == false)
+	if (Parameter.ReceiveStatus.FAC.GetStatus() == FALSE)
 	{
 		/* Empty tag if FAC is invalid */
 		PrepareTag(0);
+		FACData.Clear();
 	}
 	else
 	{
 		/* Length: 9 bytes = 72 bits */
 		PrepareTag(NUM_FAC_BITS_PER_BLOCK);
+		CVectorEx < _BINARY > *pvecbiFACData = FACData.Get(NUM_FAC_BITS_PER_BLOCK);
 
 		/* Channel parameters, service parameters, CRC */
-		pvecbiData->ResetBitAccess();
+		pvecbiFACData->ResetBitAccess();
 
 		/* FAC data is always 72 bits long which is 9 bytes, copy data byte-wise */
-		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / BITS_BINARY; i++)
-			Enqueue(pvecbiData->Separate(BITS_BINARY), BITS_BINARY);
+		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
+			Enqueue(pvecbiFACData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
 
@@ -198,19 +201,20 @@ CTagItemGeneratorFAC::GetTagName()
 string
 CTagItemGeneratorFAC::GetProfiles()
 {
-	return "ACDGQM";
+	return "ACDQM";
 }
 
 void
-CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvecbiData)
+CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &SDCData)
 {
-	if (Parameter.ReceiveStatus.SDC.GetStatus() == false)
+	if (Parameter.ReceiveStatus.SDC.GetStatus() == FALSE)
 	{
 		PrepareTag(0);
+		SDCData.Clear();
 		return;
 	}
 
-	if (pvecbiData->Size() < Parameter.iNumSDCBitsPerSuperFrame)
+	if (SDCData.GetFillLevel() < Parameter.iNumSDCBitsPerSFrame)
 	{
 		PrepareTag(0);
 		return;
@@ -219,22 +223,22 @@ CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvec
 	/* Fixed by O.Haffenden, BBC R&D */
 	/* The input SDC vector is 4 bits SDC index + a whole number of bytes plus padding. */
 	/* The padding is not sent in the MDI */
-	const int iLenSDCDataBits = BITS_BINARY * ((Parameter.iNumSDCBitsPerSuperFrame - 4) / BITS_BINARY) + 4;
+	const int iLenSDCDataBits = SIZEOF__BYTE * ((Parameter.iNumSDCBitsPerSFrame - 4) / SIZEOF__BYTE) + 4;
 
 	/* Length: "length SDC block" bytes. Our SDC data vector does not
 	   contain the 4 bits "Rfu" */
 	PrepareTag(iLenSDCDataBits + 4);
-	//CVectorEx < _BINARY > *pvecbiSDCData = SDCData.Get(Parameter.iNumSDCBitsPerSuperFrame);
+	CVectorEx < _BINARY > *pvecbiSDCData = SDCData.Get(Parameter.iNumSDCBitsPerSFrame);
 
 	/* Service Description Channel Block */
-	pvecbiData->ResetBitAccess();
+	pvecbiSDCData->ResetBitAccess();
 
 	Enqueue((uint32_t) 0, 4);	/* Rfu */
 
 	/* We have to copy bits instead of bytes since the length of SDC data is
 	   usually not a multiple of 8 */
 	for (int i = 0; i < iLenSDCDataBits; i++)
-		Enqueue(pvecbiData->Separate(1), 1);
+		Enqueue(pvecbiSDCData->Separate(1), 1);
 }
 
 string
@@ -246,7 +250,7 @@ CTagItemGeneratorSDC::GetTagName()
 string
 CTagItemGeneratorSDC::GetProfiles()
 {
-	return "ACDGM";
+	return "ACDM";
 }
 
 void
@@ -261,17 +265,17 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 	const size_t iNumActStreams = actStreams.size();
 
 	/* Length: 1 + n * 3 bytes */
-	PrepareTag((1 + 3 * iNumActStreams) * BITS_BINARY);
+	PrepareTag((1 + 3 * iNumActStreams) * SIZEOF__BYTE);
 
 	/* Protection */
 	/* Rfu */
 	Enqueue((uint32_t) 0, 4);
 
 	/* PLA */
-	Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iPartA, 2);
+	Enqueue((uint32_t) Parameter.MSCPrLe.iPartA, 2);
 
 	/* PLB */
-	Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iPartB, 2);
+	Enqueue((uint32_t) Parameter.MSCPrLe.iPartB, 2);
 
 	/* n + 1 stream description(s) */
 	for (set<int>::iterator i = actStreams.begin(); i!=actStreams.end(); i++)
@@ -279,25 +283,25 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
 		if ((*i == 0) &&
-			((Parameter.Channel.eMSCmode == CS_3_HMSYM) ||
-			 (Parameter.Channel.eMSCmode == CS_3_HMMIX)))
+			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
+			 (Parameter.eMSCCodingScheme == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
-			Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iHierarch, 2);
+			Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);
 
 			/* rfu */
 			Enqueue((uint32_t) 0, 10);
 
 			/* Data length for hierarchical (always stream 0) */
-			Enqueue((uint32_t) Parameter.MSCParameters.Stream[0].iLenPartB, 12);
+			Enqueue((uint32_t) Parameter.Stream[0].iLenPartB, 12);
 		}
 		else
 		{
 			/* Data length for part A */
-			Enqueue((uint32_t) Parameter.MSCParameters.Stream[*i].iLenPartA, 12);
+			Enqueue((uint32_t) Parameter.Stream[*i].iLenPartA, 12);
 
 			/* Data length for part B */
-			Enqueue((uint32_t) Parameter.MSCParameters.Stream[*i].iLenPartB, 12);
+			Enqueue((uint32_t) Parameter.Stream[*i].iLenPartB, 12);
 		}
 	}
 }
@@ -318,7 +322,7 @@ void
 CTagItemGeneratorRobMod::GenTag(ERobMode eCurRobMode)
 {
 	/* Length: 1 byte */
-	PrepareTag(BITS_BINARY);
+	PrepareTag(SIZEOF__BYTE);
 
 	/* Robustness mode */
 	switch (eCurRobMode)
@@ -353,14 +357,14 @@ CTagItemGeneratorRobMod::GetTagName()
 string
 CTagItemGeneratorRobMod::GetProfiles()
 {
-	return "ABCDGQM";
+	return "ABCDQM";
 }
 
 void
 CTagItemGeneratorRINF::GenTag(string strUTF8Text)
 {
 	/* Data length: n * 8 bits */
-	PrepareTag(16 * BITS_BINARY);
+	PrepareTag(16 * SIZEOF__BYTE);
 
 	/* UTF-8 text */
 	for (int i = 0; i < 16; i++)	// truncate to 16 chars as this is the max the TAG item can have
@@ -368,7 +372,7 @@ CTagItemGeneratorRINF::GenTag(string strUTF8Text)
 		const char cNewChar = strUTF8Text[i];
 
 		/* Set character */
-		Enqueue((uint32_t) cNewChar, BITS_BINARY);
+		Enqueue((uint32_t) cNewChar, SIZEOF__BYTE);
 	}
 }
 
@@ -381,7 +385,7 @@ CTagItemGeneratorRINF::GetTagName()
 string
 CTagItemGeneratorRINF::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 CTagItemGeneratorStr::CTagItemGeneratorStr():iStreamNumber(0)
@@ -398,31 +402,28 @@ CTagItemGeneratorStr::SetStreamNumber(int iStrNum)
 }
 
 void
-CTagItemGeneratorStr::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvecbiData)
+CTagItemGeneratorStr::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &MSCData)
 {
+	const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(iStreamNumber);
+	/* Only generate this tag if stream input data is not of zero length */
+	if (iLenStrData == 0)
+		return;
+
+	CVectorEx < _BINARY > *pvecbiStrData = MSCData.Get(iLenStrData);
+	/* check we have data in the vector */
+	if (iLenStrData != pvecbiStrData->Size())
+		return;
+
 	if (iStreamNumber >= MAX_NUM_STREAMS)
 		return;
 
-	volatile int iLenStrData = BITS_BINARY * Parameter.GetStreamLen(iStreamNumber);
-	volatile int iLenVec = pvecbiData->Size();
-
-	/* check we have data in the vector */
-	if(iLenStrData > iLenVec || iLenStrData == 0)
-	{
-		/* if there is an error, or the length is zero, send an empty tag
-		 * This is optimised out at the Tag Packet level but it makes sense
-		 * to always generate a tag in the tag item generator */
-		PrepareTag(0);
-		return;
-	}
-
 	PrepareTag(iLenStrData);
 
-	pvecbiData->ResetBitAccess();
+	pvecbiStrData->ResetBitAccess();
 	/* Data is always a multiple of 8 -> copy bytes */
-	for (int i = 0; i < iLenStrData / BITS_BINARY; i++)
+	for (int i = 0; i < iLenStrData / SIZEOF__BYTE; i++)
 	{
-		Enqueue(pvecbiData->Separate(BITS_BINARY), BITS_BINARY);
+		Enqueue(pvecbiStrData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
 
@@ -451,11 +452,11 @@ CTagItemGeneratorStr::GetTagName()
 }
 
 void
-CTagItemGeneratorMERFormat::GenTag(bool bIsValid, _REAL rMER)
+CTagItemGeneratorMERFormat::GenTag(_BOOLEAN bIsValid, _REAL rMER)
 {
 	/* Common routine for rmer, rwmf, rwmm tags (all have the same format) */
 	/* If no MER value is available, set tag length to zero */
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		/* Length: 0 byte */
 		PrepareTag(0);
@@ -469,11 +470,11 @@ CTagItemGeneratorMERFormat::GenTag(bool bIsValid, _REAL rMER)
 		   = (Byte1.Byte2) in [dB] with: Byte1 is an 8-bit signed integer value;
 		   and Byte2 is an 8-bit unsigned integer value */
 		/* Integer part */
-		Enqueue((uint32_t) rMER, BITS_BINARY);
+		Enqueue((uint32_t) rMER, SIZEOF__BYTE);
 
 		/* Fractional part */
 		const _REAL rFracPart = rMER - (int) rMER;
-		Enqueue((uint32_t) (rFracPart * 256), BITS_BINARY);
+		Enqueue((uint32_t) (rFracPart * 256), SIZEOF__BYTE);
 	}
 }
 
@@ -486,7 +487,7 @@ CTagItemGeneratorRWMF::GetTagName()
 string
 CTagItemGeneratorRWMF::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 string
@@ -498,7 +499,7 @@ CTagItemGeneratorRWMM::GetTagName()
 string
 CTagItemGeneratorRWMM::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 string
@@ -510,7 +511,7 @@ CTagItemGeneratorRMER::GetTagName()
 string
 CTagItemGeneratorRMER::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 string
@@ -522,14 +523,14 @@ CTagItemGeneratorRDOP::GetTagName()
 string
 CTagItemGeneratorRDOP::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorRDEL::GenTag(bool bIsValid, const vector<CMeasurements::CRdel>& rdel)
+CTagItemGeneratorRDEL::GenTag(_BOOLEAN bIsValid, const CRealVector & vecrThresholds, const CRealVector & vecrIntervals)
 {
 	/* If no value is available, set tag length to zero */
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		/* Length: 0 byte */
 		PrepareTag(0);
@@ -537,22 +538,22 @@ CTagItemGeneratorRDEL::GenTag(bool bIsValid, const vector<CMeasurements::CRdel>&
 	else
 	{
 		/* Length: 3 bytes per value = 16 bits */
-		PrepareTag(24 * rdel.size());
+		PrepareTag(24 * vecrThresholds.GetSize());
 
-		for (size_t i = 0; i < rdel.size(); i++)
+		for (int i = 0; i < vecrThresholds.GetSize(); i++)
 		{
 			/* percentage for this window */
-			Enqueue((uint32_t) rdel[i].threshold, BITS_BINARY);
+			Enqueue((uint32_t) vecrThresholds[i], SIZEOF__BYTE);
 			/* Set value: the format of this single value is (Byte1 + Byte2 / 256)
 			   = (Byte1.Byte2) in [dB] with: Byte1 is an 8-bit signed integer value;
 			   and Byte2 is an 8-bit unsigned integer value */
 			/* Integer part */
-			_REAL rDelay = rdel[i].interval;
-			Enqueue((uint32_t) rDelay, BITS_BINARY);
+			_REAL rDelay = vecrIntervals[i];
+			Enqueue((uint32_t) rDelay, SIZEOF__BYTE);
 
 			/* Fractional part */
 			const _REAL rFracPart = rDelay - (int) rDelay;
-			Enqueue((uint32_t) (rFracPart * 256), BITS_BINARY);
+			Enqueue((uint32_t) (rFracPart * 256), SIZEOF__BYTE);
 		}
 	}
 }
@@ -566,17 +567,13 @@ CTagItemGeneratorRDEL::GetTagName()
 string
 CTagItemGeneratorRDEL::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
 CTagItemGeneratorRAFS::GenTag(CParameter & Parameter)
 {
-    vector<bool> audioFrameStatus;
-
-	Parameter.Measurements.audioFrameStatus.get(audioFrameStatus);
-
-	const int iNumUnits = audioFrameStatus.size();
+	const int iNumUnits = Parameter.vecbiAudioFrameStatus.Size();
 
 	if (iNumUnits == 0)
 	{
@@ -588,13 +585,16 @@ CTagItemGeneratorRAFS::GenTag(CParameter & Parameter)
 		/* Header - length is always 48 */
 		PrepareTag(48);
 
+		/* data */
+		Parameter.vecbiAudioFrameStatus.ResetBitAccess();
+
 		/* number of units: 8 bits */
 		Enqueue(iNumUnits, 8);
 
 		/* status for each unit */
 		for (int i = 0; i < iNumUnits; i++)
 		{
-			Enqueue(audioFrameStatus[i]?1:0, 1);
+			Enqueue(Parameter.vecbiAudioFrameStatus.Separate(1), 1);
 		}
 		/* pad the rest with zeros */
 		Enqueue(0, 40 - iNumUnits);
@@ -610,16 +610,16 @@ CTagItemGeneratorRAFS::GetTagName()
 string
 CTagItemGeneratorRAFS::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorRINT::GenTag(bool bIsValid, _REAL rIntFreq, _REAL rINR, _REAL rICR)
+CTagItemGeneratorRINT::GenTag(_BOOLEAN bIsValid, CReal rIntFreq, CReal rINR, CReal rICR)
 {
 
 	/* Use Bint (BBC proprietary tag name) until tag is accepted by SE group */
 	/* If no value is available, set tag length to zero */
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		/* Length: 0 byte */
 		PrepareTag(0);
@@ -634,15 +634,15 @@ CTagItemGeneratorRINT::GenTag(bool bIsValid, _REAL rIntFreq, _REAL rINR, _REAL r
 
 		/* Interference-to-noise ratio */
 		/* integer part */
-		Enqueue((uint32_t) rINR, BITS_BINARY);
+		Enqueue((uint32_t) rINR, SIZEOF__BYTE);
 		/* Fractional part */
-		Enqueue((uint32_t) ((rINR - (int) rINR) * 256), BITS_BINARY);
+		Enqueue((uint32_t) ((rINR - (int) rINR) * 256), SIZEOF__BYTE);
 
 		/* Interference-to-carrier ratio */
 		/* integer part */
-		Enqueue((uint32_t) rICR, BITS_BINARY);
+		Enqueue((uint32_t) rICR, SIZEOF__BYTE);
 		/* Fractional part */
-		Enqueue((uint32_t) ((rICR - (int) rICR) * 256), BITS_BINARY);
+		Enqueue((uint32_t) ((rICR - (int) rICR) * 256), SIZEOF__BYTE);
 
 	}
 
@@ -657,15 +657,15 @@ CTagItemGeneratorRINT::GetTagName()
 string
 CTagItemGeneratorRINT::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorRNIP::GenTag(bool bIsValid, _REAL rIntFreq, _REAL rISR)
+CTagItemGeneratorRNIP::GenTag(_BOOLEAN bIsValid, CReal rIntFreq, CReal rISR)
 {
 
 	/* If no value is available, set tag length to zero */
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		/* Length: 0 byte */
 		PrepareTag(0);
@@ -693,13 +693,13 @@ CTagItemGeneratorRNIP::GetTagName()
 string
 CTagItemGeneratorRNIP::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorSignalStrength::GenTag(bool bIsValid, _REAL rSigStrength)
+CTagItemGeneratorSignalStrength::GenTag(_BOOLEAN bIsValid, _REAL rSigStrength)
 {
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		PrepareTag(0);
 	}
@@ -719,17 +719,17 @@ CTagItemGeneratorSignalStrength::GetTagName()
 string
 CTagItemGeneratorSignalStrength::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
 CTagItemGeneratorReceiverStatus::GenTag(CParameter & Parameter)
 {
-	PrepareTag(4 * BITS_BINARY);
-	Enqueue(Parameter.ReceiveStatus.TSync.GetStatus() == RX_OK ? 0 : 1, BITS_BINARY);	/* 0=ok, 1=bad */
-	Enqueue(Parameter.ReceiveStatus.FAC.GetStatus() == RX_OK ? 0 : 1, BITS_BINARY);	/* 0=ok, 1=bad */
-	Enqueue(Parameter.ReceiveStatus.SDC.GetStatus() == RX_OK ? 0 : 1, BITS_BINARY);	/* 0=ok, 1=bad */
-	Enqueue(Parameter.ReceiveStatus.Audio.GetStatus() == RX_OK ? 0 : 1, BITS_BINARY);	/* 0=ok, 1=bad */
+	PrepareTag(4 * SIZEOF__BYTE);
+	Enqueue(Parameter.ReceiveStatus.TSync.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.FAC.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.SDC.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.Audio.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
 }
 
 string
@@ -741,14 +741,14 @@ CTagItemGeneratorReceiverStatus::GetTagName()
 string
 CTagItemGeneratorReceiverStatus::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
 CTagItemGeneratorProfile::GenTag(char cProfile)
 {
 	PrepareTag(8);
-	Enqueue((uint32_t) cProfile, BITS_BINARY);
+	Enqueue((uint32_t) cProfile, SIZEOF__BYTE);
 }
 
 string
@@ -760,27 +760,41 @@ CTagItemGeneratorProfile::GetTagName()
 string
 CTagItemGeneratorProfile::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorRxDemodMode::GenTag(EModulationType eMode)	// rdmo
+CTagItemGeneratorRxDemodMode::GenTag(ERecMode eMode)	// rdmo
 {
-	PrepareTag(4 * BITS_BINARY);
-	string s;
+	PrepareTag(4 * SIZEOF__BYTE);
 	switch (eMode)
 	{
-	case DRM: s="drm_"; break;
-	case AM: s="am__"; break;
-	case USB: s="usb_"; break;
-	case LSB: s="lsb_"; break;
-	case NBFM: s="nbfm"; break;
-	case WBFM: s="wbfm"; break;
-	default: s="    "; break;
+	case RM_DRM:
+		Enqueue((uint32_t) 'd', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'r', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	case RM_AM:
+		Enqueue((uint32_t) 'a', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	case RM_FM:
+		Enqueue((uint32_t) 'f', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	default:
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		break;
 	}
 
-	for (int i=0; i<4; i++)
-		Enqueue((uint32_t) s[i], BITS_BINARY);
 }
 
 string
@@ -792,20 +806,20 @@ CTagItemGeneratorRxDemodMode::GetTagName()
 string
 CTagItemGeneratorRxDemodMode::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorRxFrequency::GenTag(bool bIsValid, int iFrequency)	// Frequency in kHz
+CTagItemGeneratorRxFrequency::GenTag(_BOOLEAN bIsValid, int iFrequency)	// Frequency in kHz
 {
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		PrepareTag(0);
 	}
 	else
 	{
-		PrepareTag(4 * BITS_BINARY);
-		Enqueue((uint32_t) iFrequency * 1000, 4 * BITS_BINARY);
+		PrepareTag(4 * SIZEOF__BYTE);
+		Enqueue((uint32_t) iFrequency * 1000, 4 * SIZEOF__BYTE);
 	}
 }
 
@@ -818,14 +832,14 @@ CTagItemGeneratorRxFrequency::GetTagName()
 string
 CTagItemGeneratorRxFrequency::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorRxActivated::GenTag(bool bActivated)
+CTagItemGeneratorRxActivated::GenTag(_BOOLEAN bActivated)
 {
-	PrepareTag(BITS_BINARY);
-	Enqueue(bActivated == true ? '0' : '1', BITS_BINARY);
+	PrepareTag(SIZEOF__BYTE);
+	Enqueue(bActivated == TRUE ? '0' : '1', SIZEOF__BYTE);
 }
 
 string
@@ -837,20 +851,20 @@ CTagItemGeneratorRxActivated::GetTagName()
 string
 CTagItemGeneratorRxActivated::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorRxBandwidth::GenTag(bool bIsValid, _REAL rBandwidth)
+CTagItemGeneratorRxBandwidth::GenTag(_BOOLEAN bIsValid, _REAL rBandwidth)
 {
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		PrepareTag(0);
 	}
 	else
 	{
-		PrepareTag(2 * BITS_BINARY);
-		Enqueue((uint32_t) ((int) (rBandwidth * 256.0)), 2 * BITS_BINARY);
+		PrepareTag(2 * SIZEOF__BYTE);
+		Enqueue((uint32_t) ((int) (rBandwidth * 256.0)), 2 * SIZEOF__BYTE);
 	}
 }
 
@@ -863,20 +877,20 @@ CTagItemGeneratorRxBandwidth::GetTagName()
 string
 CTagItemGeneratorRxBandwidth::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 void
-CTagItemGeneratorRxService::GenTag(bool bIsValid, int iService)
+CTagItemGeneratorRxService::GenTag(_BOOLEAN bIsValid, int iService)
 {
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		PrepareTag(0);
 	}
 	else
 	{
-		PrepareTag(BITS_BINARY);
-		Enqueue((uint32_t) iService, BITS_BINARY);
+		PrepareTag(SIZEOF__BYTE);
+		Enqueue((uint32_t) iService, SIZEOF__BYTE);
 	}
 }
 
@@ -889,7 +903,7 @@ CTagItemGeneratorRxService::GetTagName()
 string
 CTagItemGeneratorRxService::GetProfiles()
 {
-	return "ABCDGQ";
+	return "ABCDQ";
 }
 
 CTagItemGeneratorRBP::CTagItemGeneratorRBP()
@@ -928,7 +942,7 @@ CTagItemGeneratorRBP::GetTagName()
 string
 CTagItemGeneratorRBP::GetProfiles()
 {
-	return "ABCDG";
+	return "ABCD";
 }
 
 // Call this to write the binary data (header + payload) to the vector
@@ -959,12 +973,12 @@ CTagItemGenerator::PrepareTag(int iLenDataBits)
 	string strTagName = GetTagName();
 	/* Init vector length. 4 bytes for tag name and 4 bytes for data length
 	   plus the length of the actual data */
-	vecbiTagData.Init(8 * BITS_BINARY + iLenDataBits);
+	vecbiTagData.Init(8 * SIZEOF__BYTE + iLenDataBits);
 	vecbiTagData.ResetBitAccess();
 
 	/* Set tag name (always four bytes long) */
 	for (int i = 0; i < 4; i++)
-		vecbiTagData.Enqueue((uint32_t) strTagName[i], BITS_BINARY);
+		vecbiTagData.Enqueue((uint32_t) strTagName[i], SIZEOF__BYTE);
 
 	/* Set tag data length */
 	vecbiTagData.Enqueue((uint32_t) iLenDataBits, 32);
@@ -983,48 +997,35 @@ CTagItemGenerator::Enqueue(uint32_t iInformation, int iNumOfBits)
 
 //andrewm - 2006-12-08
 void
-CTagItemGeneratorGPS::GenTag(bool bIsValid, CGPSData & GPSData)	// Long/Lat in degrees
+CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, gps_data_t& gps_data)	// Long/Lat in degrees
 {
-	if (bIsValid == false)
+	if (bIsValid == FALSE)
 	{
 		PrepareTag(0);
 	}
 	else
 	{
-		PrepareTag(26 * BITS_BINARY);
-
-		switch (GPSData.GetGPSSource())
-		{
-		case CGPSData::GPS_SOURCE_INVALID:
-			Enqueue((uint32_t) 0x00, BITS_BINARY);
-			break;
-		case CGPSData::GPS_SOURCE_GPS_RECEIVER:
-			Enqueue((uint32_t) 0x01, BITS_BINARY);
-			break;
-		case CGPSData::GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER:
-			Enqueue((uint32_t) 0x02, BITS_BINARY);
-			break;
-		case CGPSData::GPS_SOURCE_MANUAL_ENTRY:
-			Enqueue((uint32_t) 0x03, BITS_BINARY);
-			break;
-		case CGPSData::GPS_SOURCE_NOT_AVAILABLE:
-			Enqueue((uint32_t) 0xFF, BITS_BINARY);
-			break;
-		default:
-			Enqueue((uint32_t) 0xFF, BITS_BINARY);
-			break;
+		uint32_t source = 0xff; // GPS_SOURCE_NOT_AVAILABLE
+		PrepareTag(26 * SIZEOF__BYTE);
+		if(gps_data.set&STATUS_SET) {
+			switch(gps_data.status) {
+			case 0: source = 3; break; // manual
+			case 1: source = 1; break; // gps
+			case 2: source = 2; break; // differential
+			}
 		}
+		Enqueue(source, SIZEOF__BYTE);
 
-		if (GPSData.GetSatellitesVisibleAvailable())
+		if (gps_data.set&SATELLITE_SET)
 		{
-			Enqueue((uint32_t) GPSData.GetSatellitesVisible(), BITS_BINARY);
+			Enqueue((uint32_t) gps_data.satellites_used, SIZEOF__BYTE);
 		}
 		else
 		{
-			Enqueue((uint32_t) 0xff, BITS_BINARY);
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetPositionAvailable())
+		if (gps_data.set&LATLON_SET)
 		{
 			double latitude, longitude;
 			int iLatitudeDegrees;
@@ -1035,7 +1036,8 @@ CTagItemGeneratorGPS::GenTag(bool bIsValid, CGPSData & GPSData)	// Long/Lat in d
 			uint8_t uiLongitudeMinutes;
 			uint16_t uiLongitudeMinuteFractions;
 
-			GPSData.GetLatLongDegrees(latitude, longitude);
+			latitude = gps_data.fix.latitude;
+			longitude = gps_data.fix.longitude;
 
 			if (latitude >= 0)
 				iLatitudeDegrees = (int) latitude;
@@ -1059,82 +1061,83 @@ CTagItemGeneratorGPS::GenTag(bool bIsValid, CGPSData & GPSData)	// Long/Lat in d
 				(uint16_t) (((60.0 * (longitude - iLongitudeDegrees)) -
 							 uiLongitudeMinutes) * 65536.0);
 
-			Enqueue((uint32_t) iLatitudeDegrees, 2 * BITS_BINARY);
-			Enqueue((uint32_t) uiLatitudeMinutes, BITS_BINARY);
-			Enqueue((uint32_t) uiLatitudeMinuteFractions, 2 * BITS_BINARY);
-			Enqueue((uint32_t) iLongitudeDegrees, 2 * BITS_BINARY);
-			Enqueue((uint32_t) uiLongitudeMinutes, BITS_BINARY);
-			Enqueue((uint32_t) uiLongitudeMinuteFractions, 2 * BITS_BINARY);
+			Enqueue((uint32_t) iLatitudeDegrees, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) uiLatitudeMinutes, SIZEOF__BYTE);
+			Enqueue((uint32_t) uiLatitudeMinuteFractions, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) iLongitudeDegrees, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) uiLongitudeMinutes, SIZEOF__BYTE);
+			Enqueue((uint32_t) uiLongitudeMinuteFractions, 2 * SIZEOF__BYTE);
 		}
 		else
 		{
-			Enqueue((uint32_t) 0xffff, 2 * BITS_BINARY);
-			Enqueue((uint32_t) 0xffff, BITS_BINARY);
-			Enqueue((uint32_t) 0xffff, 2 * BITS_BINARY);
-			Enqueue((uint32_t) 0xffff, 2 * BITS_BINARY);
-			Enqueue((uint32_t) 0xffff, BITS_BINARY);
-			Enqueue((uint32_t) 0xffff, 2 * BITS_BINARY);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xffff, SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xffff, SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetAltitudeAvailable())
+		if (gps_data.set&ALTITUDE_SET)
 		{
+			double altitude = gps_data.fix.altitude;
 			int iAltitudeMetres;
 			uint8_t uiAltitudeMetreFractions;
 
-			if (GPSData.GetAltitudeMetres() >= 0)
-				iAltitudeMetres = (int) GPSData.GetAltitudeMetres();
+			if (altitude >= 0)
+				iAltitudeMetres = (int) altitude;
 			else
-				iAltitudeMetres = (int) (GPSData.GetAltitudeMetres() - 1);
+				iAltitudeMetres = (int) (altitude - 1);
 
-			uiAltitudeMetreFractions = (uint8_t) (256.0 * (GPSData.GetAltitudeMetres() - iAltitudeMetres));
+			uiAltitudeMetreFractions = (uint8_t) (256.0 * (altitude - iAltitudeMetres));
 
-			Enqueue((uint32_t) iAltitudeMetres, 2 * BITS_BINARY);
-			Enqueue((uint32_t) uiAltitudeMetreFractions, BITS_BINARY);
+			Enqueue((uint32_t) iAltitudeMetres, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) uiAltitudeMetreFractions, SIZEOF__BYTE);
 		}
 		else
 		{
-			Enqueue((uint32_t) 0xffff, 2 * BITS_BINARY);
-			Enqueue((uint32_t) 0xff, BITS_BINARY);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetTimeAndDateAvailable())
+		if (gps_data.set&TIME_SET)
 		{
-			uint32_t year;
-			uint8_t month, day, hour, minute, second;
-			GPSData.GetTimeDate(year, month, day, hour, minute, second);
-			Enqueue((uint32_t) hour, BITS_BINARY);
-			Enqueue((uint32_t) minute, BITS_BINARY);
-			Enqueue((uint32_t) second, BITS_BINARY);
-			Enqueue(year, 2*BITS_BINARY);
-			Enqueue((uint32_t) month, BITS_BINARY);
-			Enqueue((uint32_t) day, BITS_BINARY);
+			time_t time = (time_t)gps_data.fix.time;
+			struct tm * ptm;
+			ptm = gmtime ( &time );
+			Enqueue((uint32_t) ptm->tm_hour, SIZEOF__BYTE);
+			Enqueue((uint32_t) ptm->tm_min, SIZEOF__BYTE);
+			Enqueue((uint32_t) ptm->tm_sec, SIZEOF__BYTE);
+			Enqueue(1900+ptm->tm_year, 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) ptm->tm_mon+1, SIZEOF__BYTE);
+			Enqueue((uint32_t) ptm->tm_mday, SIZEOF__BYTE);
 		}
 		else
 		{
-			Enqueue((uint32_t) 0xff, BITS_BINARY);
-			Enqueue((uint32_t) 0xff, BITS_BINARY);
-			Enqueue((uint32_t) 0xff, BITS_BINARY);
-			Enqueue((uint32_t) 0xff, BITS_BINARY);
-			Enqueue((uint32_t) 0xffff, 2 * BITS_BINARY);
-			Enqueue((uint32_t) 0xff, BITS_BINARY);
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetSpeedAvailable())
+		if (gps_data.set&SPEED_SET)
 		{
-			Enqueue((uint32_t) (GPSData.GetSpeedMetresPerSecond() * 10.0), 2 * BITS_BINARY);
+			Enqueue((uint32_t) (gps_data.fix.speed * 10.0), 2 * SIZEOF__BYTE);
 		}
 		else
 		{
-			Enqueue((uint32_t) 0xffff, 2 * BITS_BINARY);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetHeadingAvailable())
+		if (gps_data.set&TRACK_SET)
 		{
-			Enqueue((uint32_t) GPSData.GetHeadingDegrees(), 2 * BITS_BINARY);
+			Enqueue((uint32_t) gps_data.fix.track, 2 * SIZEOF__BYTE);
 		}
 		else
 		{
-			Enqueue((uint32_t) 0xffff, 2 * BITS_BINARY);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
 		}
 	}
 }
@@ -1148,26 +1151,20 @@ CTagItemGeneratorGPS::GetTagName()
 string
 CTagItemGeneratorGPS::GetProfiles()
 {
-	return "ADG";
+	return "AD";
 }
 
 void
 CTagItemGeneratorPowerSpectralDensity::GenTag(CParameter & Parameter)
 {
-    vector<_REAL> psd;
-	if (Parameter.Measurements.PSD.get(psd) == false)
+	PrepareTag(Parameter.vecrPSD.Size() * SIZEOF__BYTE);
+
+	for (int i = 0; i < Parameter.vecrPSD.Size(); i++)
 	{
-		GenEmptyTag();
-		return;
+		uint32_t p = uint8_t(Parameter.vecrPSD[i] * _REAL(-2.0));
+		Enqueue((uint32_t) p, SIZEOF__BYTE);
 	}
 
-	PrepareTag(psd.size() * BITS_BINARY);
-
-	for (size_t i = 0; i < psd.size(); i++)
-	{
-		uint32_t p = uint8_t(psd[i] * _REAL(-2.0));
-		Enqueue(uint32_t(p), BITS_BINARY);
-	}
 }
 
 string
@@ -1179,27 +1176,26 @@ CTagItemGeneratorPowerSpectralDensity::GetTagName()
 string
 CTagItemGeneratorPowerSpectralDensity::GetProfiles()
 {
-	return "ADG";
+	return "AD";
 }
 
 void
 CTagItemGeneratorPowerImpulseResponse::GenTag(CParameter & Parameter)
 {
-	const _REAL rOffset = _REAL(-60.0);
-	CMeasurements::CPIR pir;
-	(void)Parameter.Measurements.PIR.get(pir);
-	PrepareTag(pir.data.size() * BITS_BINARY + 4 * BITS_BINARY);
-
-    _REAL end = pir.rStart + pir.rStep * pir.data.size();
-	Enqueue(uint32_t(int(pir.rStart * _REAL(256.0))), 2*BITS_BINARY);
-	Enqueue(uint32_t(int(end * _REAL(256.0))), 2*BITS_BINARY);
-
-	for (size_t i = 0; i < pir.data.size(); i++)
+	int samples = Parameter.vecrPIR.Size();
+	if(samples>0)
 	{
-		uint32_t p = uint8_t((pir.data[i]+rOffset) * _REAL(-2.0));
-		Enqueue(p, BITS_BINARY);
-	}
+		const _REAL rOffset = _REAL(-60.0);
+		PrepareTag(samples * SIZEOF__BYTE + 4 * SIZEOF__BYTE);
 
+		Enqueue(uint32_t(int(Parameter.rPIRStart * _REAL(256.0))), 2*SIZEOF__BYTE);
+		Enqueue(uint32_t(int(Parameter.rPIREnd * _REAL(256.0))), 2*SIZEOF__BYTE);
+		for (int i = 0; i < samples; i++)
+		{
+			uint32_t p = uint8_t((Parameter.vecrPIR[i]+rOffset) * _REAL(-2.0));
+			Enqueue((uint32_t) p, SIZEOF__BYTE);
+		}
+	} // else generate empty tag
 }
 
 string
@@ -1223,7 +1219,7 @@ CTagItemGeneratorPilots::GetTagName()
 string
 CTagItemGeneratorPilots::GetProfiles()
 {
-	return "D";
+	return "AD";
 }
 
 void
@@ -1250,34 +1246,30 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		((iNumCarrier - 1) / iScatPilFreqInt +
 		 1) * iNumSymPerFrame / iScatPilTimeInt;
 
-	int iTagLen = 4 * BITS_BINARY;	// first 4 bytes apply to the whole frame
-	iTagLen += iNumSymPerFrame * 4 * BITS_BINARY;	// 4 bytes at start of each symbol (spec typo?)
-	iTagLen += iTotalNumPilots * 2 * 2 * BITS_BINARY;	// 4 bytes per pilot value (2 byte re, 2 byte imag)
+	int iTagLen = 4 * SIZEOF__BYTE;	// first 4 bytes apply to the whole frame
+	iTagLen += iNumSymPerFrame * 4 * SIZEOF__BYTE;	// 4 bytes at start of each symbol (spec typo?)
+	iTagLen += iTotalNumPilots * 2 * 2 * SIZEOF__BYTE;	// 4 bytes per pilot value (2 byte re, 2 byte imag)
 
 	//log.GetStatus("rpil gentag: pilots %d tag length %d", iTotalNumPilots, iTagLen);
 
 	PrepareTag(iTagLen);
 
 	// fields for the whole frame
-	Enqueue((uint32_t) iNumSymPerFrame, BITS_BINARY);	// SN = number of symbols
-	Enqueue((uint32_t) iScatPilTimeInt, BITS_BINARY);	// SR = symbol repetition
-	Enqueue((uint32_t) 0, 2 * BITS_BINARY);	// rfu
+	Enqueue((uint32_t) iNumSymPerFrame, SIZEOF__BYTE);	// SN = number of symbols
+	Enqueue((uint32_t) iScatPilTimeInt, SIZEOF__BYTE);	// SR = symbol repetition
+	Enqueue((uint32_t) 0, 2 * SIZEOF__BYTE);	// rfu
 
 	// Check that the matrix has the expected dimensions (in case of a mode change)
-	vector<vector<_COMPLEX> > pilots;
-	if(Parameter.Measurements.Pilots.get(pilots)==false)
-	{
-		GenEmptyTag();
-        return;
-	}
-	if (pilots.size() != size_t(iNumSymPerFrame / iScatPilTimeInt)
-		|| pilots[0].size() != size_t((iNumCarrier - 1) / iScatPilFreqInt + 1))
+	if (Parameter.matcReceivedPilotValues.NumRows() !=
+		iNumSymPerFrame / iScatPilTimeInt
+		|| Parameter.matcReceivedPilotValues.NumColumns() !=
+		((iNumCarrier - 1) / iScatPilFreqInt + 1))
 	{
 		GenEmptyTag();
 #if 0
 		log.GetStatus("Wrong size: %d x %d, expected %d x %d",
-				  pilots.size(),
-				  pilots[0].size(),
+				  Parameter.matcReceivedPilotValues.NumRows(),
+				  Parameter.matcReceivedPilotValues.NumColumns(),
 				  iNumSymPerFrame / iScatPilTimeInt,
 				  ((iNumCarrier - 1) / iScatPilFreqInt + 1));
 #endif
@@ -1315,7 +1307,7 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 			// Is it really a pilot? This will be false only in Mode D for the DC carrier
 			if (_IsScatPil(Param.matiMapTab[iSymbolNumber][iCarrier]))
 			{
-				_COMPLEX cPil = pilots[iRow][i];
+				_COMPLEX cPil = Parameter.matcReceivedPilotValues[iRow][i];
 				if (cPil.real() > rMax)
 					rMax = cPil.real();
 				if (-cPil.real() > rMax)
@@ -1328,21 +1320,25 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		}
 
 		// Calculate the exponent for the block
-		_REAL rExponent = ceil(log(rMax) / log(2.0));
+		_REAL rExponent = Ceil(Log(rMax) / Log(_REAL(2.0)));
 		_REAL rScale = 32767 * pow(_REAL(2.0), -rExponent);
 
 		// Put to the tag
-		Enqueue((uint32_t) iNumPilots, BITS_BINARY);	// PN = number of pilots
-		Enqueue((uint32_t) iFirstPilotCarrier, BITS_BINARY);	// PO = pilot offset
-		Enqueue((uint32_t) rExponent, 2 * BITS_BINARY);
+		Enqueue((uint32_t) iNumPilots, SIZEOF__BYTE);	// PN = number of pilots
+		Enqueue((uint32_t) iFirstPilotCarrier, SIZEOF__BYTE);	// PO = pilot offset
+		Enqueue((uint32_t) rExponent, 2 * SIZEOF__BYTE);
 
 		// Step through the pilots again and write the values
 		for (i = iFirstPilotCarrier / iScatPilFreqInt, iCarrier =
 			 iFirstPilotCarrier; iCarrier < iNumCarrier;
 			 i += iScatPilTimeInt, iCarrier += iScatPilFreqSpacing)
 		{
-			Enqueue(uint32_t(pilots[iRow][i].real()*rScale), 2 * BITS_BINARY);
-			Enqueue(uint32_t(pilots[iRow][i].imag()*rScale), 2 * BITS_BINARY);
+			Enqueue((uint32_t)
+					(Parameter.matcReceivedPilotValues[iRow][i].real() *
+					 rScale), 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t)
+					(Parameter.matcReceivedPilotValues[iRow][i].imag() *
+					 rScale), 2 * SIZEOF__BYTE);
 		}
 	}	// next symbol
 }
@@ -1352,7 +1348,7 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 {
 
 	const int iLenStrData =
-		BITS_BINARY * (Parameter.MSCParameters.Stream[0].iLenPartA + Parameter.MSCParameters.Stream[0].iLenPartB);
+		SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB);
 	// Only generate this tag if stream input data is not of zero length
 	if (iLenStrData == 0)
 		return;
@@ -1368,7 +1364,7 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 
 	// Audio coding
 	int iVal = 0;
-	switch (Parameter.AudioParam[0].eAudioCoding)
+	switch (Parameter.Service[0].AudioParam.eAudioCoding)
 	{
 	case CAudioParam::AC_AAC:	// 00
 		iVal = 0;
@@ -1386,10 +1382,10 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	Enqueue(iVal, 2);
 
 	// SBR flag
-	Enqueue(Parameter.AudioParam[0].eSBRFlag == CAudioParam::SB_USED ? 1 : 0, 1);
+	Enqueue(Parameter.Service[0].AudioParam.eSBRFlag == CAudioParam::SB_USED ? 1 : 0, 1);
 
 	// Audio mode
-	switch (Parameter.AudioParam[0].eAudioMode)
+	switch (Parameter.Service[0].AudioParam.eAudioMode)
 	{
 	case CAudioParam::AM_MONO:
 		iVal = 0;
@@ -1406,7 +1402,7 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	Enqueue(iVal, 2);
 
 	// Audio sampling rate
-	switch (Parameter.AudioParam[0].eAudioSamplRate)
+	switch (Parameter.Service[0].AudioParam.eAudioSamplRate)
 	{
 	case CAudioParam::AS_8_KHZ:
 		iVal = 0;
@@ -1432,9 +1428,9 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	// Now send the stream data
 	pvecbiStrData->ResetBitAccess();
 	// Data is always a multiple of 8 -> copy bytes
-	for (int i = 0; i < iLenStrData / BITS_BINARY; i++)
+	for (int i = 0; i < iLenStrData / SIZEOF__BYTE; i++)
 	{
-		Enqueue(pvecbiStrData->Separate(BITS_BINARY), BITS_BINARY);
+		Enqueue(pvecbiStrData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
 

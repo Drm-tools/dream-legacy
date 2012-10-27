@@ -30,7 +30,6 @@
 #define SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../GPSData.h"
 #include <map>
 #include <string>
 
@@ -57,9 +56,9 @@
 #define MAX_FREQ_AQC_SE_WIN_CEN		(SOUNDCRD_SAMPLE_RATE / 2)
 
 /* Maximum carrier frequency  */
-# define MAX_RF_FREQ				120000 /* kHz */
+# define MAX_RF_FREQ				30000 /* kHz */
 
-#ifdef QT_GUI_LIB
+#ifdef USE_QT_GUI
 /* Maximum minutes for delayed log file start */
 # define MAX_SEC_LOG_FI_START		3600 /* seconds */
 
@@ -70,15 +69,12 @@
 # define MAX_COLOR_SCHEMES_VAL		(NUM_AVL_COLOR_SCHEMES_PLOT - 1)
 
 # define MAX_MDI_PORT_IN_NUM		65535
-
-# define GUI_CONTROL_UPDATE_TIME			500	/* Milliseconds */
-
-# define GUI_CONTROL_UPDATE_TIME_FAST	250	/* Milliseconds */
-
 #endif
 
+#ifdef HAVE_LIBHAMLIB
 /* Maximum ID number for hamlib library */
 # define MAX_ID_HAMLIB				32768
+#endif
 
 /* max magnitude of front-end cal factor */
 #define MAX_CAL_FACTOR				200
@@ -123,8 +119,8 @@
 		bool operator()(const std::string& x, const std::string& y) const;
 	};
 	/* These typedefs just make the code a bit more readable */
-	typedef map<string, string, StlIniCompareStringNoCase > INISection;
-	typedef map<string, INISection , StlIniCompareStringNoCase > INIFile;
+	typedef std::map<string, string, StlIniCompareStringNoCase > INISection;
+	typedef std::map<string, INISection , StlIniCompareStringNoCase > INIFile;
 
 	class CWinGeom
 	{
@@ -149,6 +145,7 @@ protected:
 	void PutIniSetting(const string& strSection, const string& strKey="",
 				const string& strVal = "");
 	INIFile ini;
+	CMutex Mutex;
 };
 
 class CSettings: public CIniFile
@@ -158,13 +155,10 @@ public:
 	void Load(int argc, char** argv);
 	void Save();
 	void Clear();
-	void Clear(const string& section);
-	void Clear(const string& section, const string& key);
 	string Get(const string& section, const string& key, const string& def="") const;
 	void Put(const string& section, const string& key, const string& value);
 	bool Get(const string& section, const string& key, const bool def) const;
-	void Put(const string& section, const string& key, const bool value)
-		{ Put(section, key, value?1:0); }
+	void Put(const string& section, const string& key, const bool value);
 	int Get(const string& section, const string& key, const int def) const;
 	void Put(const string& section, const string& key, const int value);
 	_REAL Get(const string& section, const string& key, const _REAL def) const;
@@ -172,25 +166,20 @@ public:
 	void Get(const string& section, CWinGeom&) const;
 	void Put(const string& section, const CWinGeom&);
 
-	void Get(const string& key, INISection& section) const
-	{
-		INIFile::const_iterator i = ini.find(key);
-		if(i!=ini.end())
-			section = i->second;
-	}
-
 	string UsageArguments(char** argv);
 
 protected:
 
+
 	void ParseArguments(int argc, char** argv);
-	bool GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
+	void FileArg(const string&);
+	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
 							 string strLongOpt);
-	bool GetNumericArgument(int argc, char** argv, int& i,
+	_BOOLEAN GetNumericArgument(int argc, char** argv, int& i,
 								string strShortOpt, string strLongOpt,
 								_REAL rRangeStart, _REAL rRangeStop,
 								_REAL& rValue);
-	bool GetStringArgument(int argc, char** argv, int& i,
+	_BOOLEAN GetStringArgument(int argc, char** argv, int& i,
 							   string strShortOpt, string strLongOpt,
 							   string& strArg);
 

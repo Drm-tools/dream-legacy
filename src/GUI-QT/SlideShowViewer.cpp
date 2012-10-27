@@ -32,29 +32,28 @@
 #include "../datadecoding/DataDecoder.h"
 #include <QFileDialog>
 
-SlideShowViewer::SlideShowViewer(ReceiverInterface& rec, CSettings& s,
-        QWidget* parent,
-		const char* name, Qt::WFlags f):
-		QMainWindow(parent, f), Ui_SlideShowViewer(), Timer(), strCurrentSavePath("."),
+SlideShowViewer::SlideShowViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent):
+		QMainWindow(parent), Timer(), strCurrentSavePath("."),
 		receiver(rec), settings(s),vecImages(),vecImageNames(),iCurImagePos(-1)
 {
-    setupUi(this);
+	ui = new Ui_SlideShowViewer();
+    ui->setupUi(this);
 
-    connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
+    connect(ui->buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 
-	connect(actionClear_All, SIGNAL(triggered()), SLOT(OnClearAll()));
-	connect(actionSave, SIGNAL(triggered()), SLOT(OnSave()));
-	connect(actionSave_All, SIGNAL(triggered()), SLOT(OnSaveAll()));
-	connect(actionClose, SIGNAL(triggered()), SLOT(close()));
+	connect(ui->actionClear_All, SIGNAL(triggered()), SLOT(OnClearAll()));
+	connect(ui->actionSave, SIGNAL(triggered()), SLOT(OnSave()));
+	connect(ui->actionSave_All, SIGNAL(triggered()), SLOT(OnSaveAll()));
+	connect(ui->actionClose, SIGNAL(triggered()), SLOT(close()));
 
 	/* Update time for color LED */
-	LEDStatus->SetUpdateTime(1000);
+	ui->LEDStatus->SetUpdateTime(1000);
 
 	/* Connect controls */
-	connect(ButtonStepBack, SIGNAL(clicked()), this, SLOT(OnButtonStepBack()));
-	connect(ButtonStepForward, SIGNAL(clicked()), this, SLOT(OnButtonStepForward()));
-	connect(ButtonJumpBegin, SIGNAL(clicked()), this, SLOT(OnButtonJumpBegin()));
-	connect(ButtonJumpEnd, SIGNAL(clicked()), this, SLOT(OnButtonJumpEnd()));
+	connect(ui->ButtonStepBack, SIGNAL(clicked()), this, SLOT(OnButtonStepBack()));
+	connect(ui->ButtonStepForward, SIGNAL(clicked()), this, SLOT(OnButtonStepForward()));
+	connect(ui->ButtonJumpBegin, SIGNAL(clicked()), this, SLOT(OnButtonJumpBegin()));
+	connect(ui->ButtonJumpEnd, SIGNAL(clicked()), this, SLOT(OnButtonJumpEnd()));
 
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
@@ -73,39 +72,54 @@ void SlideShowViewer::OnTimer()
 	Parameters.Lock();
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
 	int shortID = Parameters.GetCurSelDataService();
-	int packetID = Parameters.Service[shortID].iPacketID;
+	CDataParam dp = Parameters.GetDataParam(shortID);
 	Parameters.Unlock();
 
 	switch(status)
 	{
 	case NOT_PRESENT:
-		LEDStatus->Reset(); /* GREY */
+		ui->LEDStatus->Reset(); /* GREY */
 		break;
 
 	case CRC_ERROR:
-		LEDStatus->SetLight(CMultColorLED::RL_RED); /* RED */
+		ui->LEDStatus->SetLight(CMultColorLED::RL_RED);
 		break;
 
 	case DATA_ERROR:
-		LEDStatus->SetLight(CMultColorLED::RL_YELLOW); /* YELLOW */
+		ui->LEDStatus->SetLight(CMultColorLED::RL_YELLOW);
 		break;
 
 	case RX_OK:
-		LEDStatus->SetLight(CMultColorLED::RL_GREEN); /* GREEN */
+		ui->LEDStatus->SetLight(CMultColorLED::RL_GREEN);
 		break;
 	}
 
-	CDataDecoder& DataDecoder = *receiver.GetDataDecoder();
-	CMOTDABDec *motdec = (CMOTDABDec*)DataDecoder.getApplication(packetID);
+	CDataDecoder* DataDecoder = receiver.GetDataDecoder();
+	if(DataDecoder == NULL)
+	{
+		qDebug("can't get data decoder from receiver");
+		return;
+	}
+	CMOTDABDec *motdec = DataDecoder->getApplication(dp.iPacketID);
 
 	if(motdec==NULL)
+	{
+		qDebug("can't get MOT decoder for short id %d, packetId %d", shortID, dp.iPacketID);
         return;
+	}
 
     /* Poll the data decoder module for new picture */
+#if 0
     TTransportID tid = motdec->GetNextTid();
     if (tid>=0)
     {
         CMOTObject	NewObj = motdec->GetObject(tid);
+#else
+	if(motdec->NewObjectAvailable())
+	{
+	    CMOTObject	NewObj;
+		motdec->GetNextObject(NewObj);
+#endif
         /* Store received picture */
         int iCurNumPict = vecImageNames.size();
         CVector<_BYTE>& imagedata = NewObj.Body.vecData;
@@ -173,15 +187,7 @@ void SlideShowViewer::OnClearAll()
     vecImages.clear();
     vecImageNames.clear();
     iCurImagePos = -1;
-
-    actionClear_All->setEnabled(false);
-    actionSave->setEnabled(false);
-    actionSave_All->setEnabled(false);
-
-    ButtonStepBack->setEnabled(false);
-    ButtonStepForward->setEnabled(false);
-    ButtonJumpBegin->setEnabled(false);
-    ButtonJumpEnd->setEnabled(false);
+	UpdateButtons();
 }
 
 void SlideShowViewer::showEvent(QShowEvent*)
@@ -268,10 +274,10 @@ void SlideShowViewer::SetImage(int pos)
     if(pos>int(vecImages.size()-1))
         pos = vecImages.size()-1;
     iCurImagePos = pos;
-    image->setPixmap(vecImages[pos]);
+    ui->image->setPixmap(vecImages[pos]);
 	const QString& imagename = vecImageNames[pos];
 	if (imagename.length() > 0)
-		image->setToolTip(imagename);
+		ui->image->setToolTip(imagename);
 	UpdateButtons();
 }
 
@@ -280,39 +286,39 @@ void SlideShowViewer::UpdateButtons()
 	/* Set enable menu entry for saving a picture */
 	if (iCurImagePos < 0)
 	{
-		actionClear_All->setEnabled(false);
-		actionSave->setEnabled(false);
-		actionSave_All->setEnabled(false);
+		ui->actionClear_All->setEnabled(false);
+		ui->actionSave->setEnabled(false);
+		ui->actionSave_All->setEnabled(false);
 	}
 	else
 	{
-		actionClear_All->setEnabled(true);
-		actionSave->setEnabled(true);
-		actionSave_All->setEnabled(true);
+		ui->actionClear_All->setEnabled(true);
+		ui->actionSave->setEnabled(true);
+		ui->actionSave_All->setEnabled(true);
 	}
 
 	if (iCurImagePos <= 0)
 	{
 		/* We are already at the beginning */
-		ButtonStepBack->setEnabled(false);
-		ButtonJumpBegin->setEnabled(false);
+		ui->ButtonStepBack->setEnabled(false);
+		ui->ButtonJumpBegin->setEnabled(false);
 	}
 	else
 	{
-		ButtonStepBack->setEnabled(true);
-		ButtonJumpBegin->setEnabled(true);
+		ui->ButtonStepBack->setEnabled(true);
+		ui->ButtonJumpBegin->setEnabled(true);
 	}
 
 	if (iCurImagePos == int(vecImages.size()-1))
 	{
 		/* We are already at the end */
-		ButtonStepForward->setEnabled(false);
-		ButtonJumpEnd->setEnabled(false);
+		ui->ButtonStepForward->setEnabled(false);
+		ui->ButtonJumpEnd->setEnabled(false);
 	}
 	else
 	{
-		ButtonStepForward->setEnabled(true);
-		ButtonJumpEnd->setEnabled(true);
+		ui->ButtonStepForward->setEnabled(true);
+		ui->ButtonJumpEnd->setEnabled(true);
 	}
 
 	QString strTotImages = QString().setNum(vecImages.size());
@@ -323,13 +329,13 @@ void SlideShowViewer::UpdateButtons()
 	for (int i = 0; i < (strTotImages.length() - strNumImage.length()); i++)
 		strSep += " ";
 
-	LabelCurPicNum->setText(strSep + strNumImage + "/" + strTotImages);
+	ui->LabelCurPicNum->setText(strSep + strNumImage + "/" + strTotImages);
 
 	/* If no picture was received, show the following text */
 	if (iCurImagePos < 0)
 	{
 		/* Init text browser window */
-		image->setText("<center>" + tr("MOT Slideshow Viewer") + "</center>");
+		ui->image->setText("<center>" + tr("MOT Slideshow Viewer") + "</center>");
 	}
 }
 

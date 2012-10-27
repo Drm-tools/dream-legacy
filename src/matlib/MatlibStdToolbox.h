@@ -31,18 +31,21 @@
 #include "Matlib.h"
 
 /* fftw (Homepage: http://www.fftw.org) */
-#ifdef HAVE_DFFTW_H
-# include <dfftw.h>
+#ifdef HAVE_FFTW3_H
+# include <fftw3.h>
 #else
-# include <fftw.h>
-#endif
+# ifdef HAVE_DFFTW_H
+#  include <dfftw.h>
+# else
+#  include <fftw.h>
+# endif
 
-#ifdef HAVE_DRFFTW_H
-# include <drfftw.h>
-#else
-# include <rfftw.h>
+# ifdef HAVE_DRFFTW_H
+#  include <drfftw.h>
+# else
+#  include <rfftw.h>
+# endif
 #endif
-
 
 /* Classes ********************************************************************/
 class CFftPlans
@@ -55,13 +58,21 @@ public:
 	void Init(const int iFSi);
 	inline bool IsInitialized() const {return bInitialized;}
 
-	rfftw_plan		RFFTPlForw;
-	rfftw_plan		RFFTPlBackw;
-	fftw_plan		FFTPlForw;
-	fftw_plan		FFTPlBackw;
+#ifdef HAVE_FFTW3_H
+	fftw_plan	RFFTPlForw;
+	fftw_plan	RFFTPlBackw;
+	double*		pFftwRealIn;
+	double*		pFftwRealOut;
+	int             fftw_n;
+#else
+	rfftw_plan	RFFTPlForw;
+	rfftw_plan	RFFTPlBackw;
+	fftw_real*	pFftwRealIn;
+	fftw_real*	pFftwRealOut;
+#endif
+	fftw_plan	FFTPlForw;
+	fftw_plan	FFTPlBackw;
 
-	fftw_real*		pFftwRealIn;
-	fftw_real*		pFftwRealOut;
 	fftw_complex*	pFftwComplexIn;
 	fftw_complex*	pFftwComplexOut;
 
@@ -75,7 +86,7 @@ protected:
 inline CReal				Min(const CReal& rA, const CReal& rB)
 								{return rA < rB ? rA : rB;}
 inline CMatlibVector<CReal>	Min(const CMatlibVector<CReal>& rvA, const CMatlibVector<CReal>& rvB)
-								{_VECOP(CReal, rvA.Size(), Min(rvA[i], rvB[i]));}
+								{_VECOP(CReal, rvA.GetSize(), Min(rvA[i], rvB[i]));}
 CReal						Min(const CMatlibVector<CReal>& rvI);
 void						Min(CReal& rMinVal /* out */, int& iMinInd /* out */,
 								const CMatlibVector<CReal>& rvI /* in */);
@@ -90,7 +101,7 @@ inline CReal				Min(const CReal& r1, const CReal& r2, const CReal& r3, const CRe
 inline CReal				Max(const CReal& rA, const CReal& rB)
 								{return rA > rB ? rA : rB;}
 inline CMatlibVector<CReal>	Max(const CMatlibVector<CReal>& rvA, const CMatlibVector<CReal>& rvB)
-								{_VECOP(CReal, rvA.Size(), Max(rvA[i], rvB[i]));}
+								{_VECOP(CReal, rvA.GetSize(), Max(rvA[i], rvB[i]));}
 CReal						Max(const CMatlibVector<CReal>& rvI);
 void						Max(CReal& rMaxVal /* out */, int& iMaxInd /* out */,
 								const CMatlibVector<CReal>& rvI /* in */);
@@ -110,15 +121,15 @@ inline CMatlibVector<CReal>	Zeros(const int iLen)
 
 inline CReal				Real(const CComplex& cI) {return cI.real();}
 inline CMatlibVector<CReal>	Real(const CMatlibVector<CComplex>& cvI)
-								{_VECOP(CReal, cvI.Size(), Real(cvI[i]));}
+								{_VECOP(CReal, cvI.GetSize(), Real(cvI[i]));}
 
 inline CReal				Imag(const CComplex& cI) {return cI.imag();}
 inline CMatlibVector<CReal>	Imag(const CMatlibVector<CComplex>& cvI)
-								{_VECOP(CReal, cvI.Size(), Imag(cvI[i]));}
+								{_VECOP(CReal, cvI.GetSize(), Imag(cvI[i]));}
 
 inline CComplex					Conj(const CComplex& cI) {return conj(cI);}
 inline CMatlibVector<CComplex>	Conj(const CMatlibVector<CComplex>& cvI)
-									{_VECOP(CComplex, cvI.Size(), Conj(cvI[i]));}
+									{_VECOP(CComplex, cvI.GetSize(), Conj(cvI[i]));}
 inline CMatlibMatrix<CComplex>	Conj(const CMatlibMatrix<CComplex>& cmI)
 									{_MATOP(CComplex, cmI.GetRowSize(), cmI.GetColSize(), Conj(cmI[i]));}
 
@@ -126,79 +137,79 @@ inline CMatlibMatrix<CComplex>	Conj(const CMatlibMatrix<CComplex>& cmI)
 /* Absolute and angle (argument) functions */
 inline CReal				Abs(const CReal& rI) {return fabs(rI);}
 inline CMatlibVector<CReal>	Abs(const CMatlibVector<CReal>& fvI)
-								{_VECOP(CReal, fvI.Size(), Abs(fvI[i]));}
+								{_VECOP(CReal, fvI.GetSize(), Abs(fvI[i]));}
 
 inline CReal				Abs(const CComplex& cI) {return abs(cI);}
 inline CMatlibVector<CReal>	Abs(const CMatlibVector<CComplex>& cvI)
-								{_VECOP(CReal, cvI.Size(), Abs(cvI[i]));}
+								{_VECOP(CReal, cvI.GetSize(), Abs(cvI[i]));}
 
 inline CReal				Angle(const CComplex& cI) {return arg(cI);}
 inline CMatlibVector<CReal>	Angle(const CMatlibVector<CComplex>& cvI)
-								{_VECOP(CReal, cvI.Size(), Angle(cvI[i]));}
+								{_VECOP(CReal, cvI.GetSize(), Angle(cvI[i]));}
 
 
 /* Trigonometric functions */
 inline CReal				Sin(const CReal& fI) {return sin(fI);}
 template<class T> inline
-CMatlibVector<T>			Sin(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), sin(vecI[i]));}
+CMatlibVector<T>			Sin(const CMatlibVector<T>& vecI) 
+								{_VECOP(T, vecI.GetSize(), sin(vecI[i]));}
 
 inline CReal				Cos(const CReal& fI) {return cos(fI);}
 template<class T> inline
 CMatlibVector<T>			Cos(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), cos(vecI[i]));}
+								{_VECOP(T, vecI.GetSize(), cos(vecI[i]));}
 
 inline CReal				Tan(const CReal& fI) {return tan(fI);}
 template<class T> inline
 CMatlibVector<T>			Tan(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), tan(vecI[i]));}
+								{_VECOP(T, vecI.GetSize(), tan(vecI[i]));}
 
 inline CReal				Sinh(const CReal& fI) {return sinh(fI);}
 template<class T> inline
-CMatlibVector<T>			Sinh(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), sinh(vecI[i]));}
+CMatlibVector<T>			Sinh(const CMatlibVector<T>& vecI) 
+								{_VECOP(T, vecI.GetSize(), sinh(vecI[i]));}
 
 inline CReal				Cosh(const CReal& fI) {return cosh(fI);}
 template<class T> inline
 CMatlibVector<T>			Cosh(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), cosh(vecI[i]));}
+								{_VECOP(T, vecI.GetSize(), cosh(vecI[i]));}
 
 inline CReal				Tanh(const CReal& fI) {return tanh(fI);}
 template<class T> inline
 CMatlibVector<T>			Tanh(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), tanh(vecI[i]));}
+								{_VECOP(T, vecI.GetSize(), tanh(vecI[i]));}
 
 
 /* Square root */
 inline CReal				Sqrt(const CReal& fI) {return sqrt(fI);}
 template<class T> inline
 CMatlibVector<T>			Sqrt(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), sqrt(vecI[i]));}
+								{_VECOP(T, vecI.GetSize(), sqrt(vecI[i]));}
 
 
 /* Exponential function */
 inline CReal				Exp(const CReal& fI) {return exp(fI);}
 template<class T> inline
 CMatlibVector<T>			Exp(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), exp(vecI[i]));}
+								{_VECOP(T, vecI.GetSize(), exp(vecI[i]));}
 
 
 /* Logarithm */
 inline CReal				Log(const CReal& fI) {return log(fI);}
 template<class T> inline
 CMatlibVector<T>			Log(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), log(vecI[i]));}
+								{_VECOP(T, vecI.GetSize(), log(vecI[i]));}
 
 inline CReal				Log10(const CReal& fI) {return log10(fI);}
 template<class T> inline
 CMatlibVector<T>			Log10(const CMatlibVector<T>& vecI)
-								{_VECOP(T, vecI.Size(), log10(vecI[i]));}
+								{_VECOP(T, vecI.GetSize(), log10(vecI[i]));}
 
 
 /* Mean, variance and standard deviation */
 template<class T> inline T	Mean(const CMatlibVector<T>& vecI)
-								{return Sum(vecI) / vecI.Size();}
-template<class T> inline T	Std(CMatlibVector<T>& vecI)
+								{return Sum(vecI) / vecI.GetSize();}
+template<class T> inline T	Std(CMatlibVector<T>& vecI) 
 								{return Sqrt(Var(vecI));}
 template<class T> T			Var(const CMatlibVector<T>& vecI);
 
@@ -206,20 +217,20 @@ template<class T> T			Var(const CMatlibVector<T>& vecI);
 /* Rounding functions */
 inline CReal				Fix(const CReal& fI) {return (int) fI;}
 inline CMatlibVector<CReal>	Fix(const CMatlibVector<CReal>& fvI)
-								{_VECOP(CReal, fvI.Size(), Fix(fvI[i]));}
+								{_VECOP(CReal, fvI.GetSize(), Fix(fvI[i]));}
 
 inline CReal				Floor(const CReal& fI) {return floor(fI);}
 inline CMatlibVector<CReal>	Floor(const CMatlibVector<CReal>& fvI)
-								{_VECOP(CReal, fvI.Size(), Floor(fvI[i]));}
+								{_VECOP(CReal, fvI.GetSize(), Floor(fvI[i]));}
 
 inline CReal				Ceil(const CReal& fI) {return ceil(fI);}
 inline CMatlibVector<CReal>	Ceil(const CMatlibVector<CReal>& fvI)
-								{_VECOP(CReal, fvI.Size(), Ceil(fvI[i]));}
+								{_VECOP(CReal, fvI.GetSize(), Ceil(fvI[i]));}
 
 inline CReal				Round(const CReal& fI)
 								{return Floor(fI + (CReal) 0.5);}
 inline CMatlibVector<CReal>	Round(const CMatlibVector<CReal>& fvI)
-								{_VECOP(CReal, fvI.Size(), Round(fvI[i]));}
+								{_VECOP(CReal, fvI.GetSize(), Round(fvI[i]));}
 
 inline CReal				Sign(const CReal& rI)
 								{return rI == 0 ? 0 : rI > 0 ? 1 : -1;}
@@ -273,7 +284,7 @@ CComplex					Quad(MATLIB_CALLBACK_QAUD f, const CReal a,
 template<class T> inline
 T Sum(const CMatlibVector<T>& vecI)
 {
-	const int iSize = vecI.Size();
+	const int iSize = vecI.GetSize();
 	T SumRet = 0;
 	for (int i = 0; i < iSize; i++)
 		SumRet += vecI[i];
@@ -284,7 +295,7 @@ T Sum(const CMatlibVector<T>& vecI)
 template<class T> inline
 T Var(const CMatlibVector<T>& vecI)
 {
-	const int iSize = vecI.Size();
+	const int iSize = vecI.GetSize();
 
 	/* First calculate mean */
 	T tMean = Mean(vecI);

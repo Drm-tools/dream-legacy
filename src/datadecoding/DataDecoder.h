@@ -30,69 +30,94 @@
 #define DATADECODER_H__3B0BA660_CA3452363E7A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../util/ReceiverModul.h"
-#include "../util/CRC.h"
-#include "DataApplication.h"
 #include "../Parameter.h"
+#include "../util/Modul.h"
+#include "../util/CRC.h"
+#include "../util/Vector.h"
+#include "DABMOT.h"
+#include "MOTSlideShow.h"
 
+class CExperiment;
+class CJournaline;
 class CNews;
-class CMOTSlideShowEncoder;
-class CMOTDirectory;
-class CMOTObject;
-typedef int TTransportID;
 
 /* Definitions ****************************************************************/
 /* Maximum number of packets per stream */
 #define MAX_NUM_PACK_PER_STREAM					4
+
+/* Define for application types */
+#define DAB_AT_MOTSLIDESHOW 2
+#define DAB_AT_BROADCASTWEBSITE 3
+#define DAB_AT_TPEG 4
+#define DAB_AT_DGPS 5
+#define DAB_AT_TMC 	6
+#define DAB_AT_EPG 	7
+#define DAB_AT_JAVA 	8
+#define DAB_AT_JOURNALINE 0x44A
+#define DAB_AT_EXPERIMENTAL 0x44B
 
 class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
   public:
     CDataDecoder ();
     virtual ~CDataDecoder ();
-	/* dummy assignment operator to help MSVC8 */
-	CDataDecoder& operator=(const CDataDecoder&)
-	{ throw "should not happen"; return *this;}
 
-	void setApplication(int domain, int appId, DataApplicationFactory* fact)
+    enum EAppType
+    { AT_NOT_SUP, AT_MOTSLIDESHOW, AT_JOURNALINE,
+	AT_BROADCASTWEBSITE, AT_TPEG, AT_DGPS, AT_TMC, AT_EPG,
+	    AT_JAVA, AT_EXPERIMENTAL
+    };
+
+    _BOOLEAN GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
+    _BOOLEAN GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
+	CMOTDABDec *getApplication(int iPacketID) { return (iPacketID>=0 && iPacketID<3)?&MOTObject[iPacketID]:NULL; }
+    void GetNews (const int iObjID, CNews & News);
+    EAppType GetAppType ()
     {
-        factory[domain][appId] = fact;
+		return eAppType[iServPacketID];
     }
-
-    DataApplication *getApplication(int packetId=0);
-    void SetStream(int id) { iStreamID = id; }
 
   protected:
     class CDataUnit
     {
       public:
-	vector <uint8_t> data;
-	bool bOK;
-	bool bReady;
+	CVector < _BINARY > vecbiData;
+	_BOOLEAN bOK;
+	_BOOLEAN bReady;
 
 	void Reset ()
 	{
-	    data.resize(0);
-	    bOK = false;
-	    bReady = false;
+	    vecbiData.Init (0);
+	    bOK = FALSE;
+	    bReady = FALSE;
 	}
     };
 
     int iTotalPacketSize;
     int iNumDataPackets;
-    size_t iMaxPacketDataSize;
-    int iStreamID;
-    vector<bool> vecCRCOk;
+    int iMaxPacketDataSize;
+    int iServPacketID;
+    CVector < int >veciCRCOk;
+
+    _BOOLEAN DoNotProcessData;
 
     int iContInd[MAX_NUM_PACK_PER_STREAM];
     CDataUnit DataUnit[MAX_NUM_PACK_PER_STREAM];
-    DataApplication* app[MAX_NUM_PACK_PER_STREAM];
-    map<int, map<int, DataApplicationFactory*> > factory;
+    CMOTDABDec MOTObject[MAX_NUM_PACK_PER_STREAM];
+    CJournaline& Journaline;
+    CExperiment& Experiment;
+    uint32_t iOldJournalineServiceID;
 
-    virtual void InitInternal (CParameter&);
-    virtual void ProcessDataInternal (CParameter&);
-    DataApplication *createApp(const CDataParam&, CParameter&);
-    void decodePacket(CVector<_BINARY>& data);
+    EAppType eAppType[MAX_NUM_PACK_PER_STREAM];
+
+    virtual void InitInternal (CParameter & ReceiverParam);
+    virtual void ProcessDataInternal (CParameter & ReceiverParam);
+
+    int iEPGService;
+    int iEPGPacketID;
+    void DecodeEPG(const CParameter& ReceiverParam);
+	EAppType GetAppType(const CDataParam&);
+
 };
 
 

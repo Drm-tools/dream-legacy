@@ -28,232 +28,110 @@
 \******************************************************************************/
 
 #include "EPGDlg.h"
-#include <QTextStream>
-#include <QRegExp>
-#include <QMessageBox>
-#include <QDir>
-#include <QFileDialog>
-#include <ctime>
+#include "../datadecoding/epg/epgutil.h"
+#include <set>
+#include <qregexp.h>
+#include <qfile.h>
+#if QT_VERSION < 0x040000
+# include <qtextbrowser.h>
+#else
+# include <QShowEvent>
+# include <QHideEvent>
+# include <QPixmap>
+# include <QMetaObject>
+#endif
 
-EPGModel::EPGModel(CParameter& p) : EPG(p), QAbstractTableModel(),
-BitmCubeGreen(8, 8)
+EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
+               const char* name, bool modal, Qt::WFlags f):
+    CEPGDlgbase(parent, name, modal, f),
+    do_updates(false),
+    epg(*NDRMR.GetParameters()),
+    DRMReceiver(NDRMR),
+    Settings(NSettings),Timer(),sids(),
+#if QT_VERSION < 0x040000
+    date(QDate::currentDate()),
+    BitmCubeGreen(),
+#else
+    greenCube(":/icons/greenCube.png"),
+#endif
+    next(NULL)
 {
-	BitmCubeGreen.fill(QColor(0, 255, 0));
-}
+    /* recover window size and position */
+    CWinGeom s;
+    Settings.Get("EPG Dialog", s);
+    const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+        setGeometry(WinGeom);
 
-int EPGModel::rowCount(const QModelIndex&) const
-{
-	return progs.size();
-}
+    /* auto resize of the programme name column */
+#if QT_VERSION < 0x040000
+    Data->setColumnWidthMode(COL_NAME, QListView::Maximum);
+    /* Define size of the bitmaps */
+    const int iXSize = 8;
+    const int iYSize = 8;
 
-int EPGModel::columnCount(const QModelIndex&) const
-{
-	return 5;
-}
+    /* Create bitmaps */
+    BitmCubeGreen.resize(iXSize, iYSize);
+    BitmCubeGreen.fill(QColor(0, 255, 0));
+    connect(Prev, SIGNAL(clicked()), this, SLOT(previousDay()));
+    connect(Next, SIGNAL(clicked()), this, SLOT(nextDay()));
+    connect(channel, SIGNAL(activated(const QString&)), this
+            , SLOT(selectChannel(const QString&)));
+    connect(day, SIGNAL(valueChanged(int)), this, SLOT(setDay(int)));
+    connect(month, SIGNAL(valueChanged(int)), this, SLOT(setMonth(int)));
+    connect(year, SIGNAL(valueChanged(int)), this, SLOT(setYear(int)));
+    day->setMinValue(1);
+    day->setMaxValue(31);
+    month->setMinValue(1);
+    month->setMaxValue(12);
+    year->setMinValue(0000);
+    year->setMaxValue(3000);
+#else
+    dateEdit->setDate(QDate::currentDate());
+#endif
+    connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-QVariant
-EPGModel::data ( const QModelIndex& index, int role) const
-{
-	QMap <shortCRIDType, ProgrammeType>::const_iterator it = progs.begin();
-	for(int i=0; i<index.row(); i++)
-		it++;
-	const ProgrammeType& p = it.value();
-	QString name, description, genre;
-	time_t start;
-	int duration;
-	if(p.location.size()==0)
-		return QVariant(); // TODO better than this
-	const LocationType& loc = p.location[0];
-	if(loc.time.size()==0)
-		return QVariant(); // TODO better than this
-	const EPGTime& t = loc.time[0];
+    /* Deactivate real-time timer */
+    Timer.stop();
 
-	switch(role)
-	{
-	case Qt::DecorationRole:
-		if(index.column()==0)
-		{
-			if(t.actualTime!=0)
-			{
-				duration = t.actualDuration;
-			}
-			else
-			{
-				duration = t.duration;
-			}
-			time_t start = it.key();
-			time_t end = start+60*duration;
-			time_t now = time(NULL);
-			if((start <= now) && (now <= end))
-			{
-				QIcon icon;
-				icon.addPixmap(BitmCubeGreen);
-				return icon;
-			}
-			return QVariant();
-		}
-		break;
-	case Qt::DisplayRole:
-		switch(index.column())
-		{
-			case 0:
-				// TODO - let user choose time or actualTime if available, or show as tooltip
-				{
-				    if(t.actualTime!=0)
-				    {
-					start = t.actualTime;
-				    }
-				    else
-				    {
-					start = t.time;
-				    }
-				    tm bdt = *gmtime(&start);
-				    QChar fill('0');
-				    return QString("%1:%2").arg(bdt.tm_hour,2,10,fill).arg(bdt.tm_min,2,10,fill);
-				}
-			break;
-			case 1:
-				if(p.mediumName.size()>0)
-					return p.mediumName[0].text;
-				if(p.genre.size()>0)
-					return "unknown " + p.genre[0].name.text + " programme";
-				return "";
-				break;
-			case 2:
-				description = p.mediaDescription[0].longDescription[0].text;
-				if(description=="")
-					description = p.mediaDescription[0].shortDescription[0].text;
-				// collapse white space in description
-				description.replace(QRegExp("[\t\r\n ]+"), " ");
-				return description;
-				break;
-			case 3:
-				if(p.genre.size()==0)
-					genre = "";
-				else
-				{
-					QString sep="";
-					for(size_t i=0; i<p.genre.size(); i++) {
-						if(p.genre[i].name.text != "Audio only") {
-							genre = genre+sep+p.genre[i].name.text;
-							sep = ", ";
-						}
-					}
-				}
-				return genre;
-				break;
-			case 4:
-				if(t.actualTime!=0)
-				{
-					duration = t.actualDuration;
-				}
-				else
-				{
-					duration = t.duration;
-				}
-				ushort hours = duration/60;
-				ushort mins = duration % 60;
-				QChar fill='0';
-				return QString("%1:%2").arg(hours, 2,10,fill).
-							arg(mins,2,10,fill);
-				break;
-		}
-		break;
-	}
-	return QVariant();
-}
-
-QVariant
-EPGModel::headerData ( int section, Qt::Orientation orientation, int role) const
-{
-	if(role != Qt::DisplayRole)
-		return QVariant();
-	if(orientation != Qt::Horizontal)
-		return QVariant();
-	switch(section)
-	{
-		case 0: return tr("Time [UTC]"); break;
-		case 1: return tr("Name"); break;
-		case 2: return tr("Description"); break;
-		case 3: return tr("Genre"); break;
-		case 4: return tr("Duration"); break;
-	}
-	return "";
-}
-
-bool EPGModel::IsActive(const QString& start, const QString& duration, const tm& now)
-{
-    QStringList sl = start.split(":");
-    QStringList dl = duration.split(":");
-    int s = 60*sl[0].toInt()+sl[1].toInt();
-    int e = s + 60*dl[0].toInt()+dl[1].toInt();
-    int n = 60*now.tm_hour+now.tm_min;
-	if ((s <= n) && (n < e))
-		return true;
-	else
-		return false;
-}
-
-void
-EPGModel::select (const uint32_t chan, const QDate & date)
-{
-    // get schedule for date +/- 1 - will allow user timezones sometime
-    min_time = QDateTime(date).toTime_t();
-    max_time = min_time+86400;
-    for(int i=-1; i<=1; i++)
-    {
-	QDomDocument doc;
-	QDate o = date.addDays(i);
-	doc = getFile (o, chan, false);
-	parseDoc(doc);
-	doc = getFile (o, chan, true);
-	parseDoc(doc);
-    }
-    reset();
-}
-
-EPGDlg::EPGDlg(ReceiverInterface& NDRMR, CSettings& NSettings, QWidget* parent, Qt::WFlags f)
-:QDialog(parent, f),Ui_EPGDlg(),
-date(QDate::currentDate()),
-epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
-Settings(NSettings),Timer(),currentSID(0),proxyModel()
-{
-    setupUi(this);
-
-    proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(&epg);
-	proxyModel->setFilterKeyColumn(0); // actually we don't care
-	proxyModel->setFilterRole(Qt::UserRole);
-	proxyModel->setDynamicSortFilter(true);
-
-	tableView->setModel(proxyModel);
-
-	/* Connections ---------------------------------------------------------- */
-	connect(channel, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(selectChannel(const QString &)));
-	connect(dateEdit, SIGNAL(dateChanged(const QDate&)), this, SLOT(setDate(const QDate&)));
-	connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
-	connect(pushButtonPrev, SIGNAL(clicked()), this, SLOT(OnPrev()));
-	connect(pushButtonNext, SIGNAL(clicked()), this, SLOT(OnNext()));
-	connect(pushButtonClearCache, SIGNAL(clicked()), this, SLOT(OnClearCache()));
-	connect(pushButtonSave, SIGNAL(clicked()), this, SLOT(OnSave()));
-	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
-
-	/* Deactivate real-time timer */
-	Timer.stop();
-
-
-	/* TODO show a label if EPG decoding is disabled */
-	//if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == true)
-	if(true)
-		TextEPGDisabled->hide();
-	else
-		TextEPGDisabled->show();
-    dateEdit->setCalendarPopup(true);
+    TextEPGDisabled->hide();
 }
 
 EPGDlg::~EPGDlg()
 {
 }
+
+#if QT_VERSION < 0x040000
+void EPGDlg::setActive(QListViewItem* item)
+{
+    if(((EPGListViewItem*)item)->IsActive())
+    {
+        item->setPixmap(COL_START, BitmCubeGreen);
+        Data->ensureItemVisible(item);
+        emit NowNext(item->text(COL_NAME));
+        next = item->itemBelow();
+    }
+    else
+    {
+        item->setPixmap(COL_START,QPixmap()); /* no pixmap */
+    }
+}
+#else
+void EPGDlg::setActive(QTreeWidgetItem* item)
+{
+    if(isActive(item))
+    {
+        item->setIcon(COL_START, greenCube);
+        Data->scrollToItem(item);
+        emit NowNext(item->text(COL_NAME));
+        next = Data->itemBelow(item);
+    }
+    else
+    {
+        item->setIcon(COL_START, QPixmap()); /* no pixmap */
+    }
+}
+#endif
 
 void EPGDlg::OnTimer()
 {
@@ -261,235 +139,404 @@ void EPGDlg::OnTimer()
     time_t ltime;
     time(&ltime);
     tm gmtCur = *gmtime(&ltime);
-
     if(gmtCur.tm_sec==0) // minute boundary
     {
-	select();
+        /* today in UTC */
+        QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
+
+#if QT_VERSION < 0x040000
+        if ((basic->text() == tr("no basic profile data"))
+                || (advanced->text() == tr("no advanced profile data")))
+        {
+            /* not all information is loaded */
+            select();
+        }
+        /* Check the items now on line. */
+        if (date == todayUTC) /* if today */
+        {
+            for(QListViewItem * myItem = Data->firstChild();
+                    myItem;
+                    myItem = myItem->itemBelow()
+               )
+            {
+                setActive(myItem);
+            }
+        }
+#else
+        if ((basic->toPlainText() == tr("no basic profile data"))
+                || (advanced->toPlainText() == tr("no advanced profile data")))
+        {
+            /* not all information is loaded */
+            select();
+        }
+        /* Check the items now on line. */
+        if (dateEdit->date() == todayUTC) /* if today */
+        {
+            for(int i=0; i<Data->topLevelItemCount(); i++)
+                setActive(Data->topLevelItem(i));
+        }
+#endif
     }
 }
 
 void EPGDlg::showEvent(QShowEvent *)
 {
     CParameter& Parameters = *DRMReceiver.GetParameters();
+    Parameters.Lock();
+    int sNo = Parameters.GetCurSelAudioService();
+    uint32_t sid = Parameters.Service[sNo].iServiceID;
 
-	/* recover window size and position */
-	CWinGeom s;
-	Settings.Get("GUI EPG", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-    /* restore selected service */
-    bool ok=false;
-    currentSID = QString(Settings.Get("GUI EPG", "serviceid", string("0")).c_str()).toULong(&ok, 16);
-    if(!ok)
-	currentSID=0;
+    // use the current date
+#if QT_VERSION < 0x040000
+    date = QDate::currentDate();
+#else
+    dateEdit->setDate(QDate::currentDate());
+#endif
     // update the channels combobox from the epg
     channel->clear();
-    int n = -1, m = -1;
-	Parameters.Lock();
+    int n = -1;
+    sids.clear();
     for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin();
-	 i != Parameters.ServiceInformation.end(); i++) {
-		QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
-		uint32_t channel_id = i->second.id;
-    	channel->insertItem(++n, channel_label, channel_id);
-    	if(channel_id == currentSID)
-    	{
-    	    m = n;
-    	}
+            i != Parameters.ServiceInformation.end(); i++) {
+        QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
+        uint32_t channel_id = i->second.id;
+        sids[channel_label] = channel_id;
+#if QT_VERSION < 0x040000
+        channel->insertItem(channel_label);
+        if (channel_id == sid) {
+            n = channel->currentItem();
+        }
+#else
+        channel->addItem(channel_label);
+        if (channel_id == sid) {
+            n = channel->currentIndex();
+        }
+#endif
     }
-	Parameters.Unlock();
-	if(m>=0)
-	channel->setCurrentIndex(m);
-
-    date = QDate::currentDate();
-    dateEdit->setDate(date);
-
-    epg.progs.clear();
+    Parameters.Unlock();
+    // update the current selection
+    if (n >= 0) {
+#if QT_VERSION < 0x040000
+        channel->setCurrentItem(n);
+#else
+        channel->setCurrentIndex(n);
+#endif
+    }
+    do_updates = true;
+#if QT_VERSION < 0x040000
+    setDate();
+#endif
+    epg.progs.clear ();
     select();
 
-	/* Activate real-time timer when window is shown */
-	Timer.start(GUI_TIMER_EPG_UPDATE);
+    /* Activate real-time timer when window is shown */
+    Timer.start(GUI_TIMER_EPG_UPDATE);
 }
 
 void EPGDlg::hideEvent(QHideEvent*)
 {
-	/* Deactivate real-time timer */
-	Timer.stop();
+    /* Deactivate real-time timer */
+    Timer.stop();
 
-	CWinGeom s;
-	QRect WinGeom = geometry();
-	s.iXPos = WinGeom.x();
-	s.iYPos = WinGeom.y();
-	s.iHSize = WinGeom.height();
-	s.iWSize = WinGeom.width();
-	Settings.Put("GUI EPG", s);
-    Settings.Put("GUI EPG", "serviceid", QString("%1").arg(currentSID, 16).toStdString());
+    CWinGeom s;
+    QRect WinGeom = geometry();
+    s.iXPos = WinGeom.x();
+    s.iYPos = WinGeom.y();
+    s.iHSize = WinGeom.height();
+    s.iWSize = WinGeom.width();
+    Settings.Put("EPG Dialog", s);
 }
 
-void EPGDlg::setDate(const QDate& d)
+#if QT_VERSION < 0x040000
+void EPGDlg::setDate()
 {
-    date = d;
-    epg.progs.clear();
+    day->setValue(date.day());
+    month->setValue(date.month());
+    year->setValue(date.year());
+}
+#endif
+
+#if QT_VERSION < 0x040000
+
+void EPGDlg::previousDay()
+{
+    date = date.addDays(-1);
+    setDate();
+}
+
+void EPGDlg::nextDay()
+{
+    date = date.addDays(1);
+    setDate();
+}
+
+void EPGDlg::setDay(int n)
+{
+    date.setYMD(date.year(), date.month(), n);
+    setDate();
+    select();
+}
+
+void EPGDlg::setMonth(int n)
+{
+    date.setYMD(date.year(), n, date.day());
+    setDate();
+    select();
+}
+
+void EPGDlg::setYear(int n)
+{
+    date.setYMD(n, date.month(), date.day());
+    setDate();
+    select();
+}
+#endif
+
+void EPGDlg::on_dateChanged(const QDate&)
+{
+qDebug("on_dateChanged");
     select();
 }
 
 void EPGDlg::selectChannel(const QString &)
 {
-    epg.progs.clear();
+    epg.progs.clear ();
     select();
-}
-
-void EPGDlg::OnPrev()
-{
-    dateEdit->setDate(dateEdit->date().addDays(-1));
-}
-
-void EPGDlg::OnNext()
-{
-    dateEdit->setDate(dateEdit->date().addDays(1));
-}
-
-void EPGDlg::OnClearCache()
-{
-    QDir dir(epg.dir);
-
-	/* Check if the directory exists */
-	if (!dir.exists())
-	{
-		return;
-	}
-	dir.setFilter(QDir::Files | QDir::NoSymLinks);
-
-	QStringList filters;
-	filters << "*.EHA" << "*.EHB";
-	dir.setNameFilters(filters);
-
-	const QFileInfoList& list = dir.entryInfoList();
-
-	int n=0;
-	for(QFileInfoList::const_iterator fi = list.begin();
-		fi != list.end(); fi++)
-	{
-		/* Is a file so remove it */
-		dir.remove(fi->fileName());
-		n++;
-	}
-	QMessageBox msgBox(this);
-	 msgBox.setText(QString(tr("deleted %1 files")).arg(n));
-	 msgBox.exec();
-}
-
-
-void EPGDlg::OnSave()
-{
-	QStringList filters;
-	filters << tr("ETSI XML (*.xml)");
-	if(pages->currentIndex()==0)
-	{
-		filters << tr("Web Page (*.html)") << tr("Comma Separated (*.csv)");
-	}
-	QFileDialog dialog(this);
-	dialog.setNameFilters(filters);
-	dialog.setDirectory(epg.dir);
-	dialog.setAcceptMode(QFileDialog::AcceptSave);
-	dialog.exec();
-	QStringList l = dialog.selectedFiles();
-	if(l.size()==1)
-	{
-		QString nf = dialog.selectedNameFilter();
-		QString fn = l[0];
-		QString text;
-		switch(pages->currentIndex())
-		{
-		case 0: // grid
-			if(nf.contains(".xml"))
-			{
-				fn += ".xml";
-				QDomDocument b,a;
-				bool bb = b.setContent(basic->toPlainText());
-				bool ba = a.setContent(advanced->toPlainText());
-				if(bb && ba)
-				{
-					// TODO merge(b, a);
-					text = b.toString();
-				}
-				else
-				{
-					if(bb)
-						text = basic->toPlainText();
-					else if(ba)
-						text = advanced->toPlainText();
-					else
-						text = "";
-				}
-			}
-			if(nf.contains(".html"))
-			{
-				fn += ".html";
-				text = epg.toHTML();
-			}
-			if(nf.contains(".csv"))
-			{
-				fn += ".csv";
-				text = epg.toCSV();
-			}
-			break;
-		case 1: // basic
-			fn += ".xml";
-			text = basic->toPlainText();
-			break;
-		case 2: // advanced
-			fn += ".xml";
-			text = advanced->toPlainText();
-			break;
-		}
-		QFile data(fn);
-		if (data.open(QFile::WriteOnly | QFile::Truncate))
-		{
-		     QTextStream out(&data);
-		     out << text;
-		}
-		data.close();
-	}
-	else
-	{
-	}
-}
-
-void EPGDlg::updateXML(const QDate& date, uint32_t sid, bool adv)
-{
-    QString def;
-    QTextBrowser* browser;
-    if(adv)
-    {
-	def = tr("no advanced profile data");
-	browser = advanced;
-    }
-    else
-    {
-	def = tr("no basic profile data");
-	browser = basic;
-    }
-    QString xml;
-    QDomDocument doc;
-    doc = epg.getFile (date, sid, adv);
-    epg.parseDoc(doc);
-    xml = doc.toString();
-    if (xml.length() > 0)
-    {
-	browser->setText(xml);
-    }
-    else
-    {
-    	browser->setText(def);
-    }
 }
 
 void EPGDlg::select()
 {
-    currentSID = channel->itemData(channel->currentIndex()).toUInt();
-    epg.select(currentSID, date);
-    updateXML(date, currentSID, false);
-    updateXML(date, currentSID, true);
+#if QT_VERSION < 0x040000
+    QListViewItem* CurrActiveItem = NULL;
+#else
+    QTreeWidgetItem* CurrActiveItem = NULL;
+    QDate date = dateEdit->date();
+#endif
+
+    if (!do_updates)
+        return;
+    Data->clear();
+    basic->setText(tr("no basic profile data"));
+    advanced->setText(tr("no advanced profile data"));
+    QString chan = channel->currentText();
+    // get schedule for date +/- 1 - will allow user timezones sometime
+    QDomDocument *doc;
+    QDate o = date.addDays(-1);
+    doc = getFile (o, sids[chan], false);
+    if(doc)
+        epg.parseDoc(*doc);
+    doc = getFile (o, sids[chan], true);
+    if(doc)
+        epg.parseDoc(*doc);
+    o = date.addDays(1);
+    doc = getFile (o, sids[chan], false);
+    if(doc)
+        epg.parseDoc(*doc);
+    doc = getFile (o, sids[chan], true);
+    if(doc)
+        epg.parseDoc(*doc);
+
+    QString xml;
+    doc = getFile (date, sids[chan], false);
+    if(doc)
+    {
+        epg.parseDoc(*doc);
+        xml = doc->toString();
+        if (xml.length() > 0)
+            basic->setText(xml);
+    }
+
+    doc = getFile (date, sids[chan], true);
+    if(doc)
+    {
+        epg.parseDoc(*doc);
+        xml = doc->toString();
+        if (xml.length() > 0)
+            advanced->setText(xml);
+    }
+
+    if (epg.progs.count()==0) {
+#if QT_VERSION < 0x040000
+        (void) new QListViewItem(Data, tr("no data"));
+#else
+        (void) new QTreeWidgetItem(Data, QStringList() << tr("no data"));
+#endif
+        return;
+    }
+#if QT_VERSION < 0x040000
+    Data->setSorting(COL_START);
+#else
+    Data->sortItems(COL_START, Qt::AscendingOrder);
+#endif
+
+    for (QMap < time_t, EPG::CProg >::Iterator i = epg.progs.begin();
+            i != epg.progs.end(); i++)
+    {
+#if QT_VERSION < 0x040000
+        const EPG::CProg & p = i.data();
+#else
+        const EPG::CProg & p = i.value();
+#endif
+        // TODO - let user choose time or actualTime if available, or show as tooltip
+        time_t start;
+        int duration;
+        if (p.actualTime!=0)
+        {
+            start = p.actualTime;
+            duration = p.actualDuration;
+        }
+        else
+        {
+            start = p.time;
+            duration = p.duration;
+        }
+        QString s_start, s_duration;
+        tm bdt = *gmtime(&start);
+
+        // skip entries not on the wanted day
+        if((bdt.tm_year+1900) != date.year())
+        {
+            continue;
+        }
+        if((bdt.tm_mon+1) != date.month())
+        {
+            continue;
+        }
+        if(bdt.tm_mday != date.day())
+        {
+            continue;
+        }
+
+        char s[40];
+        sprintf(s, "%02d:%02d", bdt.tm_hour, bdt.tm_min);
+        s_start = s;
+        int min = duration / 60;
+        sprintf(s, "%02d:%02d", int(min/60), min%60);
+        s_duration = s;
+        QString name, description, genre;
+        if (p.name=="" && p.mainGenre.size()>0)
+            name = "unknown " + p.mainGenre[0] + " programme";
+        else
+            name = p.name;
+        description = p.description;
+        // collapse white space in description
+        description.replace(QRegExp("[\t\r\n ]+"), " ");
+        if (p.mainGenre.size()==0)
+            genre = "";
+        else
+        {
+            // remove duplicate genres
+            set<QString> genres;
+            for (size_t i=0; i<p.mainGenre.size(); i++) {
+                if (p.mainGenre[i] != "Audio only") {
+                    genres.insert(p.mainGenre[i]);
+                }
+            }
+            QString sep="";
+            for(set<QString>::const_iterator g = genres.begin(); g!=genres.end(); g++)
+            {
+                genre = genre+sep+(*g);
+                sep = ", ";
+            }
+        }
+#if QT_VERSION < 0x040000
+        EPGListViewItem* CurrItem = new EPGListViewItem(Data, s_start, name, genre, description, s_duration, start, duration);
+        if (CurrItem->IsActive())
+            CurrActiveItem = CurrItem;
+#else
+        QStringList l;
+        l << s_start << name << genre << description << s_duration;
+        QTreeWidgetItem* CurrItem = new QTreeWidgetItem(Data, l);
+        QDateTime dt;
+        dt.setTime_t(start);
+        CurrItem->setData(COL_START, Qt::UserRole, dt);
+        CurrItem->setData(COL_DURATION, Qt::UserRole, duration);
+        if (isActive(CurrItem))
+            CurrActiveItem = CurrItem;
+#endif
+    }
+    if (CurrActiveItem) /* programme is now on line */
+        setActive(CurrActiveItem);
 }
+
+QString EPGDlg::getFileName(const QDate& date, uint32_t sid, bool bAdvanced)
+{
+    CDateAndTime d;
+    d.year = date.year();
+    d.month = date.month();
+    d.day = date.day();
+    return epg.dir + "/" + epgFilename(d, sid, 1, bAdvanced).c_str();
+}
+
+QString EPGDlg::getFileName_etsi(const QDate& date, uint32_t sid, bool bAdvanced)
+{
+    CDateAndTime d;
+    d.year = date.year();
+    d.month = date.month();
+    d.day = date.day();
+    return epg.dir + "/" + epgFilename_etsi(d, sid, 1, bAdvanced).c_str();
+}
+
+QDomDocument*
+EPGDlg::getFile(const QString& path)
+{
+    QFile file (path);
+# if QT_VERSION < 0x040000
+    if (!file.open (IO_ReadOnly))
+#else
+    if (!file.open (QIODevice::ReadOnly))
+#endif
+    {
+        return NULL;
+    }
+    vector<_BYTE> vecData;
+    vecData.resize (file.size ());
+# if QT_VERSION < 0x040000
+    file.readBlock ((char *) &vecData.front (), file.size ());
+#else
+    file.read((char *) &vecData.front (), file.size ());
+#endif
+    file.close ();
+    CEPGDecoder *epg = new CEPGDecoder();
+    epg->decode (vecData);
+    epg->doc.documentElement().insertBefore(
+        epg->doc.createComment(path),
+        epg->doc.documentElement().firstChild()
+    );
+    return &(epg->doc);
+}
+
+QDomDocument*
+EPGDlg::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
+{
+    QString path = getFileName(date, sid, bAdvanced);
+    QDomDocument* doc = getFile(path);
+    if(doc != NULL)
+        return doc;
+    return getFile(getFileName_etsi(date, sid, bAdvanced));
+}
+
+# if QT_VERSION < 0x040000
+_BOOLEAN EPGListViewItem::IsActive()
+{
+    time_t now = time(NULL);
+    if(now<start)
+        return false;
+    if(now>=(start+duration))
+        return false;
+    return true;
+}
+#else
+bool EPGDlg::isActive(QTreeWidgetItem* item)
+{
+    QDateTime start = item->data(COL_START, Qt::UserRole).toDateTime();
+    int duration = item->data(COL_DURATION, Qt::UserRole).toInt();
+    QDateTime end = start.addSecs(duration);
+    QDateTime now = QDateTime::currentDateTime();
+    if(now<start)
+        return false;
+    if(now>=end)
+        return false;
+    return true;
+}
+#endif

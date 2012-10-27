@@ -36,70 +36,82 @@
 class CPaCommon: public CSelectionInterface
 {
 public:
-			CPaCommon(bool);
-	virtual 	~CPaCommon();
+    CPaCommon(bool);
+    virtual 			~CPaCommon();
 
-	void		Enumerate(vector<string>& choices) const;
-	void		SetDev(int iNewDevice);
-	int		GetDev() const;
+    virtual void		Enumerate(vector<string>& choices);
+    virtual void		SetDev(int iNewDevice);
+    virtual int			GetDev();
 
-	void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
-	void		ReInit();
-	bool		Read(vector<_SAMPLE>& data);
-	bool		Write(vector<_SAMPLE>& data);
-	void		Close();
+    void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+    void		ReInit();
+    _BOOLEAN	Read(CVector<short>& psData);
+    _BOOLEAN	Write(CVector<short>& psData);
+    void		Close();
 
-	PaUtilRingBuffer ringBuffer;
-	int xruns;
+    PaUtilRingBuffer ringBuffer;
+    int xruns;
 
 protected:
 
-	PaSampleFormat fmt(int16_t) { return paInt16; }
-	PaSampleFormat fmt(float) { return paFloat32; }
+    PaStream *stream;
+    vector<string> names;
+    vector<PaDeviceIndex> devices;
+    int dev;
+    bool is_capture,blocking,device_changed,xrun;
+    int framesPerBuffer;
+    int iBufferSize;
+    char *ringBufferData;
 
-	PaStream *stream;
-	int dev;
-	bool is_capture,blocking,device_changed,xrun;
-	int framesPerBuffer;
-	int iBufferSize;
-	char *ringBufferData;
-	int channels;
+    static int pa_count;
 };
 
 class CPaIn: public CSoundInInterface
 {
 public:
-			CPaIn();
-	virtual 	~CPaIn();
-	void		Enumerate(vector<string>& choices) const { hw.Enumerate(choices); }
-	void		SetDev(int iNewDevice) { hw.SetDev(iNewDevice); }
-	int		GetDev() const { return hw.GetDev(); }
+    CPaIn();
+    virtual 			~CPaIn();
+    virtual void		Enumerate(vector<string>& choices) {
+        hw.Enumerate(choices);
+    }
+    virtual void		SetDev(int iNewDevice) {
+        hw.SetDev(iNewDevice);
+    }
+    virtual int			GetDev() {
+        return hw.GetDev();
+    }
 
-	void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
-	void		Close();
-	bool		Read(vector<_SAMPLE>& data);
+    virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+    virtual void		Close();
+    virtual _BOOLEAN	Read(CVector<short>& psData);
 
 protected:
 
-	CPaCommon hw;
+    CPaCommon hw;
 };
 
 class CPaOut: public CSoundOutInterface
 {
 public:
-			CPaOut();
-	virtual 	~CPaOut();
-	void		Enumerate(vector<string>& choices) const { hw.Enumerate(choices); }
-	void		SetDev(int iNewDevice) { hw.SetDev(iNewDevice); }
-	int		GetDev() const { return hw.GetDev(); }
+    CPaOut();
+    virtual 			~CPaOut();
+    virtual void		Enumerate(vector<string>& choices) {
+        hw.Enumerate(choices);
+    }
+    virtual void		SetDev(int iNewDevice) {
+        hw.SetDev(iNewDevice);
+    }
+    virtual int			GetDev() {
+        return hw.GetDev();
+    }
 
-	void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
-	void		Close();
-	bool		Write(vector<_SAMPLE>& data);
+    virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+    virtual void		Close();
+    virtual _BOOLEAN	Write(CVector<short>& psData);
 
 protected:
 
-	CPaCommon hw;
+    CPaCommon hw;
 };
 
 #endif

@@ -45,63 +45,65 @@ typedef int SOCKET;
 # define INVALID_SOCKET				(-1)
 #endif
 
-#include <pcap.h>
+#ifdef HAVE_LIBPCAP
+# include <pcap.h>
+#endif
 
 CPacketSinkFile::CPacketSinkFile()
-: pFile(0), bIsRecording(0), bChangeReceived(false)
+: pFile(0), bIsRecording(0), bChangeReceived(FALSE)
 {
 }
 
-bool CPacketSinkFile::SetDestination(const string& strFName)
+_BOOLEAN CPacketSinkFile::SetDestination(const string& strFName)
 {
 	strFileName = strFName;
-	bChangeReceived = true;
-	return true;
+	bChangeReceived = TRUE;
+	return TRUE;
 }
 
 void CPacketSinkFile::StartRecording()
 {
-	bIsRecording = true;
-	bChangeReceived = true;
+	bIsRecording = TRUE;
+	bChangeReceived = TRUE;
 }
 
 void CPacketSinkFile::StopRecording()
 {
-	bIsRecording = false;
-	bChangeReceived = true;
+	bIsRecording = FALSE;
+	bChangeReceived = TRUE;
 }
 
 void CPacketSinkFile::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 {
 	if (bChangeReceived) // something has changed, so close the file if it's open
 	{
-	if (pFile)
-	{
+        if (pFile)
+        {
 			close();
 		}
-	pFile = 0;
-		bChangeReceived = false;
+        pFile = 0;
+		bChangeReceived = FALSE;
 	}
 
     if (!bIsRecording) // not recording
     {
-	    if (pFile != 0) // close file if one is open
-	    {
-		    close();
-		    pFile = 0;
-	    }
-	    return;
+            if (pFile != 0) // close file if one is open
+            {
+                    close();
+                    pFile = 0;
+            }
+            return;
     }
 
     if (!pFile) // either wasn't open, or we just closed it
     {
-	    open();
-	    if (!pFile)
-	  {
-		    // Failed to open
-		    bIsRecording = false;
-		    return;
-	    }
+            open();
+            if (!pFile)
+          {
+                    // Failed to open
+                    bIsRecording = FALSE;
+                    return;
+            }
     }
 
 	write(vecbydata);
@@ -210,26 +212,33 @@ CPacketSinkPcapFile::CPacketSinkPcapFile():CPacketSinkFile() {}
 
 CPacketSinkPcapFile::~CPacketSinkPcapFile()
 {
+#ifdef HAVE_LIBPCAP
 	if(pFile)
     	pcap_dump_close((pcap_dumper_t *)pFile);
+#endif
 }
 
 void
 CPacketSinkPcapFile::open()
 {
+#ifdef HAVE_LIBPCAP
     pcap_t *p = pcap_open_dead(DLT_RAW, 65536);
 	pFile = (FILE*)pcap_dump_open(p, strFileName.c_str());
+#endif
 }
 
 void
 CPacketSinkPcapFile::close()
 {
+#ifdef HAVE_LIBPCAP
     pcap_dump_close((pcap_dumper_t *)pFile);
+#endif
 }
 
 void
 CPacketSinkPcapFile::write(const vector<_BYTE>& vecbydata)
 {
+#ifdef HAVE_LIBPCAP
 	vector<_BYTE> out;
 	size_t u = vecbydata.size()+8;
 	size_t c = u+20;
@@ -263,5 +272,8 @@ CPacketSinkPcapFile::write(const vector<_BYTE>& vecbydata)
 	hdr.len = c;
     pcap_dump((u_char*)pFile, &hdr, (u_char*)&out[0]);
     pcap_dump_flush((pcap_dumper_t *)pFile);
+#else
+	(void)vecbydata;
+#endif
 }
 

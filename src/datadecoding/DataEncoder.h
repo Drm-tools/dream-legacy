@@ -26,30 +26,37 @@
  *
 \******************************************************************************/
 
-#ifndef _DATAENCODER_H
-#define _DATAENCODER_H
+#ifndef __DATA_ENCODER_H
+#define __DATA_ENCODER_H
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
+#include "../util/Modul.h"
+#include "../util/CRC.h"
 #include "../util/Vector.h"
-
-class CMOTSlideShowEncoder;
+#include "DABMOT.h"
+#include "MOTSlideShow.h"
 
 class CDataEncoder
 {
   public:
-    CDataEncoder();
-    virtual ~CDataEncoder ();
+    CDataEncoder ()
+    {
+    }
+    virtual ~ CDataEncoder ()
+    {
+    }
 
-    int				Init (CParameter & Param);
-    void			GeneratePacket (CVector < _BINARY > &vecbiPacket);
+    int Init (CParameter & Param);
+    void GeneratePacket (CVector < _BINARY > &vecbiPacket);
 
-	void			AddPic(const string& strFileName, const string& strFormat);
-	void			ClearPics();
-	bool			GetTransStat(string& strCPi, _REAL& rCPe) const;
+    CMOTSlideShowEncoder *GetSliShowEnc ()
+    {
+	return &MOTSlideShowEncoder;
+    }
 
   protected:
-    CMOTSlideShowEncoder* MOTSlideShowEncoder;
+    CMOTSlideShowEncoder MOTSlideShowEncoder;
     CVector < _BINARY > vecbiCurDataUnit;
 
     int iPacketLen;

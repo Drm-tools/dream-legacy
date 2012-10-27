@@ -59,20 +59,33 @@
 ***
 **/
 
-#if 0
-# ifdef _MSC_VER
-#  define TIM_DEF
-#  include <wtypes.h>
-#  undef min
-#  pragma warning(disable: 4100)
-#  pragma warning(disable: 4786)
-# endif
+
+#ifdef _MSC_VER
+#define TIM_DEF
+#include <wtypes.h>
+#undef min
+
+#pragma warning(disable: 4100)
+#pragma warning(disable: 4786)
+
+#endif
+
+
+#if defined(_MSC_VER) && (_MSC_VER==1200)
+// for Visual Studio 6.0, define min (algorithm) as _MIN
+#define min _MIN
+
+#pragma warning(disable:4512)
 #endif
 
 #include <algorithm>
-#include <ctime>
-#ifdef WIN32
+#include <time.h>
+#ifdef _WIN32
 # include <windows.h> // for GetTickCount
+#endif
+
+#if defined(_MSC_VER) && (_MSC_VER==1200)
+#pragma warning(default:4512)
 #endif
 
 #include "dabdatagroupdecoder.h"
@@ -197,7 +210,7 @@ unsigned long NEWS_SVC_DEC_putData(
 
 	struct timeval reception_time;
 
-#ifdef WIN32
+#ifdef _WIN32
 	time((time_t *)&(reception_time.tv_sec));
 	reception_time.tv_usec=GetTickCount();
 #else
