@@ -117,8 +117,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
     connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
     //menu_Settings->addMenu(new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
-    //menubar->addMenu(new CDreamHelpMenu(this));
     connect(actionAbout_Dream, SIGNAL(triggered()), &AboutDlg, SLOT(show()));
+    connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(on_actionWhats_This()));
     SliderBandwidth->setTickPosition(QSlider::TicksBothSides);
     MainPlot = new CDRMPlot(plot);
 #endif
@@ -224,6 +224,11 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnTimerPLLPhaseDial()));
 
 	/* Don't activate real-time timers, wait for show event */
+}
+
+void AnalogDemDlg::on_actionWhats_This()
+{
+        QWhatsThis::enterWhatsThisMode();
 }
 
 void AnalogDemDlg::OnSwitchToDRM()

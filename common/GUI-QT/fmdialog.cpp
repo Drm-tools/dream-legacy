@@ -115,9 +115,9 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 		)
 	);
 	//menu_Settings->addMenu(pRemoteMenu->menu());
-	menubar->addMenu(new CDreamHelpMenu(this));
 #endif
 	connect(actionAbout_Dream, SIGNAL(triggered()), &AboutDlg, SLOT(show()));
+	connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(on_actionWhats_This()));
 #endif
 
 	/* Digi controls */
@@ -162,6 +162,11 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 FMDialog::~FMDialog()
 {
+}
+
+void FMDialog::on_actionWhats_This()
+{
+        QWhatsThis::enterWhatsThisMode();
 }
 
 void FMDialog::OnSwitchToDRM()

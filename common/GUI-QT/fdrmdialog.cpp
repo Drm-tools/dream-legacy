@@ -269,8 +269,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     case 2: actionBlackGrey->setChecked(true);break;
     }
 
-    //menubar->addMenu(new CDreamHelpMenu(this));
     connect(actionAbout_Dream, SIGNAL(triggered()), &AboutDlg, SLOT(show()));
+    connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(on_actionWhats_This()));
 
     connect(this, SIGNAL(plotStyleChanged(int)), pSysEvalDlg, SLOT(UpdatePlotStyle(int)));
     connect(this, SIGNAL(plotStyleChanged(int)), pAnalogDemDlg, SLOT(UpdatePlotStyle(int)));
@@ -347,6 +347,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 FDRMDialog::~FDRMDialog()
 {
     delete pLogging;
+}
+
+void FDRMDialog::on_actionWhats_This()
+{
+	QWhatsThis::enterWhatsThisMode();
 }
 
 #if QT_VERSION < 0x040000
