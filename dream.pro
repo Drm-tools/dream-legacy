@@ -25,8 +25,8 @@ contains(QT_VERSION, ^4\\..*) {
         SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp
         SOURCES += common/GUI-QT/SlideShowViewer.cpp common/GUI-QT/JLViewer.cpp common/GUI-QT/BWSViewer.cpp
 	SOURCES += common/GUI-QT/bwsbrowser.cpp common/GUI-QT/jlbrowser.cpp
-        HEADERS += common/GUI-QT/CSoundCardSelMenu.h
-        SOURCES += common/GUI-QT/CSoundCardSelMenu.cpp
+        HEADERS += common/GUI-QT/SoundCardSelMenu.h
+        SOURCES += common/GUI-QT/SoundCardSelMenu.cpp
         FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
         FORMS += JLViewer.ui BWSViewer.ui SlideShowViewer.ui
         unix {
