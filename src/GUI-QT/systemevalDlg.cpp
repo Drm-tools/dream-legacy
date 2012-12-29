@@ -64,8 +64,7 @@ protected:
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
                              QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
     systemevalDlgBase(parent, name, modal, f),
-    DRMReceiver(NDRMR),
-    Settings(NSettings)
+    DRMReceiver(NDRMR), Settings(NSettings)
 {
     /* Get window geometry data and apply it */
     CWinGeom s;
@@ -100,9 +99,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     LEDFrameSync->SetUpdateTime(600);
     LEDTimeSync->SetUpdateTime(600);
     LEDIOInterface->SetUpdateTime(2000); /* extra long -> red light stays long */
-
-    /* Init parameter for frequency edit for log file */
-    EdtFrequency->setText(QString().setNum(DRMReceiver.GetFrequency()));
 
     /* Update controls */
     UpdateControls();
@@ -250,8 +246,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
         ButtonGroupChanEstTimeInt->setEnabled(FALSE);
         ButtonGroupTimeSyncTrack->setEnabled(FALSE);
         CheckBoxFlipSpec->setEnabled(FALSE);
-        EdtFrequency->setText("0");
-        EdtFrequency->setEnabled(FALSE);
         GroupBoxInterfRej->setEnabled(FALSE);
 
         /* Only audio spectrum makes sence for MDI in */
@@ -399,8 +393,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
             this, SLOT(OnCheckFlipSpectrum()));
     connect(CheckBoxMuteAudio, SIGNAL(clicked()),
             this, SLOT(OnCheckBoxMuteAudio()));
-    connect(CheckBoxWriteLog, SIGNAL(clicked()),
-            this, SLOT(OnCheckWriteLog()));
+    connect(CheckBoxWriteLog, SIGNAL(stateChanged(int)),
+            this, SLOT(OnCheckWriteLog(int)));
     connect(CheckBoxSaveAudioWave, SIGNAL(clicked()),
             this, SLOT(OnCheckSaveAudioWAV()));
     connect(CheckBoxRecFilter, SIGNAL(clicked()),
@@ -413,15 +407,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     /* Timers */
     connect(&Timer, SIGNAL(timeout()),
             this, SLOT(OnTimer()));
-
-    connect(&TimerInterDigit, SIGNAL(timeout()),
-            this, SLOT(OnTimerInterDigit()));
-
-    connect(EdtFrequency, SIGNAL(textChanged ( const QString&)),
-            this, SLOT(OnFrequencyEdited ( const QString &)));
-
-    /* Start log file flag */
-    CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
 }
 
 systemevalDlg::~systemevalDlg()
@@ -487,9 +472,6 @@ void systemevalDlg::UpdateControls()
         break;
     }
 
-    if(!TimerInterDigit.isActive())
-	EdtFrequency->setText(QString().setNum(DRMReceiver.GetFrequency()));
-
     /* Update settings checkbuttons */
     CheckBoxReverb->setChecked(DRMReceiver.GetAudSorceDec()->GetReverbEffect());
     CheckBoxRecFilter->setChecked(DRMReceiver.GetFreqSyncAcq()->GetRecFilter());
@@ -537,12 +519,6 @@ void systemevalDlg::showEvent(QShowEvent*)
 
     /* Activate real-time timer */
     Timer.start(GUI_CONTROL_UPDATE_TIME);
-    TimerInterDigit.stop();
-
-#ifdef _WIN32
-    /* Compatibility with DRMLogger */
-    CheckBoxWriteLog->setFocus();
-#endif
 }
 
 void systemevalDlg::hideEvent(QHideEvent*)
@@ -596,30 +572,6 @@ void systemevalDlg::hideEvent(QHideEvent*)
      * TODO: better solution
      */
     Settings.Put("System Evaluation Dialog", "sysevplottype", (int) MainPlot->GetChartType());
-}
-
-void systemevalDlg::OnTimerInterDigit()
-{
-    TimerInterDigit.stop();
-    QString strFreq = EdtFrequency->text();
-    int len = strFreq.length();
-    /* Keep only characters 0 to 9 */
-    for (int i = 0; i < len; i++)
-        if (!(strFreq[i]>=QChar('0') && strFreq[i]<=QChar('9')))
-            { strFreq.remove(i, 1); len--; i--; }
-    int freq = strFreq.toInt();
-    EdtFrequency->setText(QString::number(freq));
-    DRMReceiver.SetFrequency(freq);
-#ifdef _WIN32
-    /* Compatibility with DRMLogger */
-    CheckBoxWriteLog->setFocus();
-#endif
-}
-
-void systemevalDlg::OnFrequencyEdited(const QString& s)
-{
-    (void)s;
-    TimerInterDigit.changeInterval(1000);
 }
 
 void systemevalDlg::UpdatePlotStyle(int iPlotStyle)
@@ -1166,9 +1118,9 @@ void systemevalDlg::OnCheckSaveAudioWAV()
         DRMReceiver.GetWriteData()->StopWriteWaveFile();
 }
 
-void systemevalDlg::OnCheckWriteLog()
+void systemevalDlg::OnCheckWriteLog(int state)
 {
-    if (CheckBoxWriteLog->isChecked())
+    if (state == 2)
     {
         emit startLogging();
     }
@@ -1419,12 +1371,6 @@ void systemevalDlg::AddWhatsThisHelp()
                        "<br>The log file will be "
                        "written in the directory were the Dream application was started and "
                        "the name of this file is always DreamLog.txt"));
-
-    /* Freq */
-    QWhatsThis::add(EdtFrequency,
-                    tr("<b>Freq:</b> In this edit control, the current "
-                       "selected frequency on the front-end can be specified. This frequency "
-                       "will be written into the log file."));
 
     /* Wiener */
     const QString strWienerChanEst =

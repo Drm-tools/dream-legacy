@@ -44,8 +44,8 @@
 #define DEFAULT_DATA_FILES_DIRECTORY "data" PATH_SEPARATOR
 
 /* Implementation *************************************************************/
-CParameter::CParameter(CDRMReceiver *pRx):
-    pDRMRec(pRx),
+CParameter::CParameter():
+    pDRMRec(NULL),
     eSymbolInterlMode(),
     eMSCCodingScheme(),
     eSDCCodingScheme(),
@@ -55,6 +55,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
     sReceiverID("                "),
     sSerialNumber(),
     sDataFilesDirectory(DEFAULT_DATA_FILES_DIRECTORY),
+    eTransmitCurrentTime(CT_OFF),
     MSCPrLe(),
     Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
     iNumBitsHierarchFrameTotal(0),
@@ -122,6 +123,8 @@ CParameter::CParameter(CDRMReceiver *pRx):
     gps_host("localhost"), gps_port("2497"),
     iAudSampleRate(DEFAULT_SOUNDCRD_SAMPLE_RATE),
     iSigSampleRate(DEFAULT_SOUNDCRD_SAMPLE_RATE),
+    iNewAudSampleRate(0),
+    iNewSigSampleRate(0),
     rSysSimSNRdB(0.0),
     iFrequency(0),
     bValidSignalStrength(FALSE),
@@ -136,8 +139,6 @@ CParameter::CParameter(CDRMReceiver *pRx):
     Mutex()
 {
     GenerateRandomSerialNumber();
-    if (pDRMRec)
-        eReceiverMode = pDRMRec->GetReceiverMode();
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate);
     gps_data.set=0;
     gps_data.status=0;
@@ -161,6 +162,7 @@ CParameter::CParameter(const CParameter& p):
     sReceiverID(p.sReceiverID),
     sSerialNumber(p.sSerialNumber),
     sDataFilesDirectory(p.sDataFilesDirectory),
+    eTransmitCurrentTime(p.eTransmitCurrentTime),
     MSCPrLe(p.MSCPrLe),
     Stream(p.Stream), Service(p.Service),
     iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
@@ -232,6 +234,8 @@ CParameter::CParameter(const CParameter& p):
     gps_host(p.gps_host),gps_port(p.gps_port),
     iAudSampleRate(p.iAudSampleRate),
     iSigSampleRate(p.iSigSampleRate),
+    iNewAudSampleRate(p.iNewAudSampleRate),
+    iNewSigSampleRate(p.iNewSigSampleRate),
     rSysSimSNRdB(p.rSysSimSNRdB),
     iFrequency(p.iFrequency),
     bValidSignalStrength(p.bValidSignalStrength),
@@ -263,6 +267,7 @@ CParameter& CParameter::operator=(const CParameter& p)
     sReceiverID = p.sReceiverID;
     sSerialNumber = p.sSerialNumber;
     sDataFilesDirectory = p.sDataFilesDirectory;
+    eTransmitCurrentTime = p.eTransmitCurrentTime;
     MSCPrLe = p.MSCPrLe;
     Stream = p.Stream;
     Service = p.Service;
@@ -335,6 +340,8 @@ CParameter& CParameter::operator=(const CParameter& p)
     restart_gpsd = p.restart_gpsd;
     iAudSampleRate = p.iAudSampleRate;
     iSigSampleRate = p.iSigSampleRate;
+    iNewAudSampleRate = p.iNewAudSampleRate;
+    iNewSigSampleRate = p.iNewSigSampleRate;
     rSysSimSNRdB = p.rSysSimSNRdB;
     iFrequency = p.iFrequency;
     bValidSignalStrength = p.bValidSignalStrength;
@@ -347,6 +354,13 @@ CParameter& CParameter::operator=(const CParameter& p)
     LastAudioService = p.LastAudioService;
     LastDataService = p.LastDataService;
     return *this;
+}
+
+void CParameter::SetReceiver(CDRMReceiver* pDRMReceiver)
+{
+	pDRMRec = pDRMReceiver;
+    if (pDRMRec)
+        eReceiverMode = pDRMRec->GetReceiverMode();
 }
 
 void CParameter::ResetServicesStreams()
@@ -1110,7 +1124,11 @@ void CParameter::GenerateRandomSerialNumber()
     char serialNumTemp[7];
 
     for (size_t i=0; i < 6; i++)
-        serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
+#ifdef _WIN32
+        serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX]; /* integer overflow on linux, RAND_MAX=0x7FFFFFFF */
+#else
+        serialNumTemp[i] = randomChars[35ll * (long long)rand() / RAND_MAX];
+#endif
 
     serialNumTemp[6] = '\0';
 

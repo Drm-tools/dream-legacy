@@ -32,17 +32,17 @@
 #include <qmessagebox.h>
 #include <qdir.h>
 #include <qfile.h>
-#if QT_VERSION < 0x040000
-# include <qregexp.h>
-#endif
 #ifdef _WIN32
 # include <winsock2.h>
 #endif
 #include "DialogUtil.h"
 #if QT_VERSION < 0x040000
+# include "../sound/sound.h"
+# include <qregexp.h>
 # include <qwhatsthis.h>
 # include <qtextview.h>
 #else
+# include <QCoreApplication>
 # include <QWhatsThis>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
@@ -99,7 +99,10 @@ QString VersionString(QWidget* parent)
 {
     QString strVersionText;
     strVersionText = "<center><b>" + parent->tr("Dream, Version ");
-    strVersionText += QString("%1.%2").arg(dream_version_major).arg(dream_version_minor);
+    strVersionText += QString("%1.%2%3")
+        .arg(dream_version_major)
+        .arg(dream_version_minor)
+        .arg(dream_version_build);
     strVersionText += "</b><br> " + parent->tr("Open-Source Software Implementation of "
                                        "a DRM-Receiver") + "<br>";
     strVersionText += parent->tr("Under the GNU General Public License (GPL)") +
@@ -303,8 +306,8 @@ CHelpUsage::CHelpUsage(const char* usage, const char* argv0,
     show();
 }
 
-/* Help menu ---------------------------------------------------------------- */
 #if QT_VERSION < 0x040000
+/* Help menu ---------------------------------------------------------------- */
 CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
 {
     /* Standard help menu consists of about and what's this help */
@@ -317,91 +320,64 @@ void CDreamHelpMenu::OnHelpWhatsThis()
 {
     QWhatsThis::enterWhatsThisMode();
 }
-#else
-#if 0
-CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
-{
-    /* Standard help menu consists of about and what's this help */
-    setTitle("?");
-    addAction(tr("What's This"), this , SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
-    addSeparator();
-    addAction(tr("About..."), parent, SLOT(OnHelpAbout()));
-}
-#endif
-#endif
-
-#if 0 // QT_VERSION >= 0x040000
-QSignalMapper* CSoundCardSelMenu::Init(const QString& text, CSelectionInterface* intf)
-{
-    QMenu* menu = addMenu(text);
-    QSignalMapper* map = new QSignalMapper(this);
-    QActionGroup* group = new QActionGroup(this);
-    vector<string> names;
-
-    intf->Enumerate(names);
-    int iNumSoundDev = names.size();
-    int iDefaultDev = intf->GetDev();
-    if ((iDefaultDev > iNumSoundDev) || (iDefaultDev < 0))
-        iDefaultDev = iNumSoundDev;
-
-    for (int i = 0; i < iNumSoundDev; i++)
-    {
-        QString name(names[i].c_str());
-        QAction* m = menu->addAction(name, map, SLOT(map()));
-		group->addAction(m);
-		map->setMapping(m, i);
-        if(i==iDefaultDev)
-            menu->setActiveAction(m);
-    }
-    return map;
-}
-#endif
 
 /* Sound card selection menu ------------------------------------------------ */
-#if QT_VERSION < 0x040000
-CSoundCardSelMenu::CSoundCardSelMenu(
-    CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
-    QPopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
+# undef DEVICE_STRING
+# ifdef _WIN32
+#  define DEVICE_STRING(s) s.c_str()
+# else
+#  define DEVICE_STRING(s) QString::fromUtf8(s.c_str())
+# endif
+
+CSoundCardSelMenu::CSoundCardSelMenu(CDRMTransceiver& DRMTransceiver, QWidget* parent) :
+    QPopupMenu(parent), DRMTransceiver(DRMTransceiver)
 {
+    /* We need to get device list directly from sound card,
+       since DRMTransceiver.GetSoundInInterface() can be an audio file interface */
+    CSelectionInterface* pSoundInIF = new CSoundIn();
+    CSelectionInterface* pSoundOutIF = DRMTransceiver.GetSoundOutInterface();
+
     pSoundInMenu = new QPopupMenu(parent);
     CHECK_PTR(pSoundInMenu);
     pSoundOutMenu = new QPopupMenu(parent);
     CHECK_PTR(pSoundOutMenu);
-    int i;
+    vector<string> vecDescriptions;
+    int i, iDefaultInDev = -1, iDefaultOutDev = -1;
 
     /* Get sound in device names */
-    pSoundInIF->Enumerate(vecSoundInNames);
-    iNumSoundInDev = vecSoundInNames.size();
-
+    string sDefaultInDev = DRMTransceiver.GetSoundInInterface()->GetDev();
+    pSoundInIF->Enumerate(vecSoundInNames, vecDescriptions);
+    const int iNumSoundInDev = vecSoundInNames.size();
     for (i = 0; i < iNumSoundInDev; i++)
     {
-        QString name(QString::fromUtf8(vecSoundInNames[i].c_str()));
-#if defined(_MSC_VER) && (_MSC_VER < 1400)
+        if (vecSoundInNames[i] == sDefaultInDev)
+            iDefaultInDev = i;
+        QString name(DEVICE_STRING(vecSoundInNames[i]));
+# if defined(_MSC_VER) && (_MSC_VER < 1400)
         if (name.find("blaster", 0, FALSE) >= 0)
             name += " (has problems on some platforms)";
-#endif
+# endif
+        if (name == "") name = tr("[default]");
         pSoundInMenu->insertItem(name, this, SLOT(OnSoundInDevice(int)), 0, i);
     }
 
     /* Get sound out device names */
-    pSoundOutIF->Enumerate(vecSoundOutNames);
-    iNumSoundOutDev = vecSoundOutNames.size();
+    string sDefaultOutDev = pSoundOutIF->GetDev();
+    pSoundOutIF->Enumerate(vecSoundOutNames, vecDescriptions);
+    const int iNumSoundOutDev = vecSoundOutNames.size();
     for (i = 0; i < iNumSoundOutDev; i++)
     {
-        pSoundOutMenu->insertItem(QString::fromUtf8(vecSoundOutNames[i].c_str()), this,
-            SLOT(OnSoundOutDevice(int)), 0, i);
+        if (vecSoundOutNames[i] == sDefaultOutDev)
+            iDefaultOutDev = i;
+        QString name(DEVICE_STRING(vecSoundOutNames[i]));
+        if (name == "") name = tr("[default]");
+        pSoundOutMenu->insertItem(name, this, SLOT(OnSoundOutDevice(int)), 0, i);
     }
 
-    /* Set default device. If no valid device was selected, select "Wave mapper" */
-    int iDefaultInDev = pSoundInIF->GetDev();
-    if ((iDefaultInDev > iNumSoundInDev) || (iDefaultInDev < 0))
-        iDefaultInDev = iNumSoundInDev;
-    int iDefaultOutDev = pSoundOutIF->GetDev();
-        if ((iDefaultOutDev > iNumSoundOutDev) || (iDefaultOutDev < 0))
-    iDefaultOutDev = iNumSoundOutDev;
-
-    pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
-    pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
+    if (iDefaultInDev >= 0)
+        pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
+    if (iDefaultOutDev >= 0)
+        pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
 
     insertItem(tr("Sound &In"), pSoundInMenu);
     insertItem(tr("Sound &Out"), pSoundOutMenu);
@@ -409,19 +385,25 @@ CSoundCardSelMenu::CSoundCardSelMenu(
 
 void CSoundCardSelMenu::OnSoundInDevice(int id)
 {
-    pSoundInIF->SetDev(id);
-    /* Take care of checks in the menu. "+ 1" because of wave mapper entry */
-    for (int i = 0; i < iNumSoundInDev + 1; i++)
+    CSelectionInterface* pSoundInIF = DRMTransceiver.GetSoundInInterface();
+	const int iNumSoundInDev = vecSoundInNames.size();
+    if (id >= 0 && id < iNumSoundInDev)
+        pSoundInIF->SetDev(vecSoundInNames[id]);
+    for (int i = 0; i < iNumSoundInDev; i++)
         pSoundInMenu->setItemChecked(i, i == id);
 }
 
 void CSoundCardSelMenu::OnSoundOutDevice(int id)
 {
-    pSoundOutIF->SetDev(id);
-    /* Take care of checks in the menu. "+ 1" because of wave mapper entry */
-    for (int i = 0; i < iNumSoundOutDev + 1; i++)
+    CSelectionInterface* pSoundOutIF = DRMTransceiver.GetSoundOutInterface();
+	const int iNumSoundOutDev = vecSoundOutNames.size();
+    if (id >= 0 && id < iNumSoundOutDev)
+        pSoundOutIF->SetDev(vecSoundOutNames[id]);
+    for (int i = 0; i < iNumSoundOutDev; i++)
         pSoundOutMenu->setItemChecked(i, i == id);
 }
+
+# undef DEVICE_STRING
 #endif
 
 RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
@@ -879,9 +861,21 @@ void CreateDirectories(const QString& strFilename)
     for (int i = 0;; i++)
     {
 #if QT_VERSION < 0x040000
+# ifdef _WIN32
+        int i1 = strFilename.find(QChar('/'), i);
+        int i2 = strFilename.find(QChar('\\'), i);
+        i = i1 >= 0 && i1 < i2 ? i1 : i2;
+# else
         i = strFilename.find(QChar('/'), i);
+# endif
 #else
+# ifdef _WIN32
+        int i1 = strFilename.indexOf(QChar('/'), i);
+        int i2 = strFilename.indexOf(QChar('\\'), i);
+        i = i1 >= 0 && i1 < i2 ? i1 : i2;
+# else
         i = strFilename.indexOf(QChar('/'), i);
+# endif
 #endif
         if (i < 0)
             break;
@@ -889,5 +883,26 @@ void CreateDirectories(const QString& strFilename)
         if (!strDirName.isEmpty() && !QFileInfo(strDirName).exists())
             QDir().mkdir(strDirName);
     }
+}
+
+void RestartTransceiver(CDRMTransceiver *DRMTransceiver)
+{
+#if QT_VERSION >= 0x040000
+    if (DRMTransceiver != NULL)
+    {
+        QMutex sleep;
+        CParameter& Parameters = *DRMTransceiver->GetParameters();
+        DRMTransceiver->Restart();
+        while (Parameters.eRunState == CParameter::RESTART)
+        {
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            sleep.lock(); /* TODO find a better way to sleep on Qt */
+            sleep.tryLock(10);
+            sleep.unlock();
+        }
+    }
+#else
+	(void)DRMTransceiver;
+#endif
 }
 

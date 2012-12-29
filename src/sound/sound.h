@@ -30,39 +30,39 @@
 #define _SOUND_H
 
 #if defined(_WIN32) && !defined(USE_PORTAUDIO) && !defined(USE_JACK)
-# include "windows/Sound.h"
+# include "../windows/Sound.h"
 #endif
 
 #ifdef USE_OSS
-# include "linux/soundin.h"
-# include "linux/soundout.h"
+# include "../linux/soundin.h"
+# include "../linux/soundout.h"
 #endif
 
 #ifdef USE_ALSA
-# include "linux/soundin.h"
-# include "linux/soundout.h"
+# include "../linux/soundin.h"
+# include "../linux/soundout.h"
 #endif
 
 #ifdef USE_JACK
-# include "linux/jack.h"
+# include "../linux/jack.h"
 typedef CSoundInJack CSoundIn;
 typedef CSoundOutJack CSoundOut;
 #endif
 
 #ifdef USE_PULSEAUDIO
-# include "sound/drm_pulseaudio.h"
+# include "drm_pulseaudio.h"
 typedef CSoundInPulse CSoundIn;
 typedef CSoundOutPulse CSoundOut;
 #endif
 
 #ifdef USE_PORTAUDIO
-# include "sound/drm_portaudio.h"
+# include "drm_portaudio.h"
 typedef CPaIn CSoundIn;
 typedef CPaOut CSoundOut;
 #endif
 
-#if !defined(_WIN32) &&!defined(USE_OSS) && !defined(USE_ALSA) && !defined(USE_JACK) && !defined(USE_PULSEAUDIO) && !defined(USE_PORTAUDIO)
-# include "sound/soundnull.h"
+#if !defined(_WIN32) && !defined(USE_OSS) && !defined(USE_ALSA) && !defined(USE_JACK) && !defined(USE_PULSEAUDIO) && !defined(USE_PORTAUDIO)
+# include "soundnull.h"
 typedef CSoundInNull CSoundIn;
 typedef CSoundOutNull CSoundOut;
 #endif

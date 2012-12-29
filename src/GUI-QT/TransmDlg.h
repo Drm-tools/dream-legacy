@@ -29,7 +29,6 @@
 #define __TransmDlg_H
 // (DF) TODO: to be enabled and removed in a future release
 //#define ENABLE_TRANSM_CODECPARAMS
-//#define ENABLE_TRANSM_CURRENTTIME
 
 #include <qpushbutton.h>
 #include <qstring.h>
@@ -74,6 +73,8 @@
 class CTransmitterThread : public QThread 
 {
 public:
+	CTransmitterThread(CSettings& Settings) : DRMTransmitter(&Settings) {}
+
 	void Stop()
 	{
 		/* Stop working thread */
@@ -128,8 +129,9 @@ protected:
 	void EnableAllControlsForSet();
 	void TabWidgetEnableTabs(QTabWidget* tabWidget, bool enable);
 
-	CSettings&			Settings;
+	CTransmitterThread	TransThread; /* Working thread object */
 	CDRMTransmitter&	DRMTransmitter;
+	CSettings&			Settings;
 #if QT_VERSION < 0x040000
 	QMenuBar*			pMenu;
 	QPopupMenu*			pSettingsMenu;
@@ -143,7 +145,6 @@ protected:
 	CodecParams*		CodecDlg;
 #endif
 
-	CTransmitterThread	TransThread; /* Working thread object */
 	_BOOLEAN			bIsStarted;
 	CVector<string>		vecstrTextMessage;
 	int					iIDCurrentText;
@@ -170,6 +171,8 @@ public slots:
 #if defined(ENABLE_TRANSM_CODECPARAMS) || QT_VERSION < 0x040000
 	void OnButtonCodec();
 #endif
+	void OnToggleCheckBoxHighQualityIQ(bool bState);
+	void OnToggleCheckBoxAmplifiedOutput(bool bState);
 	void OnToggleCheckBoxEnableData(bool bState);
 	void OnToggleCheckBoxEnableAudio(bool bState);
 	void OnToggleCheckBoxEnableTextMessage(bool bState);
@@ -187,9 +190,7 @@ public slots:
 #if defined(ENABLE_TRANSM_CODECPARAMS) || QT_VERSION < 0x040000
 	void OnRadioCodec(int iID);
 #endif
-#if defined(ENABLE_TRANSM_CURRENTTIME) || QT_VERSION < 0x040000
 	void OnRadioCurrentTime(int iID);
-#endif
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
 	void OnTextChangedSndCrdIF(const QString& strIF);

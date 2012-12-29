@@ -44,6 +44,7 @@
 # include <QMenu>
 # include <QDialog>
 # include "ui_FMMainWindow.h"
+# include "SoundCardSelMenu.h"
 #endif
 #include "DialogUtil.h"
 #include "MultColorLED.h"
@@ -70,8 +71,7 @@ class FMDialog : public FMDialogBase
 public:
 	FMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE,	Qt::WFlags f = 0);
-
-	virtual ~FMDialog();
+	void switchEvent();
 
 protected:
 	CDRMReceiver&		DRMReceiver;
@@ -86,6 +86,8 @@ protected:
 	QMenu*				pReceiverModeMenu;
 	QMenu*				pSettingsMenu;
 	QMenu*				pPlotStyleMenu;
+	CFileMenu*			pFileMenu;
+	CSoundCardSelMenu*	pSoundCardMenu;
 #endif
 	QTimer				Timer;
 	QTimer				TimerClose;

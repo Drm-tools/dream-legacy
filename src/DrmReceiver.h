@@ -56,8 +56,10 @@
 #include "sync/SyncUsingPil.h"
 #include "AMDemodulation.h"
 #include "AMSSDemodulation.h"
-#include "soundinterface.h"
+#include "sound/soundinterface.h"
 #include "PlotManager.h"
+#include "DrmTransceiver.h"
+
 
 /* Definitions ****************************************************************/
 /* Number of FAC frames until the acquisition is activated in case a signal
@@ -128,22 +130,30 @@ protected:
     virtual void ProcessDataInternal(CParameter&);
 };
 
-class CDRMReceiver
+class CDRMReceiver : public CDRMTransceiver
 {
 public:
 
-    CDRMReceiver();
+    enum ESFStatus { SF_SNDCARDIN, SF_SNDFILEIN, SF_RSCIMDIIN };
+
+    CDRMReceiver(CSettings* pSettings=NULL);
     virtual ~CDRMReceiver();
 
-    void					LoadSettings(CSettings&); // can write to settings to set defaults
-    void					SaveSettings(CSettings&);
+    void					LoadSettings(); // can write to settings to set defaults
+    void					SaveSettings();
     void					Start();
-    void					Stop();
+    void					SetRsciInput(const string& rsciInput);
+    void					ClearRsciInput();
+    void					SetSoundFile(const string& soundFile);
+    void					ClearSoundFile();
+    void					SetInputFile(const string& inputFile);
+    void					ClearInputFile();
+    ESFStatus				GetInputStatus();
     void					RequestNewAcquisition() {
         bRestartFlag = TRUE;
     }
     EAcqStat				GetAcquiState() {
-        return pParameters->GetAcquiState();
+        return Parameters.GetAcquiState();
     }
     ERecMode				GetReceiverMode() {
         return eReceiverMode;
@@ -168,7 +178,7 @@ public:
 #endif
     void	 				SetFrequency(int);
     int		 				GetFrequency() {
-        return pParameters->GetFrequency();
+        return Parameters.GetFrequency();
     }
     void					SetIQRecording(_BOOLEAN);
     void					SetRSIRecording(_BOOLEAN, const char);
@@ -225,12 +235,6 @@ public:
     }
 
     /* Get pointer to internal modules */
-    CSelectionInterface*	GetSoundInInterface() {
-        return pSoundInInterface;
-    }
-    CSelectionInterface*	GetSoundOutInterface() {
-        return pSoundOutInterface;
-    }
     CUtilizeFACData*		GetFAC() {
         return &UtilizeFACData;
     }
@@ -280,17 +284,13 @@ public:
         return &AudioSourceDecoder;
     }
     CUpstreamDI*			GetRSIIn() {
-        return &upstreamRSCI;
+        return pUpstreamRSCI;
     }
     CDownstreamDI*			GetRSIOut() {
         return &downstreamRSCI;
     }
     CChannelEstimation*		GetChannelEstimation() {
         return &ChannelEstimation;
-    }
-
-    CParameter*				GetParameters() {
-        return pParameters;
     }
 
     CPlotManager*			GetPlotManager() {
@@ -315,6 +315,8 @@ protected:
     void					SetInTrackingModeDelayed();
     void					InitsForAllModules();
     void					Run();
+    void					SetInput();
+    void					ResetInput();
     void					DemodulateDRM(_BOOLEAN&);
     void					DecodeDRM(_BOOLEAN&, _BOOLEAN&);
     void					UtilizeDRM(_BOOLEAN&);
@@ -330,8 +332,6 @@ protected:
     void					saveSDCtoFile();
 
     /* Modules */
-    CSoundInInterface*		pSoundInInterface;
-    CSoundOutInterface*		pSoundOutInterface;
     CReceiveData			ReceiveData;
     CWriteData				WriteData;
     CInputResample			InputResample;
@@ -364,14 +364,9 @@ protected:
     CAMSSExtractBits		AMSSExtractBits;
     CAMSSDecode				AMSSDecode;
 
-    CUpstreamDI				upstreamRSCI;
+    CUpstreamDI*			pUpstreamRSCI;
     CDecodeRSIMDI			DecodeRSIMDI;
     CDownstreamDI			downstreamRSCI;
-
-    /* Parameters */
-    CParameter*				pParameters;
-    CParameter*				pDRMParam;
-    CParameter*				pAMParam;
 
     /* Buffers */
     CSingleBuffer<_REAL>			AMDataBuf;
@@ -380,10 +375,10 @@ protected:
     CCyclicBuffer<_REAL>			AMSSResPhaseBuf;
     CCyclicBuffer<_BINARY>			AMSSBitsBuf;
 
-    CSingleBuffer<_REAL>			DemodDataBuf;
+    CCyclicBuffer<_REAL>			DemodDataBuf;
     CSingleBuffer<_REAL>			IQRecordDataBuf;
 
-    CSingleBuffer<_REAL>			RecDataBuf;
+    CCyclicBuffer<_REAL>			RecDataBuf;
     CCyclicBuffer<_REAL>			InpResBuf;
     CCyclicBuffer<_COMPLEX>			FreqSyncAcqBuf;
     CSingleBuffer<_COMPLEX>			TimeSyncBuf;
@@ -440,11 +435,13 @@ protected:
     int						iBwFM;
     time_t					time_keeper;
 #ifdef HAVE_LIBHAMLIB
-    CRig*				pRig;
+    CRig*					pRig;
 #endif
 
-    CPlotManager PlotManager;
-    string			rsiOrigin;
+    CPlotManager			PlotManager;
+    string					rsiOrigin;
+    string					sSoundFile;
+    int						iPrevSigSampleRate; /* sample rate before sound file */
 };
 
 

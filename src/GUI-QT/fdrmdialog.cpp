@@ -41,8 +41,6 @@
 # include <QEvent>
 # include <QShowEvent>
 # include <QCloseEvent>
-//# include <QDebug>
-# include "SoundCardSelMenu.h"
 # include "BWSViewer.h"
 # include "SlideShowViewer.h"
 # include "JLViewer.h"
@@ -85,7 +83,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     pLogging = new CLogging(Parameters);
     pLogging->LoadSettings(Settings);
-    pLogging->reStart();
 
 #if QT_VERSION < 0x040000
     /* Analog demodulation window */
@@ -144,9 +141,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     /* Settings menu  ------------------------------------------------------- */
     pSettingsMenu = new QPopupMenu(this);
     CHECK_PTR(pSettingsMenu);
-    pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-                              new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(),
-                                      DRMReceiver.GetSoundOutInterface(), this));
 
     pSettingsMenu->insertItem(tr("&AM (analog)"), this,
                               SLOT(OnSwitchToAM()), Qt::CTRL+Qt::Key_A);
@@ -157,6 +151,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pSettingsMenu->insertSeparator();
     pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
                               SLOT(OnMenuSetDisplayColor()));
+
     /* Plot style settings */
     pPlotStyleMenu = new QPopupMenu(this);
     pPlotStyleMenu->insertItem(tr("&Blue / White"), this, SLOT(OnMenuPlotStyle(int)), 0, 0);
@@ -174,6 +169,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     pSettingsMenu->insertItem(tr("&General settings..."), pGeneralSettingsDlg,
                               SLOT(show()));
+
+    /* Sound Card */
+    pSettingsMenu->insertItem(tr("&Sound Card Selection"),
+                              new CSoundCardSelMenu(DRMReceiver, this));
 
     /* Main menu bar -------------------------------------------------------- */
     pMenu = new QMenuBar(this);
@@ -245,10 +244,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     action_Multimedia_Dialog->setEnabled(false);
 
-    menu_Settings->addMenu( new CSoundCardSelMenu(
-                                DRMReceiver.GetSoundInInterface(),
-                                DRMReceiver.GetSoundOutInterface(),
-                                this));
+    pFileMenu = new CFileMenu(DRMReceiver, this, menu_View);
+    pSoundCardMenu = new CSoundCardSelMenu(DRMReceiver, pFileMenu, this);
+    menu_Settings->addMenu(pSoundCardMenu);
+    connect(pFileMenu, SIGNAL(soundFileChanged(CDRMReceiver::ESFStatus)), this, SLOT(OnSoundFileChanged(CDRMReceiver::ESFStatus)));
 
     connect(actionMultimediaSettings, SIGNAL(triggered()), pMultSettingsDlg, SLOT(show()));
     connect(actionGeneralSettings, SIGNAL(triggered()), pGeneralSettingsDlg, SLOT(show()));
@@ -366,24 +365,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     /* Activate real-time timers */
     Timer.start(GUI_CONTROL_UPDATE_TIME);
-    string schedfile = Settings.Get("command", "schedule", string());
-    if(schedfile != "")
-    {
-        pScheduler = new CScheduler;
-        pScheduler->LoadSchedule(schedfile);
-        pScheduleTimer = new QTimer(this);
-        connect(pScheduleTimer, SIGNAL(timeout()), this, SLOT(OnScheduleTimer()));
-        /* Setup the first timeout */
-        CScheduler::SEvent e;
-        e = pScheduler->front();
-        time_t now = time(NULL);
-        pScheduleTimer->start(1000*(e.time-now));
-//#if QT_VERSION >= 0x040000
-//        pScheduleTimer->start();
-//#else
-//        // TODO
-//#endif
-	}
 }
 
 FDRMDialog::~FDRMDialog()
@@ -403,7 +384,7 @@ void FDRMDialog::OnMenuPlotStyle(int value)
     emit plotStyleChanged(value);
     /* Taking care of the checks */
     for (int i = 0; i < NUM_AVL_COLOR_SCHEMES_PLOT; i++)
-    pPlotStyleMenu->setItemChecked(i, i == value);
+        pPlotStyleMenu->setItemChecked(i, i == value);
 }
 #endif
 
@@ -481,35 +462,42 @@ void FDRMDialog::UpdateDRM_GUI()
 #endif
 }
 
+void FDRMDialog::startLogging()
+{
+    pSysEvalDlg->CheckBoxWriteLog->setChecked(true);
+}
+
+void FDRMDialog::stopLogging()
+{
+    pSysEvalDlg->CheckBoxWriteLog->setChecked(false);
+}
+
 void FDRMDialog::OnScheduleTimer()
 {
-	CScheduler::SEvent e;
-	e = pScheduler->front();
-//#if QT_VERSION >= 0x040000
-//QDateTime dt;
-//dt.setTime_t(e.time);
-//qDebug() << dt.toString("yyyy-MM-dd hh:mm:ss") << " " << e.frequency;
-//#endif
-	if (e.frequency != -1)
-	{
-		pLogging->LoadSettings(Settings);
-		pLogging->reStart();
-		DRMReceiver.SetFrequency(e.frequency);
-//dprintf("start\n");
-	}
-	else
-	{
-		pLogging->stop();
-//dprintf("stop\n");
-	}
-	e = pScheduler->pop();
-	time_t now = time(NULL);
-	pScheduleTimer->start(1000*(e.time-now));
-//#if QT_VERSION >= 0x040000
-//	pScheduleTimer->setInterval(1000*(e.time-now));
-//#else
-//	pScheduleTimer->changeInterval(1000*(e.time-now));
-//#endif
+    CScheduler::SEvent e;
+    e = pScheduler->front();
+    if (e.frequency != -1)
+    {
+        DRMReceiver.SetFrequency(e.frequency);
+        if(!pLogging->enabled())
+        {
+            startLogging();
+        }
+    }
+    else
+    {
+        stopLogging();
+    }
+    if(pScheduler->empty())
+    {
+        stopLogging();
+    }
+    else
+    {
+        e = pScheduler->pop();
+        time_t now = time(NULL);
+        pScheduleTimer->start(1000*(e.time-now));
+    }
 }
 
 void FDRMDialog::OnTimer()
@@ -530,6 +518,44 @@ void FDRMDialog::OnTimer()
         break;
     case RM_NONE: // wait until working thread starts operating
         break;
+    }
+
+    // do this here so GUI has initialised before we might pop up a message box
+    if(pScheduler!=NULL)
+	return;
+
+    string schedfile = Settings.Get("command", "schedule", string());
+    if(schedfile != "")
+    {
+	bool testMode = Settings.Get("command", "test", false);
+        pScheduler = new CScheduler(testMode);
+        if(pScheduler->LoadSchedule(schedfile)) {
+            pScheduleTimer = new QTimer(this);
+            connect(pScheduleTimer, SIGNAL(timeout()), this, SLOT(OnScheduleTimer()));
+            /* Setup the first timeout */
+            CScheduler::SEvent e;
+            if(!pScheduler->empty()) {
+                e = pScheduler->front();
+                time_t now = time(NULL);
+                time_t next = e.time - now;
+                if(next > 0)
+                {
+                    pScheduleTimer->start(1000*next);
+                }
+                else // We are late starting
+                {
+                    startLogging();
+                }
+            }
+        }
+        else {
+            QMessageBox::information(this, "Dream", tr("Schedule file requested but not found"));
+        }
+    }
+    else
+    {
+        if(pLogging->enabled())
+            startLogging();
     }
 }
 
@@ -939,19 +965,32 @@ void FDRMDialog::ClearDisplay()
 
 void FDRMDialog::ChangeGUIModeToDRM()
 {
+    switchEvent();
     show();
 }
 
 void FDRMDialog::ChangeGUIModeToAM()
 {
     hide();
+    Timer.stop();
+    pAnalogDemDlg->switchEvent();
     pAnalogDemDlg->show();
 }
 
 void FDRMDialog::ChangeGUIModeToFM()
 {
     hide();
+    Timer.stop();
+    pFMDlg->switchEvent();
     pFMDlg->show();
+}
+
+void FDRMDialog::switchEvent()
+{
+    /* Put initialization code on mode switch here */
+#if QT_VERSION >= 0x040000
+    pFileMenu->UpdateMenu();
+#endif
 }
 
 void FDRMDialog::showEvent(QShowEvent* e)

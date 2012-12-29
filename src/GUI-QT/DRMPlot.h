@@ -192,9 +192,9 @@ public:
 		Frame->setFrameStyle(QFrame::Panel|QFrame::Sunken);
 		Frame->setLineWidth(WINDOW_BORDER);
 		Plot = new QwtPlot(Frame);
-		/*printf("QwtPlotDialog()\n");*/
+		/*fprintf(stderr, "QwtPlotDialog()\n");*/
 	}
-	~QwtPlotDialog() { /*printf("~QwtPlotDialog()\n");*/ }
+	~QwtPlotDialog() { /*fprintf(stderr, "~QwtPlotDialog()\n");*/ }
 	QwtPlot *GetPlot() { return Plot; }
 	void show() { QDialog::show(); emit activate(); }
 	void hide() { emit deactivate(); QDialog::hide(); }
@@ -370,7 +370,6 @@ protected:
 	QwtPlotPicker	*picker;
 	QwtLegend		*legend;
 
-	_BOOLEAN		bOnTimerCharMutexFlag;
 	QTimer			TimerChart;
 	CDRMReceiver	*pDRMRec;
 
@@ -385,6 +384,7 @@ protected:
 	QRgb*			imageData;
 	int				iAudSampleRate;
 	int				iSigSampleRate;
+	int				iLastXoredSampleRate;
 
 public slots:
 #if QWT_VERSION < 0x060000

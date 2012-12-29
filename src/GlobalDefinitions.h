@@ -59,11 +59,13 @@ using namespace std; /* Because of the library: "complex" */
 #endif /* _WIN32 */
 
 /* set sensible defaults for QT */
-#include <qglobal.h>
+#ifndef USE_NO_QT
+# include <qglobal.h>
+#endif
 
 /* Standard definitions */
 #ifndef TRUE
-# define	TRUE							1
+# define TRUE							1
 #endif
 #ifndef FALSE
 # define FALSE							0
@@ -236,16 +238,20 @@ public:
     _REAL		rChan; /* Channel power at this cell */
 };
 
-/* Mutex object to access data safely from different threads */
-/* QT mutex */
 
-#ifdef USE_QT_GUI
-
+#if QT_VERSION >= 0x040000 || defined(USE_QT_GUI)
+#if QT_VERSION < 0x040000
 # if QT_VERSION < 0x030000
 #  include <qthread.h>
 # else
 #  include <qmutex.h>
+#  include <qwaitcondition.h>
 # endif
+#else
+# include <QMutex>
+# include <QWaitCondition>
+#endif
+/* Mutex object to access data safely from different threads */
 
 class CMutex
 {
@@ -256,18 +262,41 @@ public:
     void Unlock() {
         Mutex.unlock();
     }
-
 protected:
     QMutex Mutex;
+friend class CWaitCondition;
 };
+
+class CWaitCondition
+{
+public:
+    void WakeOne() {
+        WaitCond.wakeOne();
+    }
+    _BOOLEAN Wait(CMutex* mutex, unsigned long time) {
+        return WaitCond.wait(&mutex->Mutex, time);
+    }
+protected:
+    QWaitCondition WaitCond;
+};
+
 #else
 /* No GUI and no threads, we do not need mutex in this case */
+
 class CMutex
 {
 public:
     void Lock() {}
     void Unlock() {}
 };
+
+class CWaitCondition
+{
+public:
+    void WakeOne() {}
+    _BOOLEAN Wait(CMutex*, unsigned long) {return TRUE;}
+};
+
 #endif
 
 class CGenErr
@@ -276,6 +305,7 @@ public:
     CGenErr(string strNE) : strError(strNE) {}
     string strError;
 };
+
 
 // FIXME something nicer than using "MAX_NUM_TAPS_DRM_CHAN"
 /* For simulation, data from channel simulation */

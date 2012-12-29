@@ -35,24 +35,6 @@
 # include <windows.h>
 #endif
 
-#if 0
-# ifdef _WIN32
-# include <stdarg.h>
-int dprintf(const char *format, ...)
-{
-	char buffer[1024];
-	va_list vl;
-	va_start(vl, format);
-	int ret = vsprintf(buffer, format, vl);
-	va_end(vl);
-	OutputDebugStringA(buffer);
-	return ret;
-}
-# else
-#  define dprintf printf
-# endif
-#endif
-
 #ifdef _WIN32
 time_t timegm(struct tm *tm)
 {
@@ -69,7 +51,7 @@ time_t timegm(struct tm *tm)
 	ULARGE_INTEGER uli;
 	uli.LowPart = ft.dwLowDateTime;
 	uli.HighPart = ft.dwHighDateTime;
-	return (time_t)((uli.QuadPart - 116444736000000000ULL)/10000000ULL);
+	return (time_t)(uli.QuadPart/10000000 - 11644473600);
 }
 #endif
 
@@ -80,7 +62,8 @@ CScheduler::SEvent CScheduler::front()
 	{
 		fill();
 	}
-//struct tm* dts = gmtime(&events.front().time); printf("%i %02i:%02i:%02i frequency=%i\n", (int)dts->tm_mday, (int)dts->tm_hour, (int)dts->tm_min, (int)dts->tm_sec, (int)events.front().frequency);
+	if(testMode)
+		cerr << format(events.front().time) << " " << events.front().frequency << endl;
 	return events.front();
 }
 
@@ -96,20 +79,25 @@ bool CScheduler::empty() const
 	return events.empty();
 }
 
-void CScheduler::LoadSchedule(const string& filename)
+bool CScheduler::LoadSchedule(const string& filename)
 {
-	LoadIni(filename.c_str());
-	for(int i=1; i<999; i++)
+	bool ok = iniFile.LoadIni(filename.c_str());
+	if(!ok)
+		return false;
+
+	if(testMode)
+		before();
+	for(int i=1; i<99; i++)
 	{
 		ostringstream ss;
 		ss << "Freq" << i;
-		string f = GetIniSetting("Settings", ss.str());
+		string f = iniFile.GetIniSetting("Settings", ss.str());
 		ss.str("");
 		ss << "StartTime" << i;
-		string starttime = GetIniSetting("Settings", ss.str());
+		string starttime = iniFile.GetIniSetting("Settings", ss.str());
 		ss.str("");
 		ss << "EndTime" << i;
-		string endtime = GetIniSetting("Settings", ss.str());
+		string endtime = iniFile.GetIniSetting("Settings", ss.str());
 		if(starttime == endtime)
 			break;
 		time_t start = parse(starttime);
@@ -118,43 +106,34 @@ void CScheduler::LoadSchedule(const string& filename)
 		schedule[end] = -1;
 	}
 	fill();
+	return true;
 }
 
 void CScheduler::fill()
 {
-	time_t dt;
-//	if (events.empty())
-//	{
-		dt = time(NULL); // daytime
-//	}
-//	else
-//	{
-//		dt = events.back().time;
-//	}
+	time_t dt = time(NULL); // daytime
 	struct tm dts;
 	dts = *gmtime(&dt);
 	dts.tm_hour = 0;
 	dts.tm_min = 0;
 	dts.tm_sec = 0;
 	time_t sod = timegm(&dts); // start of daytime
-//dprintf("sod = %i\n", sod);
-//{struct tm* gtm = gmtime(&sod); if (gtm) dprintf("%i %i %02i:%02i:%02i\n", (int)gtm->tm_year+1900, (int)gtm->tm_mday, (int)gtm->tm_hour, (int)gtm->tm_min, (int)gtm->tm_sec); else dprintf("gtm = NULL\n");}
 	// resolve schedule to absolute time
 	map<time_t,int> abs_sched;
-	for (map<time_t,int>::const_iterator i = schedule.begin(); i != schedule.end(); i++)
+	map<time_t,int>::const_iterator i;
+	for(i = schedule.begin(); i != schedule.end(); i++)
 	{
 		time_t st = sod + i->first;
 		if (st < dt)
 			st += 24 * 60 * 60; // want tomorrow's.
 		abs_sched[st] = i->second;
 	}
-	for (map<time_t,int>::const_iterator i = abs_sched.begin(); i != abs_sched.end(); i++)
+	for (i = abs_sched.begin(); i != abs_sched.end(); i++)
 	{
 		SEvent e;
 		e.time = i->first;
 		e.frequency = i->second;
 		events.push(e);
-//struct tm* dts = gmtime(&e.time); dprintf("%i %02i:%02i:%02i frequency=%i\n", (int)dts->tm_mday, (int)dts->tm_hour, (int)dts->tm_min, (int)dts->tm_sec, (int)e.frequency);
 	}
 }
 
@@ -164,6 +143,39 @@ int CScheduler::parse(string s)
 	char c;
 	istringstream iss(s);
 	iss >> hh >> c >> mm >> c >> ss;
-//dprintf("%02i:%02i:%02i\n", hh, mm, ss);
 	return 60*(mm + 60*hh)+ss;
+}
+
+string CScheduler::format(time_t t)
+{
+	struct tm g = *gmtime(&t);
+	return format(g);
+}
+
+string CScheduler::format(const struct tm& g)
+{
+	ostringstream ss;
+	if(g.tm_hour < 10)
+		ss << '0';
+	ss << g.tm_hour << ":";
+	if(g.tm_min < 10)
+		ss << '0';
+	ss << g.tm_min << ":" ;
+	if(g.tm_sec < 10)
+		ss << '0';
+	ss << g.tm_sec;
+	return ss.str();
+}
+
+void CScheduler::before()
+{
+	time_t t = time(NULL);
+	t += 10;
+	iniFile.PutIniSetting("Settings", "StartTime1", format(t));
+	t += 30;
+	iniFile.PutIniSetting("Settings", "EndTime1", format(t));
+	iniFile.PutIniSetting("Settings", "StartTime2", format(t));
+	t += 30;
+	iniFile.PutIniSetting("Settings", "EndTime2", format(t));
+	cerr << "CScheduler::before()" << endl;
 }

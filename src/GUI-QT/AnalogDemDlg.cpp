@@ -54,7 +54,6 @@
 # include <qmotifstyle.h>
 #else
 # include "DRMPlot.h"
-# include "SoundCardSelMenu.h"
 # include <QWhatsThis>
 # include <QDateTime>
 # include <QCloseEvent>
@@ -91,15 +90,15 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Settings menu  ------------------------------------------------------- */
 	QPopupMenu* pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
-	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
 		SLOT(OnSwitchToDRM()), CTRL+Key_D);
 	pSettingsMenu->insertItem(tr("&FM (analog)"), this,
 		SLOT(OnSwitchToFM()), CTRL+Key_F);
 	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
 		SIGNAL(NewAMAcquisition()), CTRL+Key_A);
-
+	pSettingsMenu->insertSeparator();
+	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
+		new CSoundCardSelMenu(DRMReceiver, this));
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar* pMenu = new QMenuBar(this);
@@ -112,20 +111,20 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Now tell the layout about the menu */
 	AnalogDemDlgBaseLayout->setMenuBar(pMenu);
 #else
-    connect(action_Stations_Dialog, SIGNAL(triggered()), this, SIGNAL(ViewStationsDlg()));
-    connect(action_Live_Schedule_Dialog, SIGNAL(triggered()), this, SIGNAL(ViewLiveScheduleDlg()));
-    connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
-    connect(actionAM, SIGNAL(triggered()), this, SIGNAL(NewAMAcquisition()));
-    connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
-    connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
-    menu_Settings->addMenu( new CSoundCardSelMenu(
-		DRMReceiver.GetSoundInInterface(),
-		DRMReceiver.GetSoundOutInterface(),
-	this));
-    connect(actionAbout_Dream, SIGNAL(triggered()), this, SLOT(OnHelpAbout()));
-    connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(on_actionWhats_This()));
-    SliderBandwidth->setTickPosition(QSlider::TicksBothSides);
-    MainPlot = new CDRMPlot(NULL, plot);
+	pFileMenu = new CFileMenu(DRMReceiver, this, menu_View);
+	connect(action_Stations_Dialog, SIGNAL(triggered()), this, SIGNAL(ViewStationsDlg()));
+	connect(action_Live_Schedule_Dialog, SIGNAL(triggered()), this, SIGNAL(ViewLiveScheduleDlg()));
+	connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
+	connect(actionAM, SIGNAL(triggered()), this, SIGNAL(NewAMAcquisition()));
+	connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
+	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
+	pSoundCardMenu = new CSoundCardSelMenu(DRMReceiver, pFileMenu, this);
+	menu_Settings->addMenu(pSoundCardMenu);
+	connect(pSoundCardMenu, SIGNAL(sampleRateChanged()), this, SLOT(switchEvent()));
+	connect(actionAbout_Dream, SIGNAL(triggered()), this, SLOT(OnHelpAbout()));
+	connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(on_actionWhats_This()));
+	SliderBandwidth->setTickPosition(QSlider::TicksBothSides);
+	MainPlot = new CDRMPlot(NULL, plot);
 #endif
 
 	/* Init main plot */
@@ -143,7 +142,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	}
 
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
-        QString ptt = tr("Click on the plot to set the demodulation frequency");
+	QString ptt = tr("Click on the plot to set the demodulation frequency");
 	if(MainPlot)
 	{
 #if QT_VERSION < 0x040000
@@ -249,6 +248,15 @@ void AnalogDemDlg::OnSwitchToFM()
 	emit SwitchMode(RM_FM);
 }
 
+void AnalogDemDlg::switchEvent()
+{
+	/* Put initialization code on mode switch here */
+	SliderBandwidth->setRange(0, DRMReceiver.GetParameters()->GetSigSampleRate() / 2);
+#if QT_VERSION >= 0x040000
+	pFileMenu->UpdateMenu();
+#endif
+}
+
 void AnalogDemDlg::showEvent(QShowEvent* e)
 {
 	EVENT_FILTER(e);
@@ -271,7 +279,7 @@ void AnalogDemDlg::showEvent(QShowEvent* e)
 	else
 		AMSSDlg.hide();
 
-#if QT_VERSION >= 0x040000  
+#if QT_VERSION >= 0x040000
     /* Notify the MainPlot of showEvent */
     if(MainPlot) MainPlot->activate();
 #endif

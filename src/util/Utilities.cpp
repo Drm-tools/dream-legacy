@@ -307,6 +307,17 @@ CModJulDate::Set(const uint32_t iModJulDate)
 		iYear = iC - 4715;
 }
 
+void
+CModJulDate::Get(const uint32_t iYear, const uint32_t iMonth, const uint32_t iDay)
+{
+	/* Taken from "http://en.wikipedia.org/wiki/Julian_day" */
+	uint32_t a = (14 - iMonth) / 12;
+	uint32_t y = iYear + 4800 - a;
+	uint32_t m = iMonth + 12*a - 3;;
+	uint32_t iJulDate = iDay + (153*m+2)/5 + 365*y + y/4 - y/100 + y/400 - 32045;
+	iModJulDate = iJulDate - 2400001;
+}
+
 /******************************************************************************\
 * Audio Reverberation                                                          *
 \******************************************************************************/
@@ -661,7 +672,7 @@ CHamlib::GetPortList(map < string, string > &ports)
     classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue);
     if (classesToMatch == NULL)
     {
-        printf("IOServiceMatching returned a NULL dictionary.\n");
+        fprintf(stderr, "IOServiceMatching returned a NULL dictionary.\n");
     }
     else
 	{
@@ -673,7 +684,7 @@ CHamlib::GetPortList(map < string, string > &ports)
     kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);
     if (KERN_SUCCESS != kernResult)
     {
-        printf("IOServiceGetMatchingServices returned %d\n", kernResult);
+        fprintf(stderr, "IOServiceGetMatchingServices returned %d\n", kernResult);
     }
 
     io_object_t		modemService;

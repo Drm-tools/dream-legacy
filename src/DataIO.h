@@ -32,7 +32,7 @@
 #if !defined(DATA_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DATA_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
-# include "soundinterface.h"
+#include "sound/soundinterface.h"
 #include "Parameter.h"
 #include "util/Modul.h"
 #include "FAC/FAC.h"
@@ -107,10 +107,6 @@ public:
     {
         bNewSoundBlocking = bNewBl;
         SetInitFlag();
-    }
-
-    int GetMaxAudioFrequency() {
-        return iMaxAudioFrequency;
     }
 
     void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
@@ -310,6 +306,8 @@ public:
     void StopRecording();
 
     void NewFrequency(CParameter &Parameters);
+
+	_BOOLEAN IsRecording() {return bIsRecording;}
 
 protected:
     FILE *					pFile;

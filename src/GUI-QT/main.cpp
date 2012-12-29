@@ -29,10 +29,6 @@
 \******************************************************************************/
 
 #ifdef _WIN32
-# ifdef _WIN32_WINNT
-#  undef _WIN32_WINNT
-# endif
-# define _WIN32_WINNT 0x0400
 # include <windows.h>
 #endif
 
@@ -41,50 +37,40 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
-#include "Rig.h"
-
 #include <iostream>
 
-#include <qthread.h>
 #ifdef USE_QT_GUI
-# include <qapplication.h>
-# include <qmessagebox.h>
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
 # include "DialogUtil.h"
+# include "Rig.h"
+# include <qapplication.h>
+# include <qmessagebox.h>
+# if QT_VERSION >= 0x040000
+#  include <QCoreApplication>
+#  include <QTranslator>
+# endif
 #endif
-#if QT_VERSION >= 0x040000
-# include <QCoreApplication>
-# include <QTranslator>
-#endif
+
+#if QT_VERSION >= 0x040000 || defined(USE_QT_GUI)
+# if QT_VERSION >= 0x040000
+#  include <QCoreApplication>
+# endif
+# include <qthread.h>
 
 class CRx: public QThread
 {
 public:
-	CRx(CDRMReceiver& nRx
-#ifdef _WIN32
-	, bool bPriorityEnabled
-#endif
-	):rx(nRx)
-#ifdef _WIN32
-	, bPriorityEnabled(bPriorityEnabled)
-#endif
+	CRx(CDRMReceiver& nRx):rx(nRx)
 	{}
 	void run();
 private:
 	CDRMReceiver& rx;
-	bool bPriorityEnabled;
 };
 
 void
 CRx::run()
 {
-#ifdef _WIN32
-    if (bPriorityEnabled)
-    {
-        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
-    }
-#endif
     qDebug("Working thread started");
     try
     {
@@ -101,6 +87,7 @@ CRx::run()
     }
     qDebug("Working thread complete");
 }
+#endif
 
 #ifdef USE_QT_GUI
 /******************************************************************************\
@@ -139,27 +126,10 @@ main(int argc, char **argv)
 
 	try
 	{
-
-#ifdef _WIN32
-		/* works for both transmit and receive. GUI is low, working is normal.
-		 * the working thread does not need to know what the setting is.
-		 */
-		bool bPriorityEnabled = Settings.Get("GUI", "processpriority", bool(TRUE));
-		if (bPriorityEnabled)
-		{
-			/* Set priority class for this application */
-			SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
-
-			/* Normal priority for GUI thread */
-			SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-		}
-		Settings.Put("GUI", "processpriority", bPriorityEnabled);
-#endif
-
 		string mode = Settings.Get("command", "mode", string());
 		if (mode == "receive")
 		{
-			CDRMReceiver DRMReceiver;
+			CDRMReceiver DRMReceiver(&Settings);
 
 			/* First, initialize the working thread. This should be done in an extra
 			   routine since we cannot 100% assume that the working thread is
@@ -167,9 +137,7 @@ main(int argc, char **argv)
 
 			CRig rig(DRMReceiver.GetParameters());
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
-			DRMReceiver.LoadSettings(Settings);
-
-			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
+			DRMReceiver.LoadSettings();
 
 #ifdef HAVE_LIBHAMLIB
 			DRMReceiver.SetRig(&rig);
@@ -186,11 +154,7 @@ main(int argc, char **argv)
 				);
 
 			/* Start working thread */
-#ifdef _WIN32
-			CRx rx(DRMReceiver, bPriorityEnabled);
-#else
 			CRx rx(DRMReceiver);
-#endif
 			rx.start();
 
 			/* Set main window */
@@ -207,7 +171,7 @@ main(int argc, char **argv)
 			}
 			rig.SaveSettings(Settings);
 #endif
-			DRMReceiver.SaveSettings(Settings);
+			DRMReceiver.SaveSettings();
 		}
 		else if(mode == "transmit")
 		{
@@ -304,27 +268,25 @@ main(int argc, char **argv)
 		if (mode == "receive")
 		{
 			CDRMSimulation DRMSimulation;
-			CDRMReceiver DRMReceiver;
+			CDRMReceiver DRMReceiver(&Settings);
 
 			DRMSimulation.SimScript();
-			DRMReceiver.LoadSettings(Settings);
-			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
+			DRMReceiver.LoadSettings();
 
 #if QT_VERSION >= 0x040000
-			QCoreApplication a(argc, argv);
+			QCoreApplication app(argc, argv);
 			/* Start working thread */
 			CRx rx(DRMReceiver);
 			rx.start();
-			return a.exec();
+			return app.exec();
 #else
 			DRMReceiver.Start();
 #endif
-
 		}
-		else if(mode == "transmit")
+		else if (mode == "transmit")
 		{
-			CDRMTransmitter DRMTransmitter;
-			DRMTransmitter.LoadSettings(Settings);
+			CDRMTransmitter DRMTransmitter(&Settings);
+			DRMTransmitter.LoadSettings();
 			DRMTransmitter.Start();
 		}
 		else
@@ -369,6 +331,6 @@ DebugError(const char *pchErDescr, const char *pchPar1Descr,
 	fprintf(pFile, ": ");
 	fprintf(pFile, "%e\n", dPar2);
 	fclose(pFile);
-	printf("\nDebug error! For more information see test/DebugError.dat\n");
+	fprintf(stderr, "\nDebug error! For more information see test/DebugError.dat\n");
 	exit(1);
 }

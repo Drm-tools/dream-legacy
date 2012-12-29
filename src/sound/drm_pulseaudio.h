@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#ifndef PULSEAUDIO_H_INCLUDED
-#define PULSEAUDIO_H_INCLUDED
+#ifndef DRM_PULSEAUDIO_H_INCLUDED
+#define DRM_PULSEAUDIO_H_INCLUDED
 
 
 /* Master switch */
@@ -35,7 +35,7 @@
 
 
 #include <pulse/pulseaudio.h>
-#include "../soundinterface.h"
+#include "../sound/soundinterface.h"
 #if defined(PA_STREAM_VARIABLE_RATE) && defined(ENABLE_CLOCK_DRIFT_ADJ)
 # define CLOCK_DRIFT_ADJ_ENABLED
 #endif
@@ -44,35 +44,63 @@
 # include "../matlib/MatlibSigProToolbox.h"
 #endif
 
+#ifndef _WIN32
+# define ENABLE_STDIN_STDOUT
+#endif
 
-typedef struct _pa_stream_notify_cb_userdata_t
+
+class CSoundOutPulse;
+typedef struct pa_stream_notify_cb_userdata_t
 {
-	void *SoundIO;
-	_BOOLEAN	bOverflow;
-	_BOOLEAN	bMute;
-	_BOOLEAN*	bBufferingError;
+	CSoundOutPulse*		SoundOutPulse;
+	_BOOLEAN			bOverflow;
 } pa_stream_notify_cb_userdata_t;
 
-typedef struct _pa_common
+typedef struct pa_common
 {
 	_BOOLEAN		bClockDriftComp;
 	int				sample_rate_offset;
 } pa_common;
 
+typedef struct pa_object
+{
+	pa_mainloop		*pa_m;
+	pa_context		*pa_c;
+	int				ref_count;
+} pa_object;
+
 
 /* Classes ********************************************************************/
 
-class CSoundInPulse : public CSoundInInterface
+class CSoundPulse
+{
+public:
+	CSoundPulse(_BOOLEAN bPlayback);
+	virtual ~CSoundPulse() {}
+	void			Enumerate(vector<string>& names, vector<string>& descriptions);
+	void			SetDev(string sNewDevice);
+	string			GetDev();
+protected:
+	_BOOLEAN		IsDefaultDevice();
+	_BOOLEAN		bPlayback;
+	_BOOLEAN		bChangDev;
+	string			sCurrentDevice;
+#ifdef ENABLE_STDIN_STDOUT
+	_BOOLEAN		IsStdinStdout();
+	_BOOLEAN		bStdinStdout;
+#endif
+};
+
+class CSoundInPulse : public CSoundPulse, public CSoundInInterface
 {
 public:
 	CSoundInPulse();
 	virtual ~CSoundInPulse() {}
+	void			Enumerate(vector<string>& names, vector<string>& descriptions) {CSoundPulse::Enumerate(names, descriptions);};
+	string			GetDev() {return CSoundPulse::GetDev();};
+	void			SetDev(string sNewDevice) {CSoundPulse::SetDev(sNewDevice);};
 
-	virtual void	Enumerate(vector<string>& choices) { choices = names; }
-	virtual void	SetDev(int iNewDevice);
-	virtual int		GetDev();
-
-	void			Init(int iNewSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
+	_BOOLEAN		Init(int iNewSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
 	_BOOLEAN		Read(CVector<_SAMPLE>& psData);
 	void			Close();
 #ifdef CLOCK_DRIFT_ADJ_ENABLED
@@ -89,13 +117,8 @@ protected:
 	int 			iBufferSize;
 	_BOOLEAN		bBlockingRec;
 
-	vector<string>	devices;
-	vector<string>	names;
-	_BOOLEAN		bChangDev;
-	int				iCurrentDevice;
+	_BOOLEAN		bBufferingError;
 
-	pa_mainloop		*pa_m;
-	pa_context		*pa_c;
 	pa_stream		*pa_s;
 	size_t			remaining_nbytes;
 	const char		*remaining_data;
@@ -107,17 +130,16 @@ protected:
 #endif
 };
 
-class CSoundOutPulse : public CSoundOutInterface
+class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface
 {
 public:
 	CSoundOutPulse();
 	virtual ~CSoundOutPulse() {}
+	void			Enumerate(vector<string>& names, vector<string>& descriptions) {CSoundPulse::Enumerate(names, descriptions);};
+	string			GetDev() {return CSoundPulse::GetDev();};
+	void			SetDev(string sNewDevice) {CSoundPulse::SetDev(sNewDevice);};
 
-	virtual void	Enumerate(vector<string>& choices) { choices = names; }
-	virtual void	SetDev(int iNewDevice);
-	virtual int		GetDev();
-
-	void			Init(int iNewSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
+	_BOOLEAN		Init(int iNewSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
 	_BOOLEAN		Write(CVector<_SAMPLE>& psData);
 	void			Close();
 #ifdef CLOCK_DRIFT_ADJ_ENABLED
@@ -128,6 +150,8 @@ public:
 
 	_BOOLEAN		bPrebuffer;
 	_BOOLEAN		bSeek;
+	_BOOLEAN		bBufferingError;
+	_BOOLEAN		bMuteError;
 
 protected:
 	void			Init_HW();
@@ -138,15 +162,6 @@ protected:
 	int				iBufferSize;
 	_BOOLEAN		bBlockingPlay;
 
-	_BOOLEAN		bBufferingError;
-
-	vector<string>	devices;
-	vector<string>	names;
-	_BOOLEAN		bChangDev;
-	int				iCurrentDevice;
-
-	pa_mainloop		*pa_m;
-	pa_context		*pa_c;
 	pa_stream		*pa_s;
 	pa_stream_notify_cb_userdata_t pa_stream_notify_cb_userdata_underflow;
 	pa_stream_notify_cb_userdata_t pa_stream_notify_cb_userdata_overflow;
@@ -154,14 +169,14 @@ protected:
 #ifdef CLOCK_DRIFT_ADJ_ENABLED
 	int				iMaxSampleRateOffset;
 	CReal			playback_usec_smoothed;
-	int				playback_usec;
 	int				target_latency;
 	int				filter_stabilized;
 	int				wait_prebuffer;
-	int				clock;
 	CMatlibVector<CReal> B, A, X, Z;
 	_BOOLEAN		bNewClockDriftComp;
 	pa_common		cp;
+	int				playback_usec; // DEBUG
+	int				clock; // DEBUG
 #endif
 };
 

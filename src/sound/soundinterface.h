@@ -26,20 +26,33 @@
  *
 \******************************************************************************/
 
-#ifndef _SELECTIONINTERFACE_H
-#define _SELECTIONINTERFACE_H
+#ifndef _SOUNDINTERFACE_H
+#define _SOUNDINTERFACE_H
 
-#include "GlobalDefinitions.h"
-#include <vector>
+#include "selectioninterface.h"
+#include "../util/Vector.h"
 
-class CSelectionInterface
+class CSoundInInterface : public CSelectionInterface
 {
 public:
-    virtual 			~CSelectionInterface() {}
-    virtual void		Enumerate(vector<string>&)=0;
-    virtual int			GetDev()=0;
-    virtual void		SetDev(int iNewDev)=0;
+    virtual 		~CSoundInInterface() {}
 
+    /* sound card interface - used by ReadData */
+    virtual _BOOLEAN Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)=0;
+    virtual _BOOLEAN Read(CVector<short>& psData)=0;
+    virtual void     Close()=0;
+
+};
+
+class CSoundOutInterface : public CSelectionInterface
+{
+public:
+    virtual 		~CSoundOutInterface() {}
+
+    /* sound card interface - used by WriteData */
+    virtual _BOOLEAN Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)=0;
+    virtual _BOOLEAN Write(CVector<short>& psData)=0;
+    virtual void     Close()=0;
 };
 
 #endif

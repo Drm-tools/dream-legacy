@@ -17,7 +17,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 1111
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
@@ -27,13 +27,17 @@
 \******************************************************************************/
 
 #include "AudioSourceDecoder.h"
+#if !defined(USE_FAAD2_LIBRARY)
+# include "../util/LibraryLoader.h"
+#endif
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <algorithm>
 
-// dummy AAC Decoder implementation if dll not found
+
 #ifndef USE_FAAD2_LIBRARY
+// dummy AAC Decoder implementation if dll not found
 static NeAACDecHandle NEAACDECAPI NeAACDecOpenDummy(void)
 {
     return NULL;
@@ -50,9 +54,53 @@ static void* NEAACDECAPI NeAACDecDecodeDummy(NeAACDecHandle,NeAACDecFrameInfo* h
     hInfo->error = 1;
     return NULL;
 }
+static void* hFaadLib;
+static NeAACDecOpen_t *NeAACDecOpen;
+static NeAACDecInitDRM_t *NeAACDecInitDRM;
+static NeAACDecClose_t *NeAACDecClose;
+static NeAACDecDecode_t *NeAACDecDecode;
+static const LIBFUNC LibFuncs[] = {
+	{ "NeAACDecOpen",    (void**)&NeAACDecOpen,    (void*)NeAACDecOpenDummy    },
+	{ "NeAACDecInitDRM", (void**)&NeAACDecInitDRM, (void*)NeAACDecInitDRMDummy },
+	{ "NeAACDecClose",   (void**)&NeAACDecClose,   (void*)NeAACDecCloseDummy   },
+	{ "NeAACDecDecode",  (void**)&NeAACDecDecode,  (void*)NeAACDecDecodeDummy  },
+	{ NULL, NULL, NULL }
+};
+# if defined(_WIN32)
+static const char* LibNames[] = { "faad2_drm.dll", "libfaad2_drm.dll", "faad_drm.dll", "libfaad2.dll", NULL };
+# elif defined(__APPLE__)
+static const char* LibNames[] = { "libfaad2_drm.dylib", NULL };
+# else
+static const char* LibNames[] = { "libfaad2_drm.so", "libfaad.so.2", NULL };
+# endif
 #endif
 
+
 /* Implementation *************************************************************/
+
+CAudioSourceDecoder::CAudioSourceDecoder()
+    :	bWriteToFile(FALSE), bUseReverbEffect(TRUE), AudioRev(),
+        HandleAACDecoder(NULL),
+#ifndef USE_FAAD2_LIBRARY
+		canDecodeAAC(FALSE),
+#else
+		canDecodeAAC(TRUE),
+#endif
+        canDecodeCELP(FALSE), canDecodeHVXC(FALSE),
+        pFile(NULL)
+{
+#ifndef USE_FAAD2_LIBRARY
+	if (hFaadLib == NULL)
+	{
+		hFaadLib = CLibraryLoader::Load(LibNames, LibFuncs);
+		canDecodeAAC = !!hFaadLib;
+		if (!canDecodeAAC)
+		    cerr << "No usable FAAD2 aac decoder library found" << endl;
+		else
+		    cerr << "Got FAAD2 library" << endl;
+	}
+#endif
+}
 
 string
 CAudioSourceDecoder::AACFileName(CParameter & Parameters)
@@ -76,7 +124,7 @@ CAudioSourceDecoder::AACFileName(CParameter & Parameters)
             AudioParam.eAudioMode)
     {
     case CAudioParam::AM_MONO:
-	ss << "mono";
+        ss << "mono";
         break;
 
     case CAudioParam::AM_P_STEREO:
@@ -109,7 +157,7 @@ CAudioSourceDecoder::CELPFileName(CParameter & Parameters)
     if (Parameters.Service[Parameters.GetCurSelAudioService()].
             AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
     {
-	ss << "8kHz_" << 
+        ss << "8kHz_" << 
             iTableCELP8kHzUEPParams
                  [Parameters.
                   Service[Parameters.GetCurSelAudioService()].
@@ -1125,63 +1173,6 @@ CAudioSourceDecoder::GetNumCorDecAudio()
     iNumCorDecAudio = 0;
 
     return iRet;
-}
-
-CAudioSourceDecoder::CAudioSourceDecoder()
-    :	bWriteToFile(FALSE), bUseReverbEffect(TRUE), AudioRev(),
-        HandleAACDecoder(NULL),
-#ifndef USE_FAAD2_LIBRARY
-        NeAACDecOpen(NULL), NeAACDecInitDRM(NULL), NeAACDecClose(NULL), NeAACDecDecode(NULL),
-		canDecodeAAC(FALSE),
-#else
-		canDecodeAAC(TRUE),
-#endif
-        canDecodeCELP(FALSE), canDecodeHVXC(FALSE),
-        pFile(NULL)
-{
-#ifndef USE_FAAD2_LIBRARY
-    cerr << "looking for FAAD2" << endl;
-# ifdef _WIN32
-    hFaaDlib = LoadLibrary(TEXT("faad2_drm.dll"));
-    if (hFaaDlib == NULL)
-        hFaaDlib = LoadLibrary(TEXT("libfaad2_drm.dll"));
-    if (hFaaDlib == NULL)
-        hFaaDlib = LoadLibrary(TEXT("faad_drm.dll"));
-# else
-#  define GetProcAddress(a, b) dlsym(a, b)
-#  define FreeLibrary(a) dlclose(a)
-#  define TEXT(a) (a)
-#  if defined(__APPLE__)
-#   define SO_NAME "libfaad2_drm.dylib"
-#  else
-#   define SO_NAME "libfaad2_drm.so"
-#  endif
-    hFaaDlib = dlopen(SO_NAME, RTLD_LOCAL | RTLD_NOW);
-# endif
-    if (hFaaDlib)
-    {
-        NeAACDecOpen = (NeAACDecOpen_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecOpen"));
-        NeAACDecInitDRM = (NeAACDecInitDRM_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecInitDRM"));
-        NeAACDecClose = (NeAACDecClose_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecClose"));
-        NeAACDecDecode = (NeAACDecDecode_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecDecode"));
-    }
-    canDecodeAAC = NeAACDecOpen && NeAACDecInitDRM && NeAACDecClose && NeAACDecDecode;
-    if (!canDecodeAAC)
-    {
-        NeAACDecOpen = NeAACDecOpenDummy;
-        NeAACDecInitDRM = NeAACDecInitDRMDummy;
-        NeAACDecClose = NeAACDecCloseDummy;
-        NeAACDecDecode = NeAACDecDecodeDummy;
-        if (hFaaDlib)
-        {
-            FreeLibrary(hFaaDlib);
-            hFaaDlib = NULL;
-        }
-        cerr << "no usable AAC lib found" << endl;
-    }
-    else
-        cerr << "AAC decoder lib found" << endl;
-#endif
 }
 
 CAudioSourceDecoder::~CAudioSourceDecoder()

@@ -948,9 +948,8 @@ protected:
 class CParameter
 {
 public:
-    CParameter(CDRMReceiver*);
+    CParameter();
     CParameter(const CParameter&);
-    //CParameter(CDRMReceiver *pRx, CParameter *pParameter); // OPH - just copy some of the members
     virtual ~CParameter();
     CParameter& operator=(const CParameter&);
 
@@ -958,9 +957,11 @@ public:
     /* AS: AFS in SDC is valid or not */
     enum EAFSVali { AS_VALID, AS_NOT_VALID };
 
-
     /* SI: Symbol Interleaver */
     enum ESymIntMod { SI_LONG, SI_SHORT };
+
+    /* CT: Current Time */
+    enum ECurTime { CT_OFF, CT_LOCAL, CT_UTC, CT_UTC_OFFSET };
 
     /* ST: Simulation Type */
     enum ESimType
@@ -969,6 +970,7 @@ public:
     };
 
     /* Misc. Functions ------------------------------------------------------ */
+    void SetReceiver(CDRMReceiver *pDRMReceiver);
     void GenerateRandomSerialNumber();
     void GenerateReceiverID();
     void ResetServicesStreams();
@@ -1020,8 +1022,12 @@ public:
     {
         return iSigSampleRate;
     }
-
-    void SetAudSampleRate(int sr)
+    /* Used internaly by DrmReceiver.cpp TODO */
+    void SetSigSampleRate(int sr)
+    {
+        iSigSampleRate = sr;
+    }
+    void SetNewAudSampleRate(int sr)
     {
         /* Perform range check */
         if      (sr < 8000)   sr = 8000;
@@ -1031,16 +1037,30 @@ public:
         // TODO AM Demod still have issue with some sample rate
         // The buffering system is not enough flexible
         sr = (sr + 12) / 25 * 25; // <- ok for DRM mode
-        iAudSampleRate = sr;
+        iNewAudSampleRate = sr;
     }
-    void SetSigSampleRate(int sr)
+    void SetNewSigSampleRate(int sr)
     {
         /* Set to the nearest supported sample rate */
         if      (sr < 36000)  sr = 24000;
         else if (sr < 72000)  sr = 48000;
         else if (sr < 144000) sr = 96000;
         else                  sr = 192000;
-        iSigSampleRate = sr;
+        iNewSigSampleRate = sr;
+    }
+    /* New sample rate are fetched at init (restart) */
+    void FetchNewSampleRate()
+    {
+        if (iNewAudSampleRate != 0)
+        {
+            iAudSampleRate = iNewAudSampleRate;
+            iNewAudSampleRate = 0;
+        }
+        if (iNewSigSampleRate != 0)
+        {
+            iSigSampleRate = iNewSigSampleRate;
+            iNewSigSampleRate = 0;
+        }
     }
 
     _REAL GetDCFrequency() const
@@ -1110,6 +1130,7 @@ public:
     void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
     void GetStreamLen(const int iStreamID, int& iLenPartA, int& iLenPartB) const;
     int GetStreamLen(const int iStreamID) const;
+    ECurTime eTransmitCurrentTime;
 
     /* Protection levels for MSC */
     CMSCProtLev MSCPrLe;
@@ -1248,7 +1269,7 @@ public:
     /* General -------------------------------------------------------------- */
     _REAL GetNominalBandwidth();
     _REAL GetSysToNomBWCorrFact();
-    enum { STOPPED, RUNNING, STOP_REQUESTED } eRunState;
+    volatile enum { STOPPED, RUNNING, STOP_REQUESTED, RESTART } eRunState;
 
     CCellMappingTable CellMappingTable;
 
@@ -1264,6 +1285,8 @@ protected:
 
     int iAudSampleRate;
     int iSigSampleRate;
+    int iNewAudSampleRate;
+    int iNewSigSampleRate;
 
     _REAL rSysSimSNRdB;
 

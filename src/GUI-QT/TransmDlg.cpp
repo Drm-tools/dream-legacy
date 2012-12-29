@@ -84,12 +84,13 @@
 #endif
 
 
-TransmDialog::TransmDialog(CSettings& NSettings,
+TransmDialog::TransmDialog(CSettings& Settings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 	:
 	TransmDlgBase(parent, name, modal, f),
-	Settings(NSettings),
+	TransThread(Settings),
 	DRMTransmitter(TransThread.DRMTransmitter),
+	Settings(*DRMTransmitter.GetSettings()),
 #ifdef ENABLE_TRANSM_CODECPARAMS
 	CodecDlg(NULL),
 #endif
@@ -101,7 +102,7 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 #endif
 {
 	/* Load transmitter settings */
-	DRMTransmitter.LoadSettings(Settings);
+	DRMTransmitter.LoadSettings();
 
 	/* Recover window size and position */
 	CWinGeom s;
@@ -172,12 +173,17 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 		break;
 	}
 
-	/* Don't lock the Parameter object since the working thread is stopped */
+	/* Output High Quality I/Q */
+	CheckBoxHighQualityIQ->setEnabled(TransThread.DRMTransmitter.GetTransData()->GetIQOutput() != CTransmitData::OF_REAL_VAL);
+	CheckBoxHighQualityIQ->setChecked(TransThread.DRMTransmitter.GetTransData()->GetHighQualityIQ());
 
+	/* Output Amplified */
+	CheckBoxAmplifiedOutput->setEnabled(TransThread.DRMTransmitter.GetTransData()->GetIQOutput() != CTransmitData::OF_EP);
+	CheckBoxAmplifiedOutput->setChecked(TransThread.DRMTransmitter.GetTransData()->GetAmplifiedOutput());
+
+	/* Don't lock the Parameter object since the working thread is stopped */
 	CParameter& Parameters = *DRMTransmitter.GetParameters();
 
-
-#ifdef ENABLE_TRANSM_CURRENTTIME
 	/* Transmission of current time */
 	switch (Parameters.eTransmitCurrentTime)
 	{
@@ -196,14 +202,6 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	case CParameter::CT_UTC_OFFSET:
 		RadioButtonCurTimeUTCOffset->setChecked(TRUE);
 	}
-#else
-	/* Remove the tab */
-# if QT_VERSION < 0x040000
-	delete tabMiscellaneous;
-# else
-	TabWidgetParam->removeTab(2);
-# endif
-#endif
 
 	/* Robustness mode */
 	switch (Parameters.GetWaveMode())
@@ -470,10 +468,7 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(
-		DRMTransmitter.GetSoundInInterface(),
-		DRMTransmitter.GetSoundOutInterface(),
-		this));
+		new CSoundCardSelMenu(DRMTransmitter, this));
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
@@ -486,11 +481,9 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	TransmDlgBaseLayout->setMenuBar(pMenu);
 
 #else
+	CFileMenu* pFileMenu = new CFileMenu(DRMTransmitter, this, menu_Settings);
 
-	menu_Settings->addMenu( new CSoundCardSelMenu(
-		DRMTransmitter.GetSoundInInterface(),
-		DRMTransmitter.GetSoundOutInterface(),
-		this));
+	menu_Settings->addMenu(new CSoundCardSelMenu(DRMTransmitter, pFileMenu, this));
 
 	connect(actionAbout_Dream, SIGNAL(triggered()), &AboutDlg, SLOT(show()));
 	connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(on_actionWhats_This()));
@@ -498,6 +491,7 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 
 
 	/* Connections ---------------------------------------------------------- */
+	/* Push buttons */
 	connect(ButtonStartStop, SIGNAL(clicked()),
 		this, SLOT(OnButtonStartStop()));
 #ifdef ENABLE_TRANSM_CODECPARAMS
@@ -512,6 +506,12 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 		this, SLOT(OnPushButtonAddFileName()));
 	connect(PushButtonClearAllFileNames, SIGNAL(clicked()),
 		this, SLOT(OnButtonClearAllFileNames()));
+
+	/* Check boxes */
+	connect(CheckBoxHighQualityIQ, SIGNAL(toggled(bool)),
+		this, SLOT(OnToggleCheckBoxHighQualityIQ(bool)));
+	connect(CheckBoxAmplifiedOutput, SIGNAL(toggled(bool)),
+		this, SLOT(OnToggleCheckBoxAmplifiedOutput(bool)));
 	connect(CheckBoxEnableTextMessage, SIGNAL(toggled(bool)),
 		this, SLOT(OnToggleCheckBoxEnableTextMessage(bool)));
 	connect(CheckBoxEnableAudio, SIGNAL(toggled(bool)),
@@ -549,10 +549,8 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	connect(ButtonGroupCodec, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioCodec(int)));
 # endif
-# ifdef ENABLE_TRANSM_CURRENTTIME
 	connect(ButtonGroupCurrentTime, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioCurrentTime(int)));
-# endif
 #else
 	connect(ButtonGroupRobustnessMode, SIGNAL(buttonClicked(int)),
 		this, SLOT(OnRadioRobustnessMode(int)));
@@ -564,10 +562,8 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	connect(ButtonGroupCodec, SIGNAL(buttonClicked(int)),
 		this, SLOT(OnRadioCodec(int)));
 # endif
-# ifdef ENABLE_TRANSM_CURRENTTIME
 	connect(ButtonGroupCurrentTime, SIGNAL(buttonClicked(int)),
 		this, SLOT(OnRadioCurrentTime(int)));
-# endif
 #endif
 
 	/* Line edits */
@@ -578,6 +574,7 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	connect(LineEditSndCrdIF, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnTextChangedSndCrdIF(const QString&)));
 
+	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 	connect(&TimerStop, SIGNAL(timeout()),
@@ -617,7 +614,7 @@ TransmDialog::~TransmDialog()
 	Service.iServiceDescr = iServiceDescr;
 
 	/* Save transmitter settings */
-	DRMTransmitter.SaveSettings(Settings);
+	DRMTransmitter.SaveSettings();
 
 	Parameters.Unlock();
 }
@@ -780,6 +777,16 @@ void TransmDialog::OnButtonStartStop()
 			bIsStarted = TRUE;
 		}
 	}
+}
+
+void TransmDialog::OnToggleCheckBoxHighQualityIQ(bool bState)
+{
+	TransThread.DRMTransmitter.GetTransData()->SetHighQualityIQ(bState);
+}
+
+void TransmDialog::OnToggleCheckBoxAmplifiedOutput(bool bState)
+{
+	TransThread.DRMTransmitter.GetTransData()->SetAmplifiedOutput(bState);
 }
 
 void TransmDialog::OnToggleCheckBoxEnableTextMessage(bool bState)
@@ -1366,9 +1373,9 @@ void TransmDialog::OnRadioRobustnessMode(int iID)
 		break;
 	}
 
-	/* Set new robustness mode. Spectrum occupancy is the same as before */
+	/* Set new robustness mode */
 	Parameters.Lock();
-	Parameters.InitCellMapTable(eNewRobMode, Parameters.GetSpectrumOccup());
+	Parameters.SetWaveMode(eNewRobMode);
 	Parameters.Unlock();
 }
 
@@ -1410,11 +1417,9 @@ void TransmDialog::OnRadioBandwidth(int iID)
 
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
+	/* Set new spectrum occupancy */
 	Parameters.Lock();
-
-	/* Set new spectrum occupancy. Robustness mode is the same as before */
-	Parameters.InitCellMapTable(Parameters.GetWaveMode(), eNewSpecOcc);
-
+	Parameters.SetSpectrumOccup(eNewSpecOcc);
 	Parameters.Unlock();
 }
 
@@ -1429,29 +1434,36 @@ void TransmDialog::OnRadioOutput(int iID)
 		/* Button "Real Valued" */
 		TransThread.DRMTransmitter.GetTransData()->
 			SetIQOutput(CTransmitData::OF_REAL_VAL);
+		CheckBoxAmplifiedOutput->setEnabled(true);
+		CheckBoxHighQualityIQ->setEnabled(false);
 		break;
 
 	case 1:
 		/* Button "I / Q (pos)" */
 		TransThread.DRMTransmitter.GetTransData()->
 			SetIQOutput(CTransmitData::OF_IQ_POS);
+		CheckBoxAmplifiedOutput->setEnabled(true);
+		CheckBoxHighQualityIQ->setEnabled(true);
 		break;
 
 	case 2:
 		/* Button "I / Q (neg)" */
 		TransThread.DRMTransmitter.GetTransData()->
 			SetIQOutput(CTransmitData::OF_IQ_NEG);
+		CheckBoxAmplifiedOutput->setEnabled(true);
+		CheckBoxHighQualityIQ->setEnabled(true);
 		break;
 
 	case 3:
 		/* Button "E / P" */
 		TransThread.DRMTransmitter.GetTransData()->
 			SetIQOutput(CTransmitData::OF_EP);
+		CheckBoxAmplifiedOutput->setEnabled(false);
+		CheckBoxHighQualityIQ->setEnabled(true);
 		break;
 	}
 }
 
-#ifdef ENABLE_TRANSM_CURRENTTIME
 void TransmDialog::OnRadioCurrentTime(int iID)
 {
 #if QT_VERSION >= 0x040000
@@ -1487,11 +1499,6 @@ void TransmDialog::OnRadioCurrentTime(int iID)
 
 	Parameters.Unlock();
 }
-#else
-# if QT_VERSION < 0x040000
-void TransmDialog::OnRadioCurrentTime(int iID) {(void)iID;}
-# endif
-#endif
 
 #ifdef ENABLE_TRANSM_CODECPARAMS
 void TransmDialog::OnRadioCodec(int iID)
@@ -1710,7 +1717,6 @@ void TransmDialog::AddWhatsThisHelp()
 	WhatsThis(RadioButtonOutIQNeg, strOutputFormat);
 	WhatsThis(RadioButtonOutEP, strOutputFormat);
 
-#ifdef ENABLE_TRANSM_CURRENTTIME
 	/* Current Time Transmission */
 	const QString strCurrentTime =
 		tr("<b>Current Time Transmission:</b> The current time is transmitted, "
@@ -1730,7 +1736,6 @@ void TransmDialog::AddWhatsThisHelp()
 	WhatsThis(RadioButtonCurTimeLocal, strCurrentTime);
 	WhatsThis(RadioButtonCurTimeUTC, strCurrentTime);
 	WhatsThis(RadioButtonCurTimeUTCOffset, strCurrentTime);
-#endif
 
 	/* TODO: Services... */
 

@@ -79,7 +79,6 @@ protected:
 	CSettings&		Settings;
 
 	QTimer			Timer;
-	QTimer			TimerInterDigit;
 
 	virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
@@ -95,10 +94,11 @@ protected:
 	vector<CDRMPlot*>	vecpDRMPlots;
 	int				iPlotStyle;
 
+	_BOOLEAN		bEdtFrequencyMutex;
+
 public slots:
 	void UpdatePlotStyle(int);
 	void OnTimer();
-	void OnTimerInterDigit();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
@@ -110,12 +110,11 @@ public slots:
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
 	void OnCheckBoxReverb();
-	void OnCheckWriteLog();
+	void OnCheckWriteLog(int);
 	void OnCheckSaveAudioWAV();
 	void OnCheckRecFilter();
 	void OnCheckModiMetric();
 	void OnListViContMenu();
-	void OnFrequencyEdited (const QString&);
 	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
 signals:

@@ -45,6 +45,7 @@ CReceptLog::CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALS
 void
 CReceptLog::Start(const string & filename)
 {
+qDebug("open log");
     File.open(filename.c_str(), ios::app);
     if (File.is_open())
     {
@@ -61,6 +62,7 @@ CReceptLog::Stop()
         return;
     writeTrailer();
     File.close();
+qDebug("close log");
     bLogActivated = FALSE;
 }
 
@@ -164,7 +166,7 @@ CShortLog::writeHeader()
 
     /* Beginning of new table (similar to DW DRM log file) */
     File << endl << ">>>>" << endl << "Dream" << endl
-         << "Software Version " << dream_version_major << "." << dream_version_minor << endl;
+         << "Software Version " << dream_version_major << "." << dream_version_minor << dream_version_build << endl;
 
     time_t now;
     (void) time(&now);
@@ -348,6 +350,7 @@ CLongLog::writeParameters()
 {
 
     Parameters.Lock();
+    iFrequency = Parameters.GetFrequency();
 
     /* Get parameters for delay and Doppler. In case the receiver is
        not synchronized, set parameters to zero */

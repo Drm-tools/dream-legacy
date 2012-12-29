@@ -39,6 +39,7 @@
 # include "ui_AMSSDlgbase.h"
 # include <QDialog>
 # include <QButtonGroup>
+# include "SoundCardSelMenu.h"
 #endif
 
 #include "DialogUtil.h"
@@ -120,7 +121,6 @@ public:
 	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
-
 protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
@@ -130,6 +130,10 @@ protected:
 	QTimer			TimerClose;
 	CAMSSDlg		AMSSDlg;
 	CEventFilter	ef;
+#if QT_VERSION >= 0x040000
+    CFileMenu*			pFileMenu;
+    CSoundCardSelMenu*	pSoundCardMenu;
+#endif
 
 	void UpdateControls();
 	void AddWhatsThisHelp();
@@ -137,6 +141,7 @@ protected:
 	void hideEvent(QHideEvent* pEvent);
 
 public slots:
+	void switchEvent();
 	void closeEvent(QCloseEvent* pEvent);
 	void UpdatePlotStyle(int);
 	void OnTimer();

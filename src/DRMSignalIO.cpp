@@ -46,18 +46,22 @@ void CTransmitData::ProcessDataInternal(CParameter&)
     for (i = 0; i < iNs2; i += 2)
     {
         const int iCurIndex = iBlockCnt * iNs2 + i;
+        _COMPLEX cInputData = (*pvecInputData)[i / 2];
+
+        if (bHighQualityIQ && eOutputFormat != OF_REAL_VAL)
+            HilbertFilt(cInputData);
 
         /* Imaginary, real */
-        const short sCurOutReal =
-            (short) ((*pvecInputData)[i / 2].real() * rNormFactor);
-        const short sCurOutImag =
-            (short) ((*pvecInputData)[i / 2].imag() * rNormFactor);
+        const _SAMPLE sCurOutReal =
+            Real2Sample(cInputData.real() * rNormFactor);
+        const _SAMPLE sCurOutImag =
+            Real2Sample(cInputData.imag() * rNormFactor);
 
         /* Envelope, phase */
-        const short sCurOutEnv =
-            (short) (Abs((*pvecInputData)[i / 2]) * (_REAL) 256.0);
-        const short sCurOutPhase = /* 2^15 / pi / 2 -> approx. 5000 */
-            (short) (Angle((*pvecInputData)[i / 2]) * (_REAL) 5000.0);
+        const _SAMPLE sCurOutEnv = 
+            Real2Sample(Abs(cInputData) * (_REAL) 256.0);
+        const _SAMPLE sCurOutPhase = /* 2^15 / pi / 2 -> approx. 5000 */
+            Real2Sample(Angle(cInputData) * (_REAL) 5000.0);
 
         switch (eOutputFormat)
         {
@@ -156,6 +160,9 @@ void CTransmitData::InitInternal(CParameter& Parameters)
     Parameters.Unlock();
     iBigBlockSize = iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
 
+    /* Init I/Q history */
+    vecrReHist.Init(NUM_TAPS_IQ_INPUT_FILT_HQ, (_REAL) 0.0);
+
     vecsDataOut.Init(iBigBlockSize);
 
     if (pFileTransmitter != NULL)
@@ -192,6 +199,10 @@ void CTransmitData::InitInternal(CParameter& Parameters)
        symbol (the number 3000 was obtained through output tests) */
     rNormFactor = (CReal) 3000.0 / Sqrt(Parameters.CellMappingTable.rAvPowPerSymbol);
 
+    /* Apply amplification factor, 4.0 = +12dB
+       (the maximum without clipping, obtained through output tests) */
+    rNormFactor *= bAmplified ? 4.0 : 1.0;
+
     /* Define block-size for input */
     iInputBlockSize = iSymbolBlockSize;
 }
@@ -201,6 +212,24 @@ CTransmitData::~CTransmitData()
     /* Close file */
     if (pFileTransmitter != NULL)
         fclose(pFileTransmitter);
+}
+
+void CTransmitData::HilbertFilt(_COMPLEX& vecData)
+{
+    int i;
+
+    /* Move old data */
+    for (i = 0; i < NUM_TAPS_IQ_INPUT_FILT_HQ - 1; i++)
+        vecrReHist[i] = vecrReHist[i + 1];
+
+    vecrReHist[NUM_TAPS_IQ_INPUT_FILT_HQ - 1] = vecData.real();
+
+    /* Filter */
+    _REAL rSum = (_REAL) 0.0;
+    for (i = 1; i < NUM_TAPS_IQ_INPUT_FILT_HQ; i += 2)
+        rSum += fHilFiltIQ_HQ[i] * vecrReHist[i];
+
+    vecData = _COMPLEX(vecrReHist[IQ_INP_HIL_FILT_DELAY_HQ], -rSum);
 }
 
 
@@ -219,7 +248,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
     Parameters.Lock();
 
     iFreeSymbolCounter++;
-    if (iFreeSymbolCounter >= Parameters.CellMappingTable.iNumSymPerFrame)
+    if (iFreeSymbolCounter >= Parameters.CellMappingTable.iNumSymPerFrame * 2) /* x2 because iOutputBlockSize=iSymbolBlockSize/2 */
     {
         iFreeSymbolCounter = 0;
         /* calculate the PSD once per frame for the RSI output */
@@ -238,6 +267,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
     const _BOOLEAN bBad = pSound->Read(vecsSoundBuffer);
     Parameters.Lock();
     Parameters.ReceiveStatus.InterfaceI.SetStatus(bBad ? CRC_ERROR : RX_OK); /* Red light */
+    const int iSigSampleRate = Parameters.GetSigSampleRate();
     Parameters.Unlock();
 
     /* Write data to output buffer. Do not set the switch command inside
@@ -260,8 +290,17 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
             /* Mix left and right channel together */
             const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
             const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
-
             (*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
+        }
+        break;
+
+    case CS_SUB_CHAN:
+        for (i = 0; i < iOutputBlockSize; i++)
+        {
+            /* Subtract right channel from left */
+            const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
+            const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
+            (*pvecOutputData)[i] = (rLeftChan - rRightChan) / 2;
         }
         break;
 
@@ -321,6 +360,26 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
                 HilbertFilt(cCurSig.real(), cCurSig.imag());
         }
         break;
+
+    case CS_IQ_POS_SPLIT: /* Require twice the bandwidth */
+        iPhase %= iSigSampleRate;
+        for (i = 0; i < iOutputBlockSize; i++, iPhase++)
+        {
+            _REAL rPhase = crPi * 0.5 * iPhase;
+            _REAL rValue = Cos(rPhase) * vecsSoundBuffer[2 * i] - Sin(rPhase) * vecsSoundBuffer[2 * i + 1];
+            (*pvecOutputData)[i] = sample2real(rValue);
+        }
+        break;
+
+    case CS_IQ_NEG_SPLIT: /* Require twice the bandwidth */
+        iPhase %= iSigSampleRate;
+        for (i = 0; i < iOutputBlockSize; i++, iPhase++)
+        {
+            _REAL rPhase = crPi * 0.5 * iPhase;
+            _REAL rValue = Cos(rPhase) * vecsSoundBuffer[2 * i + 1] - Sin(rPhase) * vecsSoundBuffer[2 * i];
+            (*pvecOutputData)[i] = sample2real(rValue);
+        }
+        break;
     }
 
     /* Flip spectrum if necessary ------------------------------------------- */
@@ -357,14 +416,23 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         return;
 
     Parameters.Lock();
+    /* We define iOutputBlockSize as half the iSymbolBlockSize because
+       if a positive frequency offset is present in drm signal,
+       after some time a buffer overflow occur in the output buffer of
+       InputResample.ProcessData() */
     /* Define output block-size */
-    iOutputBlockSize = Parameters.CellMappingTable.iSymbolBlockSize;
+    iOutputBlockSize = Parameters.CellMappingTable.iSymbolBlockSize / 2;
+    iMaxOutputBlockSize = iOutputBlockSize * 2;
     /* Get signal sample rate */
     iSampleRate = Parameters.GetSigSampleRate();
     Parameters.Unlock();
 
 	try {
-		pSound->Init(iSampleRate, iOutputBlockSize * 2, TRUE);
+		const _BOOLEAN bChanged = pSound->Init(iSampleRate, iOutputBlockSize * 2, TRUE);
+
+		/* Clear input data buffer on change */
+		if (bChanged)
+			ClearInputData();
 
 		/* Init buffer size for taking stereo input */
 		vecsSoundBuffer.Init(iOutputBlockSize * 2);
@@ -373,9 +441,8 @@ void CReceiveData::InitInternal(CParameter& Parameters)
 		SignalLevelMeter.Init(0);
 
 		/* Inits for I / Q input, only if it is not already
-		   to keep the history intact, TODO clear the history
-		   on sample rate change */
-		if (vecrReHist.Size() != NUM_TAPS_IQ_INPUT_FILT)
+		   to keep the history intact */
+		if (vecrReHist.Size() != NUM_TAPS_IQ_INPUT_FILT || bChanged)
 		{
 			vecrReHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
 			vecrImHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
@@ -394,6 +461,7 @@ void CReceiveData::InitInternal(CParameter& Parameters)
 
 		/* OPH: init free-running symbol counter */
 		iFreeSymbolCounter = 0;
+
 	}
     catch (CGenErr GenErr)
     {

@@ -27,26 +27,32 @@
 \******************************************************************************/
 
 #include "DrmTransmitter.h"
-#include "sound.h"
+#include "sound/sound.h"
 #include <sstream>
 
 /* Implementation *************************************************************/
 void CDRMTransmitter::Start()
 {
-    /* Set run flag */
-    TransmParam.eRunState = CParameter::RUNNING;
+    /* Set restart flag */
+    Parameters.eRunState = CParameter::RESTART;
+    do
+    {
+        /* Initialization of the modules */
+        Init();
 
-    /* Initialization of the modules */
-    Init();
+        /* Set run flag */
+        Parameters.eRunState = CParameter::RUNNING;
 
-    /* Start the transmitter run routine */
-    Run();
-}
+        /* Start the transmitter run routine */
+        Run();
+    }
+    while (Parameters.eRunState == CParameter::RESTART);
 
-void CDRMTransmitter::Stop()
-{
-    /* Set flag to request stop */
-    TransmParam.eRunState = CParameter::STOP_REQUESTED;
+    /* Closing the sound interfaces */
+    CloseSoundInterfaces();
+
+    /* Set flag to stopped */
+    Parameters.eRunState = CParameter::STOPPED;
 }
 
 void CDRMTransmitter::Run()
@@ -60,35 +66,35 @@ void CDRMTransmitter::Run()
     {
         /* MSC ****************************************************************/
         /* Read the source signal */
-        ReadData.ReadData(TransmParam, DataBuf);
+        ReadData.ReadData(Parameters, DataBuf);
 
         /* Audio source encoder */
-        AudioSourceEncoder.ProcessData(TransmParam, DataBuf, AudSrcBuf);
+        AudioSourceEncoder.ProcessData(Parameters, DataBuf, AudSrcBuf);
 
         /* MLC-encoder */
-        MSCMLCEncoder.ProcessData(TransmParam, AudSrcBuf, MLCEncBuf);
+        MSCMLCEncoder.ProcessData(Parameters, AudSrcBuf, MLCEncBuf);
 
         /* Convolutional interleaver */
-        SymbInterleaver.ProcessData(TransmParam, MLCEncBuf, IntlBuf);
+        SymbInterleaver.ProcessData(Parameters, MLCEncBuf, IntlBuf);
 
 
         /* FAC ****************************************************************/
-        GenerateFACData.ReadData(TransmParam, GenFACDataBuf);
-        FACMLCEncoder.ProcessData(TransmParam, GenFACDataBuf, FACMapBuf);
+        GenerateFACData.ReadData(Parameters, GenFACDataBuf);
+        FACMLCEncoder.ProcessData(Parameters, GenFACDataBuf, FACMapBuf);
 
 
         /* SDC ****************************************************************/
-        GenerateSDCData.ReadData(TransmParam, GenSDCDataBuf);
-        SDCMLCEncoder.ProcessData(TransmParam, GenSDCDataBuf, SDCMapBuf);
+        GenerateSDCData.ReadData(Parameters, GenSDCDataBuf);
+        SDCMLCEncoder.ProcessData(Parameters, GenSDCDataBuf, SDCMapBuf);
 
 
         /* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
-        OFDMCellMapping.ProcessData(TransmParam, IntlBuf, FACMapBuf, SDCMapBuf,
+        OFDMCellMapping.ProcessData(Parameters, IntlBuf, FACMapBuf, SDCMapBuf,
                                     CarMapBuf);
 
 
         /* OFDM-modulation ****************************************************/
-        OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);
+        OFDMModulation.ProcessData(Parameters, CarMapBuf, OFDMModBuf);
 
 
         /* Soft stop **********************************************************/
@@ -96,15 +102,8 @@ void CDRMTransmitter::Run()
             break;
 
         /* Transmit the signal ************************************************/
-        TransmitData.WriteData(TransmParam, OFDMModBuf);
+        TransmitData.WriteData(Parameters, OFDMModBuf);
     }
-
-    /* Closing the sound interfaces */
-    if (pSoundInInterface) pSoundInInterface->Close();
-    if (pSoundOutInterface) pSoundOutInterface->Close();
-
-    /* Set flag to stopped */
-    TransmParam.eRunState = CParameter::STOPPED;
 }
 
 #if 1
@@ -117,10 +116,10 @@ _BOOLEAN CDRMTransmitter::CanSoftStopExit()
     if (bNewSymbol)
     {
         /* Number of symbol by frame */
-        const int iSymbolPerFrame = TransmParam.CellMappingTable.iNumSymPerFrame;
+        const int iSymbolPerFrame = Parameters.CellMappingTable.iNumSymPerFrame;
 
         /* Set stop requested flag */
-        const _BOOLEAN bStopRequested = TransmParam.eRunState != CParameter::RUNNING;
+        const _BOOLEAN bStopRequested = Parameters.eRunState != CParameter::RUNNING;
 
         /* The soft stop is always started at the beginning of a new frame */
         if ((bStopRequested && iSoftStopSymbolCount == 0) || iSoftStopSymbolCount < 0)
@@ -152,7 +151,7 @@ _BOOLEAN CDRMTransmitter::CanSoftStopExit()
     if (bNewSymbol)
     {
         /* Set stop requested flag */
-        const _BOOLEAN bStopRequested = TransmParam.eRunState != CParameter::RUNNING;
+        const _BOOLEAN bStopRequested = Parameters.eRunState != CParameter::RUNNING;
 
         /* Check if stop is requested */
         if (bStopRequested || iSoftStopSymbolCount < 0)
@@ -174,7 +173,7 @@ _BOOLEAN CDRMTransmitter::CanSoftStopExit()
         else
         {
             /* Number of symbol by frame */
-            const int iSymbolPerFrame = TransmParam.CellMappingTable.iNumSymPerFrame;
+            const int iSymbolPerFrame = Parameters.CellMappingTable.iNumSymPerFrame;
 
             /* Update the symbol counter to keep track of frame beginning */
             if (++iSoftStopSymbolCount >= iSymbolPerFrame)
@@ -190,12 +189,34 @@ _BOOLEAN CDRMTransmitter::CanSoftStopExit()
    entire bandwidth for the last symbol. */
 _BOOLEAN CDRMTransmitter::CanSoftStopExit()
 {
-    return TransmParam.eRunState != CParameter::RUNNING;
+    return Parameters.eRunState != CParameter::RUNNING;
 }
 #endif
 
 void CDRMTransmitter::Init()
 {
+    /* Fetch new sample rate if any */
+    Parameters.FetchNewSampleRate();
+
+    /* Init cell mapping table */
+    Parameters.InitCellMapTable(Parameters.GetWaveMode(), Parameters.GetSpectrumOccup());
+
+    /* Defines number of cells, important! */
+    OFDMCellMapping.Init(Parameters, CarMapBuf);
+
+    /* Defines number of SDC bits per super-frame */
+    SDCMLCEncoder.Init(Parameters, SDCMapBuf);
+
+    MSCMLCEncoder.Init(Parameters, MLCEncBuf);
+    SymbInterleaver.Init(Parameters, IntlBuf);
+    GenerateFACData.Init(Parameters, GenFACDataBuf);
+    FACMLCEncoder.Init(Parameters, FACMapBuf);
+    GenerateSDCData.Init(Parameters, GenSDCDataBuf);
+    OFDMModulation.Init(Parameters, OFDMModBuf);
+    AudioSourceEncoder.Init(Parameters, AudSrcBuf);
+    ReadData.Init(Parameters, DataBuf);
+    TransmitData.Init(Parameters);
+
     /* (Re)Initialization of the buffers */
     CarMapBuf.Clear();
     SDCMapBuf.Clear();
@@ -208,47 +229,31 @@ void CDRMTransmitter::Init()
     AudSrcBuf.Clear();
     DataBuf.Clear();
 
-    /* Defines number of cells, important! */
-    OFDMCellMapping.Init(TransmParam, CarMapBuf);
-
-    /* Defines number of SDC bits per super-frame */
-    SDCMLCEncoder.Init(TransmParam, SDCMapBuf);
-
-    MSCMLCEncoder.Init(TransmParam, MLCEncBuf);
-    SymbInterleaver.Init(TransmParam, IntlBuf);
-    GenerateFACData.Init(TransmParam, GenFACDataBuf);
-    FACMLCEncoder.Init(TransmParam, FACMapBuf);
-    GenerateSDCData.Init(TransmParam, GenSDCDataBuf);
-    OFDMModulation.Init(TransmParam, OFDMModBuf);
-    AudioSourceEncoder.Init(TransmParam, AudSrcBuf);
-    ReadData.Init(TransmParam, DataBuf);
-    TransmitData.Init(TransmParam);
-
     /* Initialize the soft stop */
     InitSoftStop();
 }
 
-CDRMTransmitter::CDRMTransmitter() :
-        TransmParam(NULL),
-        pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
+CDRMTransmitter::~CDRMTransmitter()
+{
+    delete pSoundInInterface;
+    delete pSoundOutInterface;
+}
+
+CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettings, new CSoundIn, new CSoundOut, TRUE),
         ReadData(pSoundInInterface), TransmitData(pSoundOutInterface),
         rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
         // UEP only works with Dream receiver, FIXME! -> disabled for now
         bUseUEP(FALSE)
 {
     /* Init streams */
-    TransmParam.ResetServicesStreams();
+    Parameters.ResetServicesStreams();
 
     /* Init frame ID counter (index) */
-    TransmParam.iFrameIDTransm = 0;
+    Parameters.iFrameIDTransm = 0;
 
-    /* Date, time. TODO: use computer system time... */
-    TransmParam.iDay = 0;
-    TransmParam.iMonth = 0;
-    TransmParam.iYear = 0;
-    TransmParam.iUTCHour = 0;
-    TransmParam.iUTCMin = 0;
-
+    /* Init transmission of current time */
+    Parameters.eTransmitCurrentTime = CParameter::CT_OFF;
+	Parameters.bValidUTCOffsetAndSense = FALSE;
 
     /**************************************************************************/
     /* Robustness mode and spectrum occupancy. Available transmission modes:
@@ -262,14 +267,14 @@ CDRMTransmitter::CDRMTransmitter() :
        Available bandwidths:
        SO_0: 4.5 kHz, SO_1: 5 kHz, SO_2: 9 kHz, SO_3: 10 kHz, SO_4: 18 kHz,
        SO_5: 20 kHz */
-    TransmParam.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+    Parameters.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 
     /* Protection levels for MSC. Depend on the modulation scheme. Look at
        TableMLC.h, iCodRateCombMSC16SM, iCodRateCombMSC64SM,
        iCodRateCombMSC64HMsym, iCodRateCombMSC64HMmix for available numbers */
-    TransmParam.MSCPrLe.iPartA = 0;
-    TransmParam.MSCPrLe.iPartB = 1;
-    TransmParam.MSCPrLe.iHierarch = 0;
+    Parameters.MSCPrLe.iPartA = 0;
+    Parameters.MSCPrLe.iPartB = 1;
+    Parameters.MSCPrLe.iHierarch = 0;
 
     /* Either one audio or one data service can be chosen */
     _BOOLEAN bIsAudio = TRUE;
@@ -281,8 +286,8 @@ CDRMTransmitter::CDRMTransmitter() :
     if (bIsAudio == TRUE)
     {
         /* Audio */
-        TransmParam.SetNumOfServices(1,0);
-        TransmParam.SetCurSelAudioService(0);
+        Parameters.SetNumOfServices(1,0);
+        Parameters.SetCurSelAudioService(0);
 
         CAudioParam AudioParam;
 
@@ -291,22 +296,22 @@ CDRMTransmitter::CDRMTransmitter() :
         /* Text message */
         AudioParam.bTextflag = TRUE;
 
-        TransmParam.SetAudioParam(0, AudioParam);
+        Parameters.SetAudioParam(0, AudioParam);
 
-        TransmParam.SetAudDataFlag(0,  CService::SF_AUDIO);
+        Parameters.SetAudDataFlag(0,  CService::SF_AUDIO);
 
         /* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
         Service.iServiceDescr = 15; /* 15 -> other music */
 
-        TransmParam.SetCurSelAudioService(0);
+        Parameters.SetCurSelAudioService(0);
     }
     else
     {
         /* Data */
-        TransmParam.SetNumOfServices(0,1);
-        TransmParam.SetCurSelDataService(0);
+        Parameters.SetNumOfServices(0,1);
+        Parameters.SetCurSelDataService(0);
 
-        TransmParam.SetAudDataFlag(0,  CService::SF_DATA);
+        Parameters.SetAudDataFlag(0,  CService::SF_DATA);
 
         CDataParam DataParam;
 
@@ -316,7 +321,7 @@ CDRMTransmitter::CDRMTransmitter() :
         DataParam.iPacketLen = 45; /* TEST */
         DataParam.eDataUnitInd = CDataParam::DU_DATA_UNITS;
         DataParam.eAppDomain = CDataParam::AD_DAB_SPEC_APP;
-        TransmParam.SetDataParam(0, DataParam);
+        Parameters.SetDataParam(0, DataParam);
 
         /* The value 0 indicates that the application details are provided
            solely by SDC data entity type 5 */
@@ -333,23 +338,23 @@ CDRMTransmitter::CDRMTransmitter() :
     /* Language (see TableFAC.h, "strTableLanguageCode[]") */
     Service.iLanguage = 5; /* 5 -> english */
 
-    TransmParam.SetServiceParameters(0, Service);
+    Parameters.SetServiceParameters(0, Service);
 
     /* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
        short interleaving (400 ms): SI_SHORT */
-    TransmParam.eSymbolInterlMode = CParameter::SI_LONG;
+    Parameters.eSymbolInterlMode = CParameter::SI_LONG;
 
     /* MSC modulation scheme. Available modes:
        16-QAM standard mapping (SM): CS_2_SM,
        64-QAM standard mapping (SM): CS_3_SM,
        64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
        64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
-    TransmParam.eMSCCodingScheme = CS_3_SM;
+    Parameters.eMSCCodingScheme = CS_3_SM;
 
     /* SDC modulation scheme. Available modes:
        4-QAM standard mapping (SM): CS_1_SM,
        16-QAM standard mapping (SM): CS_2_SM */
-    TransmParam.eSDCCodingScheme = CS_2_SM;
+    Parameters.eSDCCodingScheme = CS_2_SM;
 
     /* Set desired intermedia frequency (IF) in Hertz */
     SetCarOffset(_REAL(VIRTUAL_INTERMED_FREQ)); /* Default: "VIRTUAL_INTERMED_FREQ" */
@@ -357,34 +362,40 @@ CDRMTransmitter::CDRMTransmitter() :
     if (bUseUEP == TRUE)
     {
         // TEST
-        TransmParam.SetStreamLen(0, 80, 0);
+        Parameters.SetStreamLen(0, 80, 0);
     }
     else
     {
         /* Length of part B is set automatically (equal error protection (EEP),
            if "= 0"). Sets the number of bytes, should not exceed total number
            of bytes available in MSC block */
-        TransmParam.SetStreamLen(0, 0, 0);
+        Parameters.SetStreamLen(0, 0, 0);
     }
 }
 
-void CDRMTransmitter::LoadSettings(CSettings& s)
+void CDRMTransmitter::LoadSettings()
 {
+    if (pSettings == NULL) return;
+    CSettings& s = *pSettings;
+
     const char *Transmitter = "Transmitter";
     std::ostringstream oss;
     string value, service;
 
     /* Sound card audio sample rate */
-    TransmParam.SetAudSampleRate(s.Get(Transmitter, "samplerateaud", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
+    Parameters.SetNewAudSampleRate(s.Get(Transmitter, "samplerateaud", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
 
     /* Sound card signal sample rate */
-    TransmParam.SetSigSampleRate(s.Get(Transmitter, "sampleratesig", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
+    Parameters.SetNewSigSampleRate(s.Get(Transmitter, "sampleratesig", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
+
+    /* Fetch new sample rate if any */
+    Parameters.FetchNewSampleRate();
 
     /* Sound card input device id */
-    pSoundInInterface->SetDev(s.Get(Transmitter, "snddevin", int(0)));
+    pSoundInInterface->SetDev(s.Get(Transmitter, "snddevin", string()));
 
     /* Sound card output device id */
-    pSoundOutInterface->SetDev(s.Get(Transmitter, "snddevout", int(0)));
+    pSoundOutInterface->SetDev(s.Get(Transmitter, "snddevout", string()));
 #if 0 // TODO
     /* Sound clock drift adjustment */
     _BOOLEAN bEnabled = s.Get(Transmitter, "sndclkadj", int(0));
@@ -407,27 +418,27 @@ void CDRMTransmitter::LoadSettings(CSettings& s)
     else if (value == "SO_3") { eSpectOccup = SO_3; }
     else if (value == "SO_4") { eSpectOccup = SO_4; }
     else if (value == "SO_5") { eSpectOccup = SO_5; }
-    TransmParam.InitCellMapTable(eRobustnessMode, eSpectOccup);
+    Parameters.InitCellMapTable(eRobustnessMode, eSpectOccup);
 
     /* Protection level for MSC */
-    TransmParam.MSCPrLe.iPartB = s.Get(Transmitter, "protlevel", int(1));
+    Parameters.MSCPrLe.iPartB = s.Get(Transmitter, "protlevel", int(1));
 
     /* Interleaver mode of MSC service */
     value = s.Get(Transmitter, "interleaver", string("SI_LONG"));
-    if      (value == "SI_SHORT") { TransmParam.eSymbolInterlMode = CParameter::SI_SHORT; }
-    else if (value == "SI_LONG")  { TransmParam.eSymbolInterlMode = CParameter::SI_LONG;  }
+    if      (value == "SI_SHORT") { Parameters.eSymbolInterlMode = CParameter::SI_SHORT; }
+    else if (value == "SI_LONG")  { Parameters.eSymbolInterlMode = CParameter::SI_LONG;  }
 
     /* MSC modulation scheme */
     value = s.Get(Transmitter, "msc", string("CS_3_SM"));
-    if      (value == "CS_2_SM")    { TransmParam.eMSCCodingScheme = CS_2_SM;    }
-    else if (value == "CS_3_SM")    { TransmParam.eMSCCodingScheme = CS_3_SM;    }
-    else if (value == "CS_3_HMSYM") { TransmParam.eMSCCodingScheme = CS_3_HMSYM; }
-    else if (value == "CS_3_HMMIX") { TransmParam.eMSCCodingScheme = CS_3_HMMIX; }
+    if      (value == "CS_2_SM")    { Parameters.eMSCCodingScheme = CS_2_SM;    }
+    else if (value == "CS_3_SM")    { Parameters.eMSCCodingScheme = CS_3_SM;    }
+    else if (value == "CS_3_HMSYM") { Parameters.eMSCCodingScheme = CS_3_HMSYM; }
+    else if (value == "CS_3_HMMIX") { Parameters.eMSCCodingScheme = CS_3_HMMIX; }
 
     /* SDC modulation scheme */
     value = s.Get(Transmitter, "sdc", string("CS_2_SM"));
-    if      (value == "CS_1_SM") { TransmParam.eSDCCodingScheme = CS_1_SM; }
-    else if (value == "CS_2_SM") { TransmParam.eSDCCodingScheme = CS_2_SM; }
+    if      (value == "CS_1_SM") { Parameters.eSDCCodingScheme = CS_1_SM; }
+    else if (value == "CS_2_SM") { Parameters.eSDCCodingScheme = CS_2_SM; }
 
     /* IF frequency */
     SetCarOffset(s.Get(Transmitter, "iffreq", double(GetCarOffset())));
@@ -438,14 +449,20 @@ void CDRMTransmitter::LoadSettings(CSettings& s)
     else if (value == "OF_IQ_POS")   { GetTransData()->SetIQOutput(CTransmitData::OF_IQ_POS);   }
     else if (value == "OF_IQ_NEG")   { GetTransData()->SetIQOutput(CTransmitData::OF_IQ_NEG);   }
     else if (value == "OF_EP")       { GetTransData()->SetIQOutput(CTransmitData::OF_EP);       }
-#if 0 // TODO
+
+    /* IF high quality I/Q */
+    GetTransData()->SetHighQualityIQ(s.Get(Transmitter, "hqiq", int(1)));
+
+    /* IF amplified output */
+    GetTransData()->SetAmplifiedOutput(s.Get(Transmitter, "ifamp", int(1)));
+
     /* Transmission of current time */
     value = s.Get(Transmitter, "currenttime", string("CT_OFF"));
-    if      (value == "CT_OFF")        { TransmParam.eTransmitCurrentTime = CParameter::CT_OFF;        }
-    else if (value == "CT_LOCAL")      { TransmParam.eTransmitCurrentTime = CParameter::CT_LOCAL;      }
-    if      (value == "CT_UTC")        { TransmParam.eTransmitCurrentTime = CParameter::CT_UTC;        }
-    else if (value == "CT_UTC_OFFSET") { TransmParam.eTransmitCurrentTime = CParameter::CT_UTC_OFFSET; }
-#endif
+    if      (value == "CT_OFF")        { Parameters.eTransmitCurrentTime = CParameter::CT_OFF;        }
+    else if (value == "CT_LOCAL")      { Parameters.eTransmitCurrentTime = CParameter::CT_LOCAL;      }
+    if      (value == "CT_UTC")        { Parameters.eTransmitCurrentTime = CParameter::CT_UTC;        }
+    else if (value == "CT_UTC_OFFSET") { Parameters.eTransmitCurrentTime = CParameter::CT_UTC_OFFSET; }
+
     /**********************/
     /* Service parameters */
     for (int i=0; i<1/*MAX_NUM_SERVICES*/; i++) // TODO
@@ -453,7 +470,7 @@ void CDRMTransmitter::LoadSettings(CSettings& s)
         oss << Transmitter << " Service " << i+1;
         service = oss.str();
 
-        CService& Service = TransmParam.Service[i];
+        CService& Service = Parameters.Service[i];
 
         /* Service ID */
         Service.iServiceID = s.Get(service, "id", int(Service.iServiceID));
@@ -503,29 +520,35 @@ void CDRMTransmitter::LoadSettings(CSettings& s)
     }
 }
 
-void CDRMTransmitter::SaveSettings(CSettings& s)
+void CDRMTransmitter::SaveSettings()
 {
+    if (pSettings == NULL) return;
+    CSettings& s = *pSettings;
+
     const char *Transmitter = "Transmitter";
     std::ostringstream oss;
     string value, service;
 
+    /* Fetch new sample rate if any */
+    Parameters.FetchNewSampleRate();
+
     /* Sound card audio sample rate */
-    s.Put(Transmitter, "samplerateaud", TransmParam.GetAudSampleRate());
+    s.Put(Transmitter, "samplerateaud", Parameters.GetAudSampleRate());
 
     /* Sound card signal sample rate */
-    s.Put(Transmitter, "sampleratesig", TransmParam.GetSigSampleRate());
+    s.Put(Transmitter, "sampleratesig", Parameters.GetSigSampleRate());
 
     /* Sound card input device id */
-    s.Put(Transmitter, "snddevin", int(pSoundInInterface->GetDev()));
+    s.Put(Transmitter, "snddevin", pSoundInInterface->GetDev());
 
     /* Sound card output device id */
-    s.Put(Transmitter, "snddevout", int(pSoundOutInterface->GetDev()));
+    s.Put(Transmitter, "snddevout", pSoundOutInterface->GetDev());
 #if 0 // TODO
     /* Sound clock drift adjustment */
     s.Put(Transmitter, "sndclkadj", int(((CSoundOutPulse*)pSoundOutInterface)->IsClockDriftAdjEnabled()));
 #endif
     /* Robustness mode */
-    switch (TransmParam.GetWaveMode()) {
+    switch (Parameters.GetWaveMode()) {
     case RM_ROBUSTNESS_MODE_A: value = "RM_ROBUSTNESS_MODE_A"; break;
     case RM_ROBUSTNESS_MODE_B: value = "RM_ROBUSTNESS_MODE_B"; break;
     case RM_ROBUSTNESS_MODE_C: value = "RM_ROBUSTNESS_MODE_C"; break;
@@ -534,7 +557,7 @@ void CDRMTransmitter::SaveSettings(CSettings& s)
     s.Put(Transmitter, "robustness", value);
 	
     /* Spectrum occupancy */
-    switch (TransmParam.GetSpectrumOccup()) {
+    switch (Parameters.GetSpectrumOccup()) {
     case SO_0: value = "SO_0"; break;
     case SO_1: value = "SO_1"; break;
     case SO_2: value = "SO_2"; break;
@@ -545,17 +568,17 @@ void CDRMTransmitter::SaveSettings(CSettings& s)
     s.Put(Transmitter, "spectocc", value);
 
     /* Protection level for MSC */
-    s.Put(Transmitter, "protlevel", int(TransmParam.MSCPrLe.iPartB));
+    s.Put(Transmitter, "protlevel", int(Parameters.MSCPrLe.iPartB));
 
     /* Interleaver mode of MSC service */
-    switch (TransmParam.eSymbolInterlMode) {
+    switch (Parameters.eSymbolInterlMode) {
     case CParameter::SI_SHORT: value = "SI_SHORT"; break;
     case CParameter::SI_LONG:  value = "SI_LONG";  break;
     default: value = ""; }
     s.Put(Transmitter, "interleaver", value);
 
     /* MSC modulation scheme */
-    switch (TransmParam.eMSCCodingScheme) {
+    switch (Parameters.eMSCCodingScheme) {
     case CS_2_SM:    value = "CS_2_SM";    break;
     case CS_3_SM:    value = "CS_3_SM";    break;
     case CS_3_HMSYM: value = "CS_3_HMSYM"; break;
@@ -564,7 +587,7 @@ void CDRMTransmitter::SaveSettings(CSettings& s)
     s.Put(Transmitter, "msc", value);
 
     /* SDC modulation scheme */
-    switch (TransmParam.eSDCCodingScheme) {
+    switch (Parameters.eSDCCodingScheme) {
     case CS_1_SM: value = "CS_1_SM"; break;
     case CS_2_SM: value = "CS_2_SM"; break;
     default: value = ""; }
@@ -581,16 +604,22 @@ void CDRMTransmitter::SaveSettings(CSettings& s)
     case CTransmitData::OF_EP:       value = "OF_EP";       break;
     default: value = ""; }
     s.Put(Transmitter, "ifformat", value);
-#if 0 // TODO
+
+    /* IF high quality I/Q */
+    s.Put(Transmitter, "hqiq", int(GetTransData()->GetHighQualityIQ()));
+
+    /* IF amplified output */
+    s.Put(Transmitter, "ifamp", int(GetTransData()->GetAmplifiedOutput()));
+
     /* Transmission of current time */
-    switch (TransmParam.eTransmitCurrentTime) {
+    switch (Parameters.eTransmitCurrentTime) {
     case CParameter::CT_OFF:        value = "CT_OFF";        break;
     case CParameter::CT_LOCAL:      value = "CT_LOCAL";      break;
     case CParameter::CT_UTC:        value = "CT_UTC";        break;
     case CParameter::CT_UTC_OFFSET: value = "CT_UTC_OFFSET"; break;
     default: value = ""; }
     s.Put(Transmitter, "currenttime", value);
-#endif
+
     /**********************/
     /* Service parameters */
     for (int i=0; i<1/*MAX_NUM_SERVICES*/; i++) // TODO
@@ -598,7 +627,7 @@ void CDRMTransmitter::SaveSettings(CSettings& s)
         oss << Transmitter << " Service " << i+1;
         service = oss.str();
 
-        CService& Service = TransmParam.Service[i];
+        CService& Service = Parameters.Service[i];
 
         /* Service ID */
         s.Put(service, "id", int(Service.iServiceID));

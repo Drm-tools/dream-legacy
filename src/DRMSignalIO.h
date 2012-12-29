@@ -29,8 +29,8 @@
 #if !defined(DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_)
 #define DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_
 
+#include "sound/soundinterface.h"
 #include "Parameter.h"
-#include "soundinterface.h"
 #include <math.h>
 #include "matlib/Matlib.h"
 #include "IQInputFilter.h"
@@ -81,7 +81,8 @@ public:
 
     CTransmitData(CSoundOutInterface* pNS) : pFileTransmitter(NULL), pSound(pNS),
             eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
-            strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
+            strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE),
+            bAmplified(FALSE), bHighQualityIQ(FALSE) {}
     virtual ~CTransmitData();
 
     void SetIQOutput(const EOutFormat eFormat) {
@@ -89,6 +90,20 @@ public:
     }
     EOutFormat GetIQOutput() {
         return eOutputFormat;
+    }
+
+    void SetAmplifiedOutput(_BOOLEAN bEnable) {
+        bAmplified = bEnable;
+    }
+    _BOOLEAN GetAmplifiedOutput() {
+        return bAmplified;
+    }
+
+    void SetHighQualityIQ(_BOOLEAN bEnable) {
+        bHighQualityIQ = bEnable;
+    }
+    _BOOLEAN GetHighQualityIQ() {
+        return bHighQualityIQ;
     }
 
     void SetCarOffset(const CReal rNewCarOffset)
@@ -122,6 +137,12 @@ protected:
     string				strOutFileName;
     _BOOLEAN			bUseSoundcard;
 
+    _BOOLEAN			bAmplified;
+    _BOOLEAN			bHighQualityIQ;
+    CVector<_REAL>		vecrReHist;
+
+    void HilbertFilt(_COMPLEX& vecData);
+
     virtual void InitInternal(CParameter& TransmParam);
     virtual void ProcessDataInternal(CParameter& Parameter);
 };
@@ -129,13 +150,13 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
-    enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
-                     CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO
+    enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_SUB_CHAN, CS_IQ_POS,
+                     CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_IQ_POS_SPLIT, CS_IQ_NEG_SPLIT
                     };
 
     CReceiveData() : pSound(NULL),
             vecrInpData(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0),
-            bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN)
+            bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN), iPhase(0)
     {}
     virtual ~CReceiveData();
 
@@ -150,6 +171,10 @@ public:
     }
     _BOOLEAN GetFlippedSpectrum() {
         return bFippedSpectrum;
+    }
+
+    void ClearInputData() {
+        vecrInpData.Init(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0);
     }
 
     void SetSoundInterface(CSoundInInterface* pS) {
@@ -179,6 +204,7 @@ protected:
     CVector<_REAL>		vecrImHist;
     _COMPLEX			cCurExp;
     _COMPLEX			cExpStep;
+    int					iPhase;
 
     _REAL HilbertFilt(const _REAL rRe, const _REAL rIm);
 

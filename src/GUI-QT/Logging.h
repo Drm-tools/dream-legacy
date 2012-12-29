@@ -47,6 +47,7 @@ public:
 	virtual ~CLogging() {}
 	void LoadSettings(CSettings&);
 	void SaveSettings(CSettings&);
+	bool enabled() { return state!=off; }
 
 protected:
 	QTimer			TimerLogFile;
@@ -54,9 +55,9 @@ protected:
 
 	CShortLog		shortLog;
 	CLongLog		longLog;
-	bool			enabled;
 	int			iLogDelay;
 	int			iLogCount;
+	enum {off,starting,on}  state;
 
 signals:
 	void subscribeRig();
@@ -64,8 +65,8 @@ signals:
 public slots:
 	void start();
 	void stop();
-	void reStart();
 	void OnTimerLogFile();
+	void OnTimerLogFileStart();
 };
 
 #endif
