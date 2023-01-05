@@ -986,7 +986,9 @@ CDRMReceiver::process()
                     if (iUnlockedCount < MAX_UNLOCKED_COUNT)
                         iUnlockedCount++;
                     else
+		    {
                         downstreamRSCI.SendUnlockedFrame(Parameters);
+		    }
                 }
             }
             else if (bFrameToSend)
@@ -1365,10 +1367,18 @@ void CDRMReceiver::SetFrequency(int iNewFreqkHz)
 void
 CDRMReceiver::SetIQRecording(bool bON)
 {
+    ReceiveData.SetInitFlag();
+    SplitForIQRecord.SetInitFlag();
     if (bON)
+    {
+        cout<<"Starting I/Q recording"<<endl;
         WriteIQFile.StartRecording(Parameters);
+    }
     else
+    {
+        cout<<"Stopping I/Q recording"<<endl;
         WriteIQFile.StopRecording();
+    }
 }
 
 void

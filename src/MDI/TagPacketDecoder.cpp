@@ -54,7 +54,6 @@ CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0),iSeqNumber(0xfff
 CTagPacketDecoder::Error
 CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 {
-
 	int i;
 
 	/* CRC check ------------------------------------------------------------ */
@@ -152,7 +151,18 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	/* Payload -------------------------------------------------------------- */
 	DecodeTagPackets(vecbiAFPkt, iPayLLen);
 
-	return E_OK;
+ 	int iCRC2 = vecbiAFPkt.Separate(16);
+
+	vecbiAFPkt.erase(vecbiAFPkt.begin(), vecbiAFPkt.begin()+iPayLLen*8 + 80 + 16);
+
+	if (vecbiAFPkt.size()==0)
+	{
+		return E_OK;
+	}
+	else
+	{
+		return DecodeAFPacket(vecbiAFPkt);
+	}
 }
 
 	// Decode all the tags in the tag packet. To do things before or after the decoding,
