@@ -52,17 +52,37 @@ void CPacketSocketHTTP::onFinished(QNetworkReply *pReply)
 
 void CPacketSocketHTTP::onAuthRequired(QNetworkReply *reply, QAuthenticator *authenticator)
 {
-    authenticator->setUser("user");
-    authenticator->setPassword("password");
+    authenticator->setUser(QString::fromStdString(destUser));
+    authenticator->setPassword(QString::fromStdString(destPassword));
 }
 
 bool CPacketSocketHTTP::SetDestination(const std::string& str)
 {
 
     std::istringstream iss(str);
+    std::string user_pass;
+
     getline(iss, destScheme, ':');
     while (iss.peek()=='/')
         iss.get();
+
+
+    if (str.find("@")!=std::string::npos)
+    {
+        getline(iss, user_pass, '@');
+        size_t pos=user_pass.find(':');
+        if (pos==std::string::npos)
+        {
+            destUser = user_pass;
+            destPassword = "";
+        }
+        else
+        {
+            destUser = user_pass.substr(0, pos);
+            destPassword = user_pass.substr(pos+1);
+        }
+        std::cout<<"User = " << destUser << " Pass = " << destPassword <<std::endl;
+    }
     getline(iss, destHost, '/');
     getline(iss, destPath);
     dest = str;

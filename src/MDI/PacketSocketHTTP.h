@@ -44,6 +44,8 @@ private:
     std::string destScheme;
     std::string destHost;
     std::string destPath;
+    std::string destUser;
+    std::string destPassword;
     QNetworkAccessManager * pNetworkAccessManager;
 };
 
