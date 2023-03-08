@@ -8,9 +8,11 @@
 CPacketSocketHTTP::CPacketSocketHTTP()
 {
     pNetworkAccessManager = new QNetworkAccessManager(this);
-    connect(pNetworkAccessManager, &QNetworkAccessManager::finished, this, &CPacketSocketHTTP::onFinished);
+    //connect(pNetworkAccessManager, &QNetworkAccessManager::finished, this, &CPacketSocketHTTP::onPostFinished);
     connect(this, &CPacketSocketHTTP::postDataReady, this, &CPacketSocketHTTP::doPost);
+    connect(this, &CPacketSocketHTTP::getReady, this, &CPacketSocketHTTP::doGet);
     connect(pNetworkAccessManager, &QNetworkAccessManager::authenticationRequired, this, &CPacketSocketHTTP::onAuthRequired);
+
 
 }
 CPacketSocketHTTP::~CPacketSocketHTTP()
@@ -21,12 +23,13 @@ CPacketSocketHTTP::~CPacketSocketHTTP()
 // Set the sink which will receive the packets
 void CPacketSocketHTTP::SetPacketSink(CPacketSink *pSink)
 {
+    pPacketSink = pSink;
 }
 
 // Stop sending packets to the sink
 void CPacketSocketHTTP::ResetPacketSink(void)
 {
-
+    pPacketSink = nullptr;
 }
 
 // Send packet to the socket
@@ -40,15 +43,49 @@ void CPacketSocketHTTP::doPost(const QByteArray& qdata)
 {
     QNetworkRequest req(QString::fromStdString(dest));
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
-    pNetworkAccessManager->post(req, qdata);
+    QNetworkReply *pReply =  pNetworkAccessManager->post(req, qdata);
+    connect(pReply, &QNetworkReply::finished, this, &CPacketSocketHTTP::onPostFinished);
 }
 
-void CPacketSocketHTTP::onFinished(QNetworkReply *pReply)
+void CPacketSocketHTTP::onPostFinished()
 {
+    QNetworkReply * pReply = qobject_cast<QNetworkReply *>(sender());
     if (pReply->error() != 0)
     {
         std::cout<<"onFinished called; reply error num " <<pReply->error() << " string: " << pReply->errorString().toStdString() << std::endl;
     }
+    pReply->deleteLater();
+}
+void CPacketSocketHTTP::poll()
+{
+    emit getReady();
+
+}
+
+void CPacketSocketHTTP::doGet()
+{
+    QNetworkRequest req(QString::fromStdString(dest));
+    QNetworkReply *pReply =  pNetworkAccessManager->get(req);
+    connect(pReply, &QNetworkReply::finished, this, &CPacketSocketHTTP::onGetFinished);
+}
+
+void CPacketSocketHTTP::onGetFinished()
+{
+    QNetworkReply * pReply = qobject_cast<QNetworkReply *>(sender());
+    if (pReply->error() != 0)
+    {
+        std::cout<<"onGetFinished called; reply error num " <<pReply->error() << " string: " << pReply->errorString().toStdString() << std::endl;
+    }
+    QByteArray responseBody = pReply->readAll();
+    std::vector<_BYTE> vecbydata(responseBody.begin(), responseBody.end());
+    if (vecbydata.size() > 0)
+    {
+        std::cout<<"Received RCI data size " << vecbydata.size()<< std::endl;
+
+        if (pPacketSink)
+            pPacketSink->SendPacket(vecbydata);
+    }
+
     pReply->deleteLater();
 }
 
@@ -121,7 +158,3 @@ bool CPacketSocketHTTP::GetOrigin(std::string& str)
     return true;
 }
 
-void CPacketSocketHTTP::poll()
-{
-
-}

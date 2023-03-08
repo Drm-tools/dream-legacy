@@ -29,11 +29,14 @@ public:
 
 private slots:
     void doPost(const QByteArray& vecbydata);
-    void onFinished(QNetworkReply *pReply);
+    void onPostFinished();
+    void doGet();
+    void onGetFinished();
     void onAuthRequired(QNetworkReply *reply, QAuthenticator *authenticator);
 
 signals:
     void postDataReady(const QByteArray& vecbydata);
+    void getReady();
 
 private:
 
@@ -47,6 +50,7 @@ private:
     std::string destUser;
     std::string destPassword;
     QNetworkAccessManager * pNetworkAccessManager;
+    CPacketSink *pPacketSink;
 };
 
 #endif // PACKETSOCKETHTTP_H
