@@ -31,6 +31,7 @@
 #include <fdk-aac/FDK_audio.h>
 #include "src/SDC/SDC.h"
 #include <cstring>
+#include <iomanip>
 
 FdkAacCodec::FdkAacCodec() :
     hDecoder(nullptr), hEncoder(nullptr),bUsac(false),decode_buf()
@@ -235,7 +236,6 @@ FdkAacCodec::DecOpen(const CAudioParam& AudioParam, int& iAudioSampleRate)
     type9Size = unsigned(type9.size());
     t9 = &type9[0];
 
-    //cerr << "type9 " << hex; for(size_t i=0; i<type9Size; i++) cerr << int(type9[i]) << " "; cerr << dec << endl;
     AAC_DECODER_ERROR err = aacDecoder_ConfigRaw (hDecoder, &t9, &type9Size);
     if(err == AAC_DEC_OK) {
         CStreamInfo *pinfo = aacDecoder_GetStreamInfo(hDecoder);
@@ -288,7 +288,6 @@ CAudioCodec::EDecError FdkAacCodec::Decode(const vector<uint8_t>& audio_frame, u
         bufferSize = UINT(data.size());
     }
     UINT bytesValid = bufferSize;
-
     AAC_DECODER_ERROR err = aacDecoder_Fill(hDecoder, &pData, &bufferSize, &bytesValid);
     if(err != AAC_DEC_OK) {
         cerr << "fill failed " << int(err) << endl;
@@ -319,7 +318,6 @@ CAudioCodec::EDecError FdkAacCodec::Decode(const vector<uint8_t>& audio_frame, u
         cerr << "Fill failed: " << err << endl;
         return CAudioCodec::DECODER_ERROR_UNKNOWN;
     }
-    //cerr << "aac decode after fill bufferSize " << bufferSize << ", bytesValid " << bytesValid << endl;
     if (bytesValid != 0) {
         cerr << "Unable to feed all " << bufferSize << " input bytes, bytes left " << bytesValid << endl;
         return CAudioCodec::DECODER_ERROR_UNKNOWN;

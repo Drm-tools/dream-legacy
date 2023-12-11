@@ -800,11 +800,10 @@ bool CReceiverModul<TInput, TOutput>::
 		}
 		else
 		{
-			/* Write processed data from internal memory in transfer-buffer */
+                        /* Write processed data from internal memory in transfer-buffer */
 			OutputBuffer2.Put(iOutputBlockSize2);
 		}
 	}
-
 	return bEnoughData;
 }
 

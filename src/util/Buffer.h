@@ -32,7 +32,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "Vector.h"
-
+#include <iostream>
 
 /* Classes ********************************************************************/
 /* Buffer base class */
@@ -142,7 +142,10 @@ template<class TData> CVectorEx<TData>* CSingleBuffer<TData>::Get(const int iReq
 			iFillLevel, "Requested size", iRequestedSize);
 	}
 #endif
-
+    if (iRequestedSize > iFillLevel)
+    {
+        std::cerr<<"SingleBuffer Get() FillLevel"<<iFillLevel<<" Requested size "<< iRequestedSize<<std::endl;
+    }
 	/* Block is read, buffer is now empty again */
 	iFillLevel -= iRequestedSize;
 
@@ -154,6 +157,10 @@ template<class TData> void CSingleBuffer<TData>::Put(const int iOfferedSize)
 	/* New Block was added, set new fill level */
 	iFillLevel += iOfferedSize;
 
+    if (iFillLevel > this->iBufferSize)
+    {
+        std::cerr<<"SingleBuffer Put() FillLevel "<<iFillLevel<< " Buffer size"<< this->iBufferSize<<std::endl;
+    }
 #ifdef _DEBUG_DREAM
 	if (iFillLevel > this->iBufferSize)
 	{
@@ -206,6 +213,10 @@ template<class TData> CVectorEx<TData>* CCyclicBuffer<TData>::Get(const int iReq
 	if ((iAvailSpace < 0) || ((iAvailSpace == 0) && (iBufferState == BS_FULL)))
 		iAvailSpace += this->iBufferSize;
 
+    if (iAvailSpace < iRequestedSize)
+    {
+        std::cerr<<"CyclicBuffer Get() Available space "<<iAvailSpace<< " Requested size " << iRequestedSize<<std::endl;
+    }
 #ifdef _DEBUG_DREAM
 	if (iAvailSpace < iRequestedSize)
 	{
@@ -274,10 +285,13 @@ template<class TData> void CCyclicBuffer<TData>::Put(const int iOfferedSize)
 			iAvailSpace, "Offered size", iOfferedSize);
 	}
 #endif
+    if (iAvailSpace < iOfferedSize) {
+        std::cerr<<"CyclicBuffer Put() Available space"<<iAvailSpace<< "Offered size"<< iOfferedSize<<std::endl;
+    }
 
 
 	/* Put data ------------------------------------------------------------- */
-	iElementCount = 0;
+    iElementCount = 0;
 
 	/* Test if data can be written in one block */
 	if (this->iBufferSize - iPut < iOfferedSize)

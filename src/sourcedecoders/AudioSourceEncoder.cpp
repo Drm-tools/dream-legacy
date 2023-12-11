@@ -490,17 +490,20 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
     case CAudioParam::AC_AAC:
     {
         int iTimeEachAudBloMS = 40;
+        iNumChannels = (Parameters.Service[iCurSelServ].AudioParam.eAudioMode==CAudioParam::AM_MONO)?1:2;
 
         switch (Parameters.Service[iCurSelServ].AudioParam.eAudioSamplRate)
         {
         case CAudioParam::AS_12KHZ:
             iTimeEachAudBloMS = 80;	/* ms */
             iNumAudioFrames = 5;
+            lEncSamprate = 12000;
             break;
 
         case CAudioParam::AS_24KHZ:
             iTimeEachAudBloMS = 40;	/* ms */
             iNumAudioFrames = 10;
+            lEncSamprate = 24000;
             break;
         }
 
@@ -521,6 +524,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
 
         /* Open encoder instance */
         codec->EncOpen(Parameters.Service[iCurSelServ].AudioParam, lNumSampEncIn, lMaxBytesEncOut);
+
         lNumSampEncIn /= iNumChannels;
 
         /* Calculate bitrate, bit per second */
@@ -603,7 +607,6 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
     /* Define input and output block size */
     iOutputBlockSize = iTotNumBitsForUsage;
     iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
-
     Parameters.Unlock();
 }
 

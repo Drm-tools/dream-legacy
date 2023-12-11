@@ -361,7 +361,7 @@ CDRMReceiver::UtilizeDRM(bool& bEnoughData)
     /* Source decoding (audio) */
     if (iAudioStreamID != STREAM_ID_NOT_USED)
     {
-        //cerr << "audio processing" << endl;
+        //cerr << "audio processing. input buffer fill level="<<MSCUseBuf[iAudioStreamID].GetFillLevel() << endl;
         if (AudioSourceDecoder.ProcessData(Parameters,
                                            MSCUseBuf[iAudioStreamID],
                                            AudSoDecBuf))

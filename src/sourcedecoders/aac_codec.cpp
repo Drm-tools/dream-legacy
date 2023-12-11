@@ -310,7 +310,7 @@ bool
 AacCodec::EncOpen(const CAudioParam& AudioParam, unsigned long& lNumSampEncIn, unsigned long& lMaxBytesEncOut)
 {
     unsigned long iSampleRate = (AudioParam.eAudioSamplRate==CAudioParam::AS_12KHZ)?12000:24000;
-    unsigned int iChannels=(AudioParam.eAudioMode!=CAudioParam::AM_MONO)?1:2;
+    unsigned int iChannels=(AudioParam.eAudioMode==CAudioParam::AM_MONO)?1:2;
     hFaacEncoder = faacEncOpen(iSampleRate, iChannels, &lNumSampEncIn, &lMaxBytesEncOut);
     return hFaacEncoder != nullptr;
 }

@@ -426,7 +426,6 @@ void CWriteData::InitInternal(CParameter& Parameters)
     }
 #endif
     if(pSound!=nullptr) pSound->Init(iAudSampleRate, iAudFrameSize * 2 /* stereo */, bSoundBlocking); // might be a sound file
-
     /* Init intermediate buffer needed for different channel selections */
     vecsTmpAudData.Init(iAudFrameSize * 2 /* stereo */);
 

@@ -321,6 +321,7 @@ win32 {
     exists($$PWD/include/opus/opus.h) {
         CONFIG += opus
     }
+
   }
 }
 fdk-aac {

@@ -250,7 +250,7 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
     /* The output buffer is a cyclic buffer, we have to specify the total
        buffer size */
     iMaxOutputBlockSize = (int) ((_REAL) iAudSampleRate *
-                                 (_REAL) 0.4 /* 400ms */ * 2 /* for stereo */);
+                                 (_REAL) 0.4 /* 400ms */ * 2 /* for stereo */ * 2 /* to allow for different write/read sizes */);
 
     iInputBlockSize = iSymbolBlockSize;
 

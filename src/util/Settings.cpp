@@ -293,6 +293,12 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
+        /* Receiver mode 0=DRM, 1=AM, ...*/
+        if (GetNumericArgument(argc, argv, i, "--rxmode", "--rxmode", 0,4, rArgument))
+        {
+            Put("Receiver", "mode", rArgument);
+        }
+
 		/* Signal upscale ratio --------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-U", "--sigupratio",
 							  1, 2, rArgument))
@@ -497,7 +503,7 @@ CSettings::ParseArguments(int argc, char **argv)
 							  strArgument))
 		{
 			cerr <<
-				"modulator mode not implemented yet, perhaps you wanted rsiin"
+                "modulator mode not implemented yet, perhaps you wanted rsiin"
 				<< endl;
 			continue;
 		}
