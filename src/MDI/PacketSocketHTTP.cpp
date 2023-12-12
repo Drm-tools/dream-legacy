@@ -5,7 +5,7 @@
 #include <QNetworkReply>
 #include <QAuthenticator>
 
-CPacketSocketHTTP::CPacketSocketHTTP()
+CPacketSocketHTTP::CPacketSocketHTTP(): bGetInFlight(false)
 {
     pNetworkAccessManager = new QNetworkAccessManager(this);
     //connect(pNetworkAccessManager, &QNetworkAccessManager::finished, this, &CPacketSocketHTTP::onPostFinished);
@@ -64,6 +64,9 @@ void CPacketSocketHTTP::poll()
 
 void CPacketSocketHTTP::doGet()
 {
+    if (bGetInFlight)
+        return;
+    bGetInFlight = true;
     QNetworkRequest req(QString::fromStdString(dest));
     QNetworkReply *pReply =  pNetworkAccessManager->get(req);
     connect(pReply, &QNetworkReply::finished, this, &CPacketSocketHTTP::onGetFinished);
@@ -71,6 +74,7 @@ void CPacketSocketHTTP::doGet()
 
 void CPacketSocketHTTP::onGetFinished()
 {
+    bGetInFlight = false;
     QNetworkReply * pReply = qobject_cast<QNetworkReply *>(sender());
     if (pReply->error() != 0)
     {

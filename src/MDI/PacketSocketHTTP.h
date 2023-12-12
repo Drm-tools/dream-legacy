@@ -51,6 +51,7 @@ private:
     std::string destPassword;
     QNetworkAccessManager * pNetworkAccessManager;
     CPacketSink *pPacketSink;
+    bool bGetInFlight;
 };
 
 #endif // PACKETSOCKETHTTP_H
