@@ -339,6 +339,10 @@ win32 {
 }
 fdk-aac {
      DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
+     unix: {
+         INCLUDEPATH += /usr/include/fdk-aac
+         LIBS += -L/usr/lib64/fdk-aac
+     }
      LIBS += -lfdk-aac
      HEADERS += src/sourcedecoders/fdk_aac_codec.h
      SOURCES += src/sourcedecoders/fdk_aac_codec.cpp
