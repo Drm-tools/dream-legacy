@@ -113,7 +113,7 @@ protected:
 
 	void EnableSMeter(const bool bStatus);
 
-	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
+	static int			PrintHamlibModelList(struct rig_caps* caps, void* data);
 	void				SetRigModes();
 	void				SetRigLevels();
 	void				SetRigFuncs();

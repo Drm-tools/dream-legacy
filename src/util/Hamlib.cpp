@@ -341,7 +341,7 @@ string CHamlib::GetComPort() const
 }
 
 int
-CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
+CHamlib::PrintHamlibModelList(struct rig_caps *caps, void *data)
 {
 	/* Access data members of class through pointer ((CHamlib*) data) */
 	CHamlib & Hamlib = *((CHamlib *) data);
