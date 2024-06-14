@@ -682,9 +682,9 @@ void CDRMPlot::SetupAvIR()
 {
 	/* Init chart for averaged impulse response */
 	plot->setTitle(tr("Channel Impulse Response"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Time [ms]"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("IR [dB]"));
 
 	/* Curves color */
@@ -760,9 +760,9 @@ void CDRMPlot::SetupTranFct()
 {
 	/* Init chart for transfer function */
 	plot->setTitle(tr("Channel Transfer Function / Group Delay"));
-	plot->enableAxis(QwtPlot::yRight);
+	//plot->enableAxis(QwtPlot::yRight);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("TF [dB]"));
 
 	plot->setAxisTitle(QwtPlot::yRight, tr("Group Delay [ms]"));
@@ -799,9 +799,9 @@ void CDRMPlot::SetupAudioSpec(bool bAudioDecoder)
 		plot->setTitle(tr("No audio decoding possible"));
         main1curve.SETDATA(dblptr, dblptr, 0);
 	}
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, "AS [dB]");
 
 	/* Fixed scale */
@@ -824,9 +824,9 @@ void CDRMPlot::SetupFreqSamOffsHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
 	plot->setTitle(tr("Rel. Frequency Offset / Sample Rate Offset History"));
-	plot->enableAxis(QwtPlot::yRight);
+	//plot->enableAxis(QwtPlot::yRight);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
 
 	/* Curve colors */
@@ -890,9 +890,9 @@ void CDRMPlot::SetupDopplerDelayHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
 	plot->setTitle(tr("Delay / Doppler History"));
-	plot->enableAxis(QwtPlot::yRight);
+	//plot->enableAxis(QwtPlot::yRight);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
 	plot->setAxisTitle(QwtPlot::yRight, tr("Doppler [Hz]"));
 
@@ -923,9 +923,9 @@ void CDRMPlot::SetupSNRAudHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
 	plot->setTitle(tr("SNR / Correctly Decoded Audio History"));
-	plot->enableAxis(QwtPlot::yRight);
+	//plot->enableAxis(QwtPlot::yRight);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
 	plot->setAxisTitle(QwtPlot::yRight, tr("Corr. Dec. Audio / DRM-Frame"));
 
@@ -1023,9 +1023,9 @@ void CDRMPlot::SetupPSD()
 {
 	/* Init chart for power spectram density estimation */
 	plot->setTitle(tr("Shifted Power Spectral Density of Input Signal"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("PSD [dB]"));
 
 	/* Fixed scale */
@@ -1061,9 +1061,9 @@ void CDRMPlot::SetupSNRSpectrum()
 {
 	/* Init chart for power spectram density estimation */
 	plot->setTitle(tr("SNR Spectrum (Weighted MER on MSC Cells)"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
 
 	/* Curve color */
@@ -1079,9 +1079,9 @@ void CDRMPlot::SetupInpSpec()
 {
 	/* Init chart for power spectram density estimation */
 	plot->setTitle(tr("Input Spectrum"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input Spectrum [dB]"));
 
 	/* Fixed scale */
@@ -1123,9 +1123,9 @@ void CDRMPlot::SetupInpPSD(bool bAnalog)
 {
 	/* Init chart for power spectram density estimation */
 	plot->setTitle(tr("Input PSD"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 
 	/* Fixed scale */
@@ -1186,9 +1186,9 @@ void CDRMPlot::SetupInpSpecWaterf()
 {
 	/* Init chart for waterfall input spectrum */
 	plot->setTitle(tr("Waterfall Input Spectrum"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, false);
+	//plot->enableAxis(QwtPlot::yLeft, false);
 	grid.enableX(false);
 	grid.enableY(false);
 
@@ -1316,9 +1316,9 @@ void CDRMPlot::SetupFACConst()
 {
 	/* Init chart for FAC constellation */
 	plot->setTitle(tr("FAC Constellation"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Set fixed scale */
@@ -1346,9 +1346,9 @@ void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
 {
 	/* Init chart for SDC constellation */
 	plot->setTitle(tr("SDC Constellation"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Set fixed scale */
@@ -1376,9 +1376,9 @@ void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
 {
 	/* Init chart for MSC constellation */
 	plot->setTitle(tr("MSC Constellation"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Set fixed scale */
@@ -1406,9 +1406,9 @@ void CDRMPlot::SetupAllConst()
 {
 	/* Init chart for constellation */
 	plot->setTitle(tr("MSC / SDC / FAC Constellation"));
-	plot->enableAxis(QwtPlot::yRight, false);
+	//plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-	plot->enableAxis(QwtPlot::yLeft, true);
+	//plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Set fixed scale */
