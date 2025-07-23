@@ -174,6 +174,9 @@ public:
     ERecMode				GetReceiverMode() {
         return eReceiverMode;
     }
+    ERecMode GetNewReceiverMode() {
+        return eNewReceiverMode;
+    }
     bool GetDownstreamRSCIOutEnabled()
     {
         return downstreamRSCI.GetOutEnabled();

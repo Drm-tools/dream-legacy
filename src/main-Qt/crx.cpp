@@ -36,6 +36,7 @@ CRx::run()
             rx.InitReceiverMode();
             rx.SetInStartMode();
 
+            ERecMode rxMode = rx.GetReceiverMode();
             switch(rx.GetReceiverMode()) {
             case RM_DRM: emit drmModeStarted(); break;
             case RM_AM: emit amModeStarted(); break;
@@ -49,6 +50,8 @@ CRx::run()
             {
                 rx.updatePosition();
                 rx.process();
+		if (rx.GetNewReceiverMode() != rxMode && rx.GetNewReceiverMode() != RM_NONE)
+		  eRunState = RESTART;
 
 #ifdef USE_CONSOLEIO
                 eRunState = CConsoleIO::Update();

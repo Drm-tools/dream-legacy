@@ -89,6 +89,7 @@ CDRMReceiver::~CDRMReceiver()
 void
 CDRMReceiver::SetReceiverMode(ERecMode eNewMode)
 {
+    cerr<<"New receiver mode: " << eNewMode<<endl;
     if (eReceiverMode!=eNewMode || eNewReceiverMode != RM_NONE)
         eNewReceiverMode = eNewMode;
 }
