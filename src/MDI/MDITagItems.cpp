@@ -1403,21 +1403,25 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 }
 
 void
-CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &AudioData)
+CTagItemGeneratorAMAudio::GenTagFieldsNonStandard(CParameter & Parameter, int iLenStrData)
+{
+        char mimeType[]="audio/aac";
+        int iMimeTypeLen = strlen(mimeType);
+
+	PrepareTag(iLenStrData + iMimeTypeLen*8 + 16);
+        Enqueue(224, 8); // Codec type = MIME defined
+        Enqueue(strlen(mimeType), 8); // MIME type length
+        for (int i=0; i<strlen(mimeType); i++)
+           Enqueue(mimeType[i], 8);
+}
+
+void
+CTagItemGeneratorAMAudio::GenTagFieldsStandard(CParameter & Parameter, CSingleBuffer < _BINARY > &AudioData)
 {
 
-	const int iLenStrData =
-		SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB);
-	// Only generate this tag if stream input data is not of zero length
-	if (iLenStrData == 0)
-		return;
-
-	CVectorEx < _BINARY > *pvecbiStrData = AudioData.Get(iLenStrData);
-	// check we have data in the vector
-	if (iLenStrData != pvecbiStrData->Size())
-		return;
-
-	PrepareTag(iLenStrData + 16);
+	PrepareTag(iLenStrData + 32);
+	Enqueue(192, 8); // Codec type
+        Enqueue(2, 8); // Audio config lengths
 
 	// Send audio parameters
 
@@ -1428,11 +1432,11 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	case CAudioParam::AC_AAC:	// 00
 		iVal = 0;
 		break;
-    case CAudioParam::AC_OPUS:	// 01
+        case CAudioParam::AC_OPUS:	// 01
 		iVal = 1;
 		break;
-    case CAudioParam::AC_xHE_AAC:	// 11
-        iVal = 3;
+        case CAudioParam::AC_xHE_AAC:	// 11
+                iVal = 3;
 		break;
 	default:
 		iVal = 0;				// reserved
@@ -1494,6 +1498,41 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 
 	// coder field and some rfus (TODO: code the coder field correctly for all cases
 	Enqueue(0, 8);
+}
+
+void
+CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &AudioData)
+{
+	bool bStandardCodec = false;
+	switch (Parameter.Service[0].AudioParam.eAudioCoding) {
+          case AC_AAC:
+          case AC_OPUS:
+          case AC_xHE_AAC:
+              bStandardCodec = true;
+              break;
+          default:
+              bStandardCodec = false; 
+
+        }
+
+	const int iLenStrData = AudioData.GetFillLevel();
+	if (bStandardCodec)
+		iLenStrData = SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB);
+
+	// Only generate this tag if stream input data is not of zero length
+	if (iLenStrData == 0)
+		return;
+
+	CVectorEx < _BINARY > *pvecbiStrData = AudioData.Get(iLenStrData);
+	// check we have data in the vector
+	if (bStandardCodec && iLenStrData != pvecbiStrData->Size())
+		return;
+
+	if (bStandardCodec)
+          GenTagFieldsStandard(Parameter, iLenStrData);
+        else
+          GenTagFieldsNonStandard(Parameter, iLenStrData);
+
 
 	// Now send the stream data
 	pvecbiStrData->ResetBitAccess();

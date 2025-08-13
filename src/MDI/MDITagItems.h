@@ -368,6 +368,8 @@ public:
 		void GenTag(CParameter& Parameter, CSingleBuffer<_BINARY>& AudioData
 );
 protected:
+                void GenTagFieldsStandard(CParameter & Parameter, int iLenStrData);
+                void GenTagFieldsNonStandard(CParameter & Parameter, int iLenStrData);
 		virtual std::string GetTagName(void);
 		virtual std::string GetProfiles(void); // Return a std::string containing the set of profiles for this tag
 };
