@@ -1416,7 +1416,7 @@ CTagItemGeneratorAMAudio::GenTagFieldsNonStandard(CParameter & Parameter, int iL
 }
 
 void
-CTagItemGeneratorAMAudio::GenTagFieldsStandard(CParameter & Parameter, CSingleBuffer < _BINARY > &AudioData)
+CTagItemGeneratorAMAudio::GenTagFieldsStandard(CParameter & Parameter, int iLenStrData)
 {
 
 	PrepareTag(iLenStrData + 32);
@@ -1505,9 +1505,9 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 {
 	bool bStandardCodec = false;
 	switch (Parameter.Service[0].AudioParam.eAudioCoding) {
-          case AC_AAC:
-          case AC_OPUS:
-          case AC_xHE_AAC:
+          case CAudioParam::AC_AAC:
+          case CAudioParam::AC_OPUS:
+          case CAudioParam::AC_xHE_AAC:
               bStandardCodec = true;
               break;
           default:
@@ -1515,9 +1515,7 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 
         }
 
-	const int iLenStrData = AudioData.GetFillLevel();
-	if (bStandardCodec)
-		iLenStrData = SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB);
+	const int iLenStrData = (bStandardCodec ? SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB) : AudioData.GetFillLevel());
 
 	// Only generate this tag if stream input data is not of zero length
 	if (iLenStrData == 0)
