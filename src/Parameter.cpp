@@ -436,7 +436,7 @@ void CParameter::ResetServicesStreams()
         // Set up encoded AM audio parameters
         Service[0].AudioParam.strTextMessage = "";
         Service[0].AudioParam.iStreamID = 0;
-        Service[0].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
+        Service[0].AudioParam.eAudioCoding = CAudioParam::AC_MPEGAAC;
         Service[0].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
         Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
         Service[0].AudioParam.bTextflag = false;
@@ -455,7 +455,7 @@ void CParameter::ResetServicesStreams()
         Service[0].strLabel = "";
 
         Stream[0].iLenPartA = 0;
-        Stream[0].iLenPartB = 1044;
+        Stream[0].iLenPartB = 7000; // enough for 128kbps
     }
 
     /* Reset alternative frequencies */

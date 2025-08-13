@@ -8,7 +8,7 @@ class CAudioParam
 public:
 
     /* AC: Audio Coding */
-    enum EAudCod { AC_AAC=0, AC_OPUS=1, AC_RESERVED=2, AC_xHE_AAC=3,  AC_NONE=4 };
+    enum EAudCod { AC_AAC=0, AC_OPUS=1, AC_RESERVED=2, AC_xHE_AAC=3,  AC_NONE=4, AC_MPEGAAC=5 };
 
     /* SB: SBR */
     enum ESBRFlag { SB_NOT_USED=0, SB_USED=1 };

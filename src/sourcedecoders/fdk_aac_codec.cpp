@@ -633,7 +633,8 @@ FdkAacCodec::Encode(CVector<_SAMPLE>& vecsEncInData, unsigned long lNumSampEncIn
 
       //cerr<<"Encoded audio: ";
       for (int i=0; i<bytesEncoded; i++) {
-        //cerr<<hex<<setw(2)<<setfill('0')<<int(outputBuffer[i]);
+        //if (i<100 || i>bytesEncoded-100) cerr<<hex<<setw(2)<<setfill('0')<<int(outputBuffer[i]);
+        //if (i==100) cerr<<" ... ";
         vecsEncOutData[i] = outputBuffer[i]; 
       }
       //cerr<<endl;

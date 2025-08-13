@@ -156,8 +156,9 @@ cerr<<"Audio param changed"<<endl;
             iAudioFrameLength += veciFrameLength[j];
 
             /* Frame border in bytes (12 bits) */
-            if (bDrmSf)
+            if (bDrmSf) {
                 (*pvecOutputData).Enqueue(iAudioFrameLength, 12);
+            }
         }
 
         /* Byte-alignment (4 bits) in case of odd number of borders */
@@ -188,16 +189,19 @@ cerr<<"Audio param changed"<<endl;
         /* Lower protected part */
         for (int j = 0; j < iNumAudioFrames; j++)
         {
+
             for (int i = iNumHigherProtectedBytes; i < veciFrameLength[j]; i++)
             {
                 /* If encoder produced too many bits, we have to drop them */
                 if (iCurNumBytes < iAudioPayloadLen)
                     (*pvecOutputData).Enqueue(audio_frame[j][i], 8);
+else cerr<<" Dropping byte because iCurNumBytes "<<iCurNumBytes<<">= iAudioPayloadLen "<<iAudioPayloadLen<<endl;
 
                 iCurNumBytes++;
             }
         }
-cerr<<"AudioSourceEncoder wrote "<<iCurNumBytes<<endl;
+        if (!bDrmSf)
+          iOutputBlockSize = iCurNumBytes * 8;
 
 #ifdef _DEBUG_
         /* Save number of bits actually used by audio encoder */
@@ -568,7 +572,8 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
         lNumSampEncIn /= iNumChannels;
         iNumInSamplesMono  = lNumSampEncIn * iNumAudioFrames;
 
-        iAudioPayloadLen = lMaxBytesEncOut;
+        //iAudioPayloadLen = lMaxBytesEncOut;
+        iAudioPayloadLen = iTotAudFraSizeBits / SIZEOF__BYTE;
     }
     break;
     case CAudioParam::AC_OPUS:

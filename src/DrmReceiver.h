@@ -120,6 +120,16 @@ protected:
     {
         this->iInputBlockSize = (int) ((_REAL) p.GetAudSampleRate() * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;
     }
+    virtual void InitInternal(CParameter& Parameters)
+    {
+        this->SetInputBlockSize(Parameters);
+        this->iOutputBlockSize = this->iInputBlockSize;
+        this->iOutputBlockSize2 = this->iInputBlockSize;
+        this->iMaxOutputBlockSize2 = 2 * this->iInputBlockSize; // this makes the allocated buffer big enough to store two blocks, required because it's cyclic
+
+    }
+
+
 };
 
 class CConvertAudio : public CReceiverModul<_REAL,_SAMPLE>
